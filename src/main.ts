@@ -1,13 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import {
-  BracketEntryType,
   BracketService,
-  BracketType,
 } from './rest/tournament/bracket.service';
 import { REDIS_PASSWORD, REDIS_URL } from './config/env';
 import { Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { BracketEntryType, BracketType } from './gateway/shared-types/tournament';
 
 
 const mockedParticipants =[
@@ -60,7 +59,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(5000);
+  await app.listen(6100);
 
   const t = await app
     .get<BracketService>(BracketService)

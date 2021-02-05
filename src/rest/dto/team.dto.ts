@@ -20,3 +20,10 @@ export class TeamDto {
 export class SubmitInvitationDto {
   accept: boolean;
 }
+
+
+export class CreateTeamInviteDto {
+  public readonly inviter: string;
+  public readonly invited: string;
+  public readonly teamId: string;
+}

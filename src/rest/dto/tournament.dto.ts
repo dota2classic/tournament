@@ -1,4 +1,4 @@
-import { BracketEntryType } from '../tournament/bracket.service';
+import { BracketEntryType } from '../../gateway/shared-types/tournament';
 
 export class CreateTournamentDto {
   name: string;

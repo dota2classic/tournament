@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateTeamDto, SubmitInvitationDto, TeamDto } from './dto/team.dto';
+import { CreateTeamDto, CreateTeamInviteDto, SubmitInvitationDto, TeamDto } from './dto/team.dto';
 import { TeamService } from './tournament/team.service';
 import { TeamMapper } from './mapper/team.mapper';
 
@@ -17,13 +17,12 @@ export class TeamController {
     return this.teamService.fullTeam(id).then(this.teamMapper.mapTeam);
   }
 
-  @Post(`/invite/:id/:steam_id`)
+  @Post(`/invite`)
   public async inviteToTeam(
-    @Param('id') id: string,
-    @Param('steam_id') steam_id: string,
+    @Body() dto: CreateTeamInviteDto
   ): Promise<TeamDto> {
-    await this.teamService.inviteToTeam(id, steam_id);
-    return this.getTeam(id);
+    await this.teamService.inviteToTeam(dto.teamId, dto.inviter, dto.invited);
+    return this.getTeam(dto.teamId);
   }
 
 

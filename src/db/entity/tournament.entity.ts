@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { BracketEntryType } from '../../rest/tournament/bracket.service';
+import { BracketEntryType } from '../../gateway/shared-types/tournament';
 
 @Entity()
 export class TournamentEntity {

@@ -80,12 +80,15 @@ export class TeamService {
     );
   }
 
-  public async inviteToTeam(id: string, steam_id: string) {
+  public async inviteToTeam(id: string, inviter: string, steam_id: string) {
     const team = await this.fullTeam(id);
     if (!team) throw new NotFoundException();
 
     // we cant invite if 5 in team
     if (team.members.length >= 5) return;
+
+    // only member can invite
+    if(!team.members.find(t => t.steam_id === inviter)) return;
 
     const existingInvite = await this.teamInvitationEntityRepository.findOne({
       steam_id,
