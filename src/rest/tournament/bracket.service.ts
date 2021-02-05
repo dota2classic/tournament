@@ -73,10 +73,11 @@ export class BracketService {
     await this.manager.create(example);
   }
 
-  public async createTournament(name: string, type: BracketEntryType) {
+  public async createTournament(name: string, type: BracketEntryType, startDate: number) {
     const t = new TournamentEntity();
     t.name = name;
     t.entryType = type;
+    t.startDate = new Date(startDate);
     return await this.tournamentEntityRepository.save(t);
   }
 

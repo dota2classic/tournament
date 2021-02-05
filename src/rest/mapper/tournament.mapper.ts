@@ -3,11 +3,21 @@ import { BracketCrud, TournamentBracketInfo } from '../tournament/bracket.crud';
 import { UserRepository } from '../caches/user.repository';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
+import { TournamentEntity } from '../../db/entity/tournament.entity';
+import { TournamentDto } from '../dto/tournament.dto';
 
 export interface RenderBracket {}
 @Injectable()
 export class TournamentMapper {
   constructor(private readonly crud: BracketCrud) {}
+
+
+  public mapTournament = (t: TournamentEntity): TournamentDto => {
+    return {
+      ...t,
+      startDate: t.startDate.getTime()
+    }
+  }
 
   public mapBracket = async (
     bracket: TournamentBracketInfo,

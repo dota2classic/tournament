@@ -28,12 +28,24 @@ export class TournamentController {
   public async createTournament(
     @Body() dto: CreateTournamentDto,
   ): Promise<TournamentDto> {
-    return await this.bracketService.createTournament(dto.name, dto.entryType);
+    return await this.bracketService
+      .createTournament(dto.name, dto.entryType, dto.startDate)
+      .then(this.mapper.mapTournament);
+  }
+
+  // todo pagination
+  @Get(`/list`)
+  public async listTournaments(): Promise<TournamentDto[]> {
+    return this.tournamentEntityRepository
+      .find()
+      .then(t => t.map(this.mapper.mapTournament));
   }
 
   @Get(`/:id`)
   public async getTournament(@Param('id') id: number): Promise<TournamentDto> {
-    return this.tournamentEntityRepository.findOne(id);
+    return this.tournamentEntityRepository
+      .findOne(id)
+      .then(this.mapper.mapTournament);
   }
 
   @Post(`/:id/join_tournament_team/:team_id`)
@@ -51,6 +63,4 @@ export class TournamentController {
   ) {
     return this.bracketService.registerSoloPlayer(tId, steam_id);
   }
-
-
 }

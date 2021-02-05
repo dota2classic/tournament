@@ -63,7 +63,7 @@ async function bootstrap() {
 
   const t = await app
     .get<BracketService>(BracketService)
-    .createTournament('Test tournament', BracketEntryType.PLAYER);
+    .createTournament('Test tournament', BracketEntryType.PLAYER, new Date().getTime() + 1000 * 60 * 60 * 10);
   // example 1x1 tournament
   await app
     .get<BracketService>(BracketService)
