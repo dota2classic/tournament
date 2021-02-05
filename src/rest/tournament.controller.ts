@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { BracketCrud } from './tournament/bracket.crud';
-import { TournamentMapper } from './tournament.mapper';
+import { TournamentMapper } from './mapper/tournament.mapper';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateTournamentDto, TournamentDto } from './dto/tournament.dto';
 import { TournamentEntity } from '../db/entity/tournament.entity';
@@ -51,4 +51,6 @@ export class TournamentController {
   ) {
     return this.bracketService.registerSoloPlayer(tId, steam_id);
   }
+
+
 }

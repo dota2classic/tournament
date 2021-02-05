@@ -13,10 +13,13 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { BracketService } from './rest/tournament/bracket.service';
 import { BracketCrud } from './rest/tournament/bracket.crud';
 import { TournamentController } from './rest/tournament.controller';
-import { TournamentMapper } from './rest/tournament.mapper';
+import { TournamentMapper } from './rest/mapper/tournament.mapper';
 import { qCache, UserRepository } from './rest/caches/user.repository';
 import { outerQuery } from './gateway/util/outerQuery';
 import { GetUserInfoQuery } from './gateway/queries/GetUserInfo/get-user-info.query';
+import { TeamController } from './rest/team.controller';
+import { TeamService } from './rest/tournament/team.service';
+import { TeamMapper } from './rest/mapper/team.mapper';
 
 @Module({
   imports: [
@@ -40,8 +43,10 @@ import { GetUserInfoQuery } from './gateway/queries/GetUserInfo/get-user-info.qu
       },
     ] as any),
   ],
-  controllers: [RedisController, TournamentController],
+  controllers: [RedisController, TeamController, TournamentController],
   providers: [
+    TeamService,
+    TeamMapper,
     BracketService,
     UserRepository,
     TournamentMapper,

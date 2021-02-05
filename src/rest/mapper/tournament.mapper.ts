@@ -1,16 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { BracketCrud, TournamentBracketInfo } from './tournament/bracket.crud';
-import { UserRepository } from './caches/user.repository';
-import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
-import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
+import { BracketCrud, TournamentBracketInfo } from '../tournament/bracket.crud';
+import { UserRepository } from '../caches/user.repository';
+import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
+import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
 
 export interface RenderBracket {}
 @Injectable()
 export class TournamentMapper {
-  constructor(
-    private readonly userRepository: UserRepository,
-    private readonly crud: BracketCrud,
-  ) {}
+  constructor(private readonly crud: BracketCrud) {}
 
   public mapBracket = async (
     bracket: TournamentBracketInfo,
@@ -42,7 +39,7 @@ export class TournamentMapper {
                   );
 
                   return {
-                    name: await this.userRepository.name(rr.name),
+                    name: rr.name,
                     steam_id: rr.name,
                     result: opp.result,
                   };
@@ -59,19 +56,5 @@ export class TournamentMapper {
         };
       }),
     );
-  };
-
-  public mapBracket2 = async (
-    bracket: TournamentBracketInfo,
-  ): Promise<TournamentBracketInfo> => {
-    return {
-      ...bracket,
-      participant: await Promise.all(
-        bracket.participant.map(async p => ({
-          ...p,
-          name: await this.userRepository.name(p.name),
-        })),
-      ),
-    };
   };
 }

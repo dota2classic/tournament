@@ -9,6 +9,15 @@ export class TeamEntity {
   @Column()
   creator: string;
 
+  @Column()
+  name: string;
+
+  @Column()
+  tag: string;
+
+  @Column()
+  imageUrl: string;
+
   @OneToMany(
     () => TeamMemberEntity,
     t => t.team,

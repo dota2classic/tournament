@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { TeamEntity } from './team.entity';
 
 @Entity()
@@ -9,7 +9,10 @@ export class TeamMemberEntity {
   @Column()
   steam_id: string;
 
+  @Column()
+  teamId: string;
 
   @ManyToOne(() => TeamEntity, t => t.members)
+  @JoinColumn({name: "teamId"})
   team: TeamEntity
 }

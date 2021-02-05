@@ -132,6 +132,9 @@ export class BracketService {
     const team = await this.teamEntityRepository.findOne(teamId);
     if (!team) throw new NotFoundException();
 
+    // TODO: manage conflicting members?
+
+
     const b = new BracketParticipantEntity();
     b.tournament_id = t.id;
     b.name = team.id;
