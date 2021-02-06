@@ -27,11 +27,15 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       return;
     }
 
+    const offset = connectedMatch.teamOffset;
+
+    // offset = 0 => radiant = opp1, dire = opp2
+    // offset = 1 => radiant = opp2, dire = opp1
+    const winCondition = offset === 0 ? event.radiantWin : !event.radiantWin;
+
     await this.bService.matchResults(
       connectedMatch.id,
-      event.radiantWin
-        ? connectedMatch.opponent1.id
-        : connectedMatch.opponent2.id,
+      winCondition ? connectedMatch.opponent1.id : connectedMatch.opponent2.id,
     );
   }
 }

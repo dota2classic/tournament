@@ -27,7 +27,9 @@ export class BracketMatchService {
     private readonly roundEntityRepository: Repository<RoundEntity>,
     private readonly ebus: EventBus,
     @InjectRepository(BracketParticipantEntity)
-    private readonly bracketParticipantEntityRepository: Repository<BracketParticipantEntity>,
+    private readonly bracketParticipantEntityRepository: Repository<
+      BracketParticipantEntity
+    >,
   ) {}
 
   public async scheduleBracketMatch(tid: number, bid: number) {
@@ -37,60 +39,74 @@ export class BracketMatchService {
     const bm = await this.bracketMatchEntityRepository.findOne(bid);
     if (!bm) return;
 
-
-    if(tour.entryType === BracketEntryType.PLAYER){
+    if (tour.entryType === BracketEntryType.PLAYER) {
       // its 1x1 strategy, 30 mins between rounds
       const tStartDate = tour.startDate;
       const round = await this.roundEntityRepository.findOne(bm.round_id);
       const roundNumber = round.number;
 
-
       const minOffset = 0.1;
-      const offset = 1000 * 60 * minOffset // 30 min offset
+      const offset = 1000 * 60 * minOffset; // 30 min offset
 
       const matchDate = new Date(tStartDate.getTime() + offset * roundNumber);
-      const job = new CronJob(matchDate, () => this.initMatch(tid, bid))
+      const job = new CronJob(matchDate, () => this.initMatch(tid, bid));
       this.schedulerRegistry.addCronJob(`initMatch:${tour.id}:${bm.id}`, job);
       job.start();
 
-
-      console.log(`Scheduled match ${bm.id} for ${matchDate}`)
-    }else{
+      console.log(`Scheduled match ${bm.id} for ${matchDate}`);
+    } else {
       // its 5x5 strategy, 70 mins between rounds or so
     }
-
-
   }
 
   private async initMatch(tid: number, bid: number) {
     const tour = await this.tournamentEntityRepository.findOne(tid);
     const b = await this.bracketMatchEntityRepository.findOne(bid);
 
-    console.log("Yahoo!! init match ye")
 
-    if(!b.opponent1?.id || !b.opponent2?.id){
+    // offset generation right before initing stuff
+    b.teamOffset = Math.round(Math.random());
+    await this.bracketMatchEntityRepository.save(b);
+
+    console.log('Yahoo!! init match ye');
+
+    if (!b.opponent1?.id || !b.opponent2?.id) {
       console.error(`cant start match not enough opponents`);
       return;
     }
 
-    const opp1 = await this.bracketParticipantEntityRepository.findOne(b.opponent1.id)
-    const opp2 = await this.bracketParticipantEntityRepository.findOne(b.opponent2.id)
+    const opp1 = await this.bracketParticipantEntityRepository.findOne(
+      b.opponent1.id,
+    );
+    const opp2 = await this.bracketParticipantEntityRepository.findOne(
+      b.opponent2.id,
+    );
 
-    if(tour.entryType === BracketEntryType.PLAYER) {
+    if (tour.entryType === BracketEntryType.PLAYER) {
+      let defaultOffset = [
+        [new PlayerId(opp1.name)],
+        [new PlayerId(opp2.name)],
+      ];
+      if(b.teamOffset === 1){
+        // if offset is present we change teams
+        defaultOffset = [
+          defaultOffset[1],
+          defaultOffset[0]
+        ]
+      }
       this.ebus.publish(
         new TournamentGameReadyEvent(
           tid,
           bid,
           MatchmakingMode.TOURNAMENT,
-          [new PlayerId(opp1.name)],
-          [new PlayerId(opp2.name)],
-          tour.entryType
-        )
-      )
-
-    }else{
-      throw "Not implemented"
+          defaultOffset[0],
+          defaultOffset[1],
+          tour.entryType,
+        ),
+      );
+    } else {
+      throw 'Not implemented';
     }
-    console.log('OK HERE WE NEED TO START MATCH SOMEHOW KEKEKEKEKEKE')
+    console.log('OK HERE WE NEED TO START MATCH SOMEHOW KEKEKEKEKEKE');
   }
 }
