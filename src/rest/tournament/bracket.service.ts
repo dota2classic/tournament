@@ -3,7 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection, Repository } from 'typeorm';
 
 import { BracketsManager } from 'brackets-manager';
-import { InputStage } from 'brackets-model';
+import { InputStage, ParticipantResult } from 'brackets-model';
 import { BracketCrud } from './bracket.crud';
 import { TournamentEntity } from '../../db/entity/tournament.entity';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
@@ -130,17 +130,17 @@ export class BracketService {
   }
 
   public async matchResults(
-    tId: number,
     matchId: number,
-    winnerName: EntryIdType,
+    winnerOpponentId: number,
   ) {
     const m: BracketMatchEntity = await this.stor.select('match', matchId);
 
-    const winnerOpponent = (
-      await this.stor.select<BracketParticipantEntity>('participant', {
-        name: winnerName,
-      })
-    )[0];
+    let winnerOpponent: ParticipantResult | undefined
+    if(m.opponent1?.id === winnerOpponentId){
+      winnerOpponent = m.opponent1
+    }else if(m.opponent2?.id === winnerOpponentId){
+      winnerOpponent = m.opponent2
+    }
 
     if (!winnerOpponent) return;
 

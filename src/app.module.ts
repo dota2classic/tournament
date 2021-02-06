@@ -17,6 +17,9 @@ import { TeamService } from './rest/tournament/team.service';
 import { TeamMapper } from './rest/mapper/team.mapper';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BracketMatchService } from './rest/tournament/bracket-match.service';
+import { AppService } from './app.service';
+import { MatchStartedHandler } from './tournament/event/match-started.handler';
+import { GameResultsHandler } from './tournament/event/game-results.handler';
 
 @Module({
   imports: [
@@ -42,6 +45,7 @@ import { BracketMatchService } from './rest/tournament/bracket-match.service';
   ],
   controllers: [RedisController, TeamController, TournamentController],
   providers: [
+    AppService,
     TeamService,
     TeamMapper,
     BracketService,
@@ -49,6 +53,9 @@ import { BracketMatchService } from './rest/tournament/bracket-match.service';
     TournamentMapper,
     BracketMatchService,
     BracketCrud,
+
+    MatchStartedHandler,
+    GameResultsHandler,
     outerQuery(GetUserInfoQuery, 'QueryCore', qCache()),
   ],
 })

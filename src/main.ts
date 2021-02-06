@@ -39,8 +39,8 @@ const mockedParticipants = [
   '[U:1:1081775503]',
   '[U:1:401982721]',
   '[U:1:157787666]',
-  '[U:1:1174929366]',
-  '[U:1:906350541]',
+  // '[U:1:1174929366]',
+  // '[U:1:906350541]',
   // '[U:1:120230466]',
   // '[U:1:234538375]',
   // '[U:1:128033448]',
@@ -85,29 +85,26 @@ async function bootstrap() {
 
   await app.listen(6100);
 
-  const tournTeam = await app
-    .get<BracketService>(BracketService)
-    .createTournament(
-      'Test team tournament',
-      BracketEntryType.PLAYER,
-      new Date().getTime() + 1000 * 60, // in one minute
-      'https://upload.wikimedia.org/wikipedia/en/8/8e/The_International_logo_%282014%29.png',
-      BracketType.SINGLE_ELIMINATION,
-    );
+  // const tournTeam = await app
+  //   .get<BracketService>(BracketService)
+  //   .createTournament(
+  //     'Test team tournament',
+  //     BracketEntryType.PLAYER,
+  //     new Date().getTime() + 1000 * 10, // in 10 seconds
+  //     'https://upload.wikimedia.org/wikipedia/en/8/8e/The_International_logo_%282014%29.png',
+  //     BracketType.SINGLE_ELIMINATION,
+  //   );
+  //
+  //
+  // let i = 0;
+  // for (const steamId of mockedParticipants) {
+  //   await app.get(BracketService).registerSoloPlayer(tournTeam.id, steamId);
+  //   i++;
+  // }
+  //
+  // await app
+  //   .get<BracketService>(BracketService)
+  //   .generateTournament(tournTeam.id);
 
-  const ts = app.get(TeamService);
-
-  let i = 0;
-  for (const steamId of mockedParticipants) {
-    await app.get(BracketService).registerSoloPlayer(tournTeam.id, steamId);
-    i++;
-  }
-
-  await app
-    .get<BracketService>(BracketService)
-    .generateTournament(tournTeam.id);
-
-  // await app.get(BracketService)
-  //   .registeredTeams(tournTeam.id)
 }
 bootstrap();

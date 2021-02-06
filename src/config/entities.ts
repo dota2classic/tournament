@@ -33,7 +33,7 @@ export const devDbConfig: any = {
   password: 'mypassword',
   entities: Entities,
   synchronize: true,
-  dropSchema: true,
+  // dropSchema: true,
   keepConnectionAlive: true,
 };
 
@@ -43,7 +43,7 @@ export const testDbConfig: TypeOrmModuleOptions = {
   entities: Entities,
   synchronize: true,
   keepConnectionAlive: true,
-  dropSchema: true,
+  // dropSchema: true,
 };
 
 export const prodDbConfig: any = {

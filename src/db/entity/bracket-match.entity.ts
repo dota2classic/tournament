@@ -38,11 +38,11 @@ export class BracketMatchEntity {
 
 
   @Column({ type: 'simple-json', nullable: true })
-  opponent1: ParticipantResult
+  opponent1?: ParticipantResult
 
 
   @Column({ type: 'simple-json', nullable: true})
-  opponent2: ParticipantResult
+  opponent2?: ParticipantResult
 
 
   stage?: StageEntity

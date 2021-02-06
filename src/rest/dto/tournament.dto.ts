@@ -31,6 +31,7 @@ export class SeedItemDto {
 export class SeedDto {
   teams: SeedItemDto[];
   date: string;
+  matchId?: number;
   id: number;
 }
 
