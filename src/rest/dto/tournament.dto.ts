@@ -12,6 +12,10 @@ export class CreateTournamentDto {
   strategy: BracketType
 }
 
+export class TournamentParticipantDto {
+  public readonly steam_id?: string;
+  public readonly team?: TeamDto
+}
 export class TournamentDto {
   id: number;
   name: string;
@@ -19,6 +23,15 @@ export class TournamentDto {
   status: TournamentStatus;
   startDate: number;
   imageUrl: string;
+}
+export class FullTournamentDto {
+  id: number;
+  name: string;
+  entryType: BracketEntryType;
+  status: TournamentStatus;
+  startDate: number;
+  imageUrl: string;
+  participants: TournamentParticipantDto[]
 }
 
 export class SeedItemDto {

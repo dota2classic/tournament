@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { TournamentEntity } from './tournament.entity';
 
 @Entity()
 export class TournamentParticipantEntity {
@@ -14,5 +15,10 @@ export class TournamentParticipantEntity {
    */
   @Column()
   name: string;
+
+
+  @ManyToOne(t => TournamentEntity, t => t.participants)
+  @JoinColumn({ name: 'tournament_id'})
+  tournament?: TournamentEntity
 
 }

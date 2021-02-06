@@ -3,7 +3,7 @@ import { BracketCrud, TournamentBracketInfo } from '../tournament/bracket.crud';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
 import { TournamentEntity } from '../../db/entity/tournament.entity';
-import { BracketDto, TournamentDto } from '../dto/tournament.dto';
+import { BracketDto, FullTournamentDto, TournamentDto } from '../dto/tournament.dto';
 import {
   BracketEntryType,
   BracketType,
@@ -27,7 +27,7 @@ export class TournamentMapper {
   public mapTournament = (t: TournamentEntity): TournamentDto => {
     return {
       ...t,
-      startDate: t.startDate.getTime(),
+      startDate: t.startDate.getTime()
     };
   };
 
@@ -115,7 +115,9 @@ export class TournamentMapper {
       return {
         type: tournament.strategy,
         winning: await Promise.all(
-          bracket.round.map(async round => this.mapRound(tournament.entryType, round)),
+          bracket.round.map(async round =>
+            this.mapRound(tournament.entryType, round),
+          ),
         ),
         losing: [],
       };

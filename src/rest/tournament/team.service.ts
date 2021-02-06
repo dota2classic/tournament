@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TeamMemberEntity } from '../../db/entity/team-member.entity';
 import { TeamInvitationEntity } from '../../db/entity/team-invitation.entity';
-import { TournamentDto } from '../dto/tournament.dto';
+import { FullTournamentDto } from '../dto/tournament.dto';
 import { TournamentEntity } from '../../db/entity/tournament.entity';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
 import { BracketEntryType } from '../../gateway/shared-types/tournament';

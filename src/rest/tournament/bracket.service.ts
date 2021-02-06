@@ -18,6 +18,8 @@ import {
 import { TournamentParticipantEntity } from '../../db/entity/tournament-participant.entity';
 import { BracketMatchService } from './bracket-match.service';
 import { StageEntity } from '../../db/entity/stage.entity';
+import { FullTournamentDto } from '../dto/tournament.dto';
+import { TeamMapper } from '../mapper/team.mapper';
 
 export type EntryIdType = string;
 
@@ -44,6 +46,7 @@ export class BracketService {
     private readonly bracketMatchEntityRepository: Repository<
       BracketMatchEntity
     >,
+    private readonly mapper: TeamMapper,
   ) {
     this.manager = new BracketsManager(stor);
     this.tournamentEntityRepository = connection.getRepository(
@@ -84,7 +87,10 @@ export class BracketService {
       })
     ).map(z => z.name);
 
-    const example: InputStage = {
+    // it's just stupid to do this right
+    if (entries.length < Math.pow(2, 2)) return;
+
+    const stageSetup: InputStage = {
       name: 'Example',
       tournamentId: tId,
       type:
@@ -95,9 +101,12 @@ export class BracketService {
       settings: { seedOrdering: ['inner_outer'], grandFinal: 'simple' },
     };
 
-    await this.manager.create(example);
+    await this.manager.create(stageSetup);
 
     tournament.status = TournamentStatus.ONGOING;
+    // just to sync things up.
+    tournament.startDate = new Date();
+
     await this.tournamentEntityRepository.save(tournament);
 
     // ok here we need to find all
@@ -129,17 +138,14 @@ export class BracketService {
     return await this.tournamentEntityRepository.save(t);
   }
 
-  public async matchResults(
-    matchId: number,
-    winnerOpponentId: number,
-  ) {
+  public async matchResults(matchId: number, winnerOpponentId: number) {
     const m: BracketMatchEntity = await this.stor.select('match', matchId);
 
-    let winnerOpponent: ParticipantResult | undefined
-    if(m.opponent1?.id === winnerOpponentId){
-      winnerOpponent = m.opponent1
-    }else if(m.opponent2?.id === winnerOpponentId){
-      winnerOpponent = m.opponent2
+    let winnerOpponent: ParticipantResult | undefined;
+    if (m.opponent1?.id === winnerOpponentId) {
+      winnerOpponent = m.opponent1;
+    } else if (m.opponent2?.id === winnerOpponentId) {
+      winnerOpponent = m.opponent2;
     }
 
     if (!winnerOpponent) return;
@@ -187,10 +193,40 @@ export class BracketService {
 
     if (t.entryType !== BracketEntryType.PLAYER) throw new NotFoundException();
 
+    const participation = await this.tournamentParticipantEntityRepository.findOne(
+      {
+        name: steam_id,
+        tournament_id: tId,
+      },
+    );
+
+    // already in
+    if (participation) return;
+
     const b = new TournamentParticipantEntity();
     b.tournament_id = t.id;
     b.name = steam_id;
     await this.tournamentParticipantEntityRepository.save(b);
+  }
+
+  public async leaveSoloPlayer(tId: number, steam_id: string) {
+    const t = await this.tournamentEntityRepository.findOne(tId);
+    if (!t) throw new NotFoundException();
+
+    if (t.entryType !== BracketEntryType.PLAYER) throw new NotFoundException();
+
+    if (t.status !== TournamentStatus.NEW) throw new NotFoundException();
+
+    const participation = await this.tournamentParticipantEntityRepository.findOne(
+      {
+        name: steam_id,
+        tournament_id: tId,
+      },
+    );
+
+    if (!participation) return;
+
+    await this.tournamentParticipantEntityRepository.delete(participation);
   }
 
   public async registeredTeams(id: number): Promise<TeamEntity[]> {
@@ -206,5 +242,54 @@ export class BracketService {
       .andWhere('tournament.id = :id', { id });
     const res = await query.getMany();
     return res.map(t => t.team);
+  }
+
+  public async fullTournament(id: number): Promise<FullTournamentDto> {
+    const t = await this.tournamentEntityRepository.findOne(id, {
+      relations: ['preParticipants'],
+    });
+
+    if (t.entryType === BracketEntryType.PLAYER) {
+      // players
+
+      return {
+        ...t,
+        startDate: t.startDate.getTime(),
+        participants: t.preParticipants.map(t => ({
+          steam_id: t.name,
+        })),
+      };
+    } else {
+      const teams = await this.teamEntityRepository.findByIds(
+        t.preParticipants.map(t => t.name),
+        { relations: ['members'] },
+      );
+      return {
+        ...t,
+        startDate: t.startDate.getTime(),
+        participants: teams.map(t => ({
+          team: this.mapper.mapTeam(t),
+        })),
+      };
+    }
+  }
+
+  public async cancelTournament(tId: number) {
+    const tournament = await this.tournamentEntityRepository.findOne(tId);
+    if (!tournament) return;
+
+    tournament.status = TournamentStatus.CANCELLED;
+    await this.tournamentEntityRepository.save(tournament);
+
+    const allMatches = await this.bracketMatchEntityRepository
+      .createQueryBuilder('bm')
+      .leftJoin(StageEntity, 'stage', 'stage.id = bm.stage_id')
+      .where('stage.tournament_id = :tId', { tId })
+      .getMany();
+
+    await Promise.all(
+      allMatches.map(async m => this.bmService.clearJob(tId, m.id)),
+    );
+
   }
 }

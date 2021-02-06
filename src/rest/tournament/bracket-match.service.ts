@@ -32,6 +32,14 @@ export class BracketMatchService {
     >,
   ) {}
 
+  public async clearJob(tid: number, bid: number) {
+    try {
+      this.schedulerRegistry.deleteCronJob(`initMatch:${tid}:${bid}`);
+    }catch (e){
+      // if not match scheduled then ok.
+    }
+  }
+
   public async scheduleBracketMatch(tid: number, bid: number) {
     const tour = await this.tournamentEntityRepository.findOne(tid);
     if (!tour) return;
@@ -45,10 +53,15 @@ export class BracketMatchService {
       const round = await this.roundEntityRepository.findOne(bm.round_id);
       const roundNumber = round.number;
 
-      const minOffset = 0.1;
+      const minOffset = 30;
       const offset = 1000 * 60 * minOffset; // 30 min offset
 
       const matchDate = new Date(tStartDate.getTime() + offset * roundNumber);
+
+      bm.scheduledDate = matchDate;
+
+      await this.bracketMatchEntityRepository.save(bm);
+
       const job = new CronJob(matchDate, () => this.initMatch(tid, bid));
       this.schedulerRegistry.addCronJob(`initMatch:${tour.id}:${bm.id}`, job);
       job.start();
@@ -62,7 +75,6 @@ export class BracketMatchService {
   private async initMatch(tid: number, bid: number) {
     const tour = await this.tournamentEntityRepository.findOne(tid);
     const b = await this.bracketMatchEntityRepository.findOne(bid);
-
 
     // offset generation right before initing stuff
     b.teamOffset = Math.round(Math.random());
@@ -87,12 +99,9 @@ export class BracketMatchService {
         [new PlayerId(opp1.name)],
         [new PlayerId(opp2.name)],
       ];
-      if(b.teamOffset === 1){
+      if (b.teamOffset === 1) {
         // if offset is present we change teams
-        defaultOffset = [
-          defaultOffset[1],
-          defaultOffset[0]
-        ]
+        defaultOffset = [defaultOffset[1], defaultOffset[0]];
       }
       this.ebus.publish(
         new TournamentGameReadyEvent(
