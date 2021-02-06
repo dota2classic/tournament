@@ -16,6 +16,8 @@ import {
   TournamentStatus,
 } from '../../gateway/shared-types/tournament';
 import { TournamentParticipantEntity } from '../../db/entity/tournament-participant.entity';
+import { BracketMatchService } from './bracket-match.service';
+import { StageEntity } from '../../db/entity/stage.entity';
 
 export type EntryIdType = string;
 
@@ -36,6 +38,11 @@ export class BracketService {
     @InjectRepository(TournamentParticipantEntity)
     private readonly tournamentParticipantEntityRepository: Repository<
       TournamentParticipantEntity
+    >,
+    private readonly bmService: BracketMatchService,
+    @InjectRepository(BracketMatchEntity)
+    private readonly bracketMatchEntityRepository: Repository<
+      BracketMatchEntity
     >,
   ) {
     this.manager = new BracketsManager(stor);
@@ -92,6 +99,18 @@ export class BracketService {
 
     tournament.status = TournamentStatus.ONGOING;
     await this.tournamentEntityRepository.save(tournament);
+
+    // ok here we need to find all
+
+    const allMatches = await this.bracketMatchEntityRepository
+      .createQueryBuilder('bm')
+      .leftJoin(StageEntity, 'stage', 'stage.id = bm.stage_id')
+      .where('stage.tournament_id = :tId', { tId })
+      .getMany();
+
+    await Promise.all(
+      allMatches.map(async m => this.bmService.scheduleBracketMatch(tId, m.id)),
+    );
   }
 
   public async createTournament(
