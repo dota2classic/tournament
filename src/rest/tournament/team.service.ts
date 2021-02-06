@@ -8,6 +8,10 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TeamMemberEntity } from '../../db/entity/team-member.entity';
 import { TeamInvitationEntity } from '../../db/entity/team-invitation.entity';
+import { TournamentDto } from '../dto/tournament.dto';
+import { TournamentEntity } from '../../db/entity/tournament.entity';
+import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
+import { BracketEntryType } from '../../gateway/shared-types/tournament';
 
 @Injectable()
 export class TeamService {
@@ -19,6 +23,10 @@ export class TeamService {
     @InjectRepository(TeamInvitationEntity)
     private readonly teamInvitationEntityRepository: Repository<
       TeamInvitationEntity
+    >,
+    @InjectRepository(BracketParticipantEntity)
+    private readonly bracketParticipantEntityRepository: Repository<
+      BracketParticipantEntity
     >,
   ) {}
 
@@ -88,7 +96,7 @@ export class TeamService {
     if (team.members.length >= 5) return;
 
     // only member can invite
-    if(!team.members.find(t => t.steam_id === inviter)) return;
+    if (!team.members.find(t => t.steam_id === inviter)) return;
 
     const existingInvite = await this.teamInvitationEntityRepository.findOne({
       steam_id,
@@ -113,5 +121,21 @@ export class TeamService {
     } finally {
       await this.teamInvitationEntityRepository.delete(inv);
     }
+  }
+
+  public async getTournaments(teamId: string): Promise<TournamentEntity[]> {
+    const res = await this.bracketParticipantEntityRepository
+      .createQueryBuilder('p')
+      .leftJoinAndMapOne(
+        'p.tournament',
+        TournamentEntity,
+        'tour',
+        'p.tournament_id = tour.id',
+      )
+      .where('tour.entryType = :type', { type: BracketEntryType.TEAM })
+      .andWhere('p.name = :teamId', { teamId })
+      .getMany();
+
+    return res.map(t => t.tournament);
   }
 }

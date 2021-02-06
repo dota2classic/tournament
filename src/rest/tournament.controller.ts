@@ -7,6 +7,8 @@ import { TournamentEntity } from '../db/entity/tournament.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BracketService } from './tournament/bracket.service';
+import { CompactTeamDto, TeamDto } from './dto/team.dto';
+import { TeamMapper } from './mapper/team.mapper';
 
 @Controller('tournament')
 @ApiTags('tournament')
@@ -14,6 +16,7 @@ export class TournamentController {
   constructor(
     private readonly crud: BracketCrud,
     private readonly mapper: TournamentMapper,
+    private readonly teamMapper: TeamMapper,
     @InjectRepository(TournamentEntity)
     private readonly tournamentEntityRepository: Repository<TournamentEntity>,
     private readonly bracketService: BracketService,
@@ -21,7 +24,14 @@ export class TournamentController {
 
   @Get('/bracket/:id')
   async getBracket(@Param('id') id: number) {
-    return this.crud.getBracket(id).then(t => this.mapper.mapBracket(t));
+    const tournament = await this.tournamentEntityRepository.findOne(id)
+    return this.crud.getBracket(id).then(t => this.mapper.mapBracket(t, tournament));
+  }
+
+  @Get('/bracket2/:id')
+  async getBracket2(@Param('id') id: number) {
+    // const tournament = await this.tournamentEntityRepository.findOne(id)
+    return this.crud.getBracket(id)
   }
 
   @Post(`/create`)
@@ -29,7 +39,7 @@ export class TournamentController {
     @Body() dto: CreateTournamentDto,
   ): Promise<TournamentDto> {
     return await this.bracketService
-      .createTournament(dto.name, dto.entryType, dto.startDate)
+      .createTournament(dto.name, dto.entryType, dto.startDate, dto.imageUrl, dto.strategy)
       .then(this.mapper.mapTournament);
   }
 
@@ -39,6 +49,13 @@ export class TournamentController {
     return this.tournamentEntityRepository
       .find()
       .then(t => t.map(this.mapper.mapTournament));
+  }
+
+  @Get(`/teams/:id`)
+  public async tournamentTeams(@Param('id') id: number): Promise<CompactTeamDto[]> {
+    return this.bracketService
+      .registeredTeams(id)
+      .then(t => t.map(this.teamMapper.mapTeamCompact));
   }
 
   @Get(`/:id`)
@@ -51,7 +68,7 @@ export class TournamentController {
   @Post(`/:id/join_tournament_team/:team_id`)
   public async registerTeam(
     @Param('id') tId: number,
-    @Param('team_id') teamId: number,
+    @Param('team_id') teamId: string,
   ) {
     return this.bracketService.registerTeam(tId, teamId);
   }

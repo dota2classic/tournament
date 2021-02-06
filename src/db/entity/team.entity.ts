@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { TeamMemberEntity } from './team-member.entity';
+import { BracketParticipantEntity } from './bracket-participant.entity';
 
 @Entity()
 export class TeamEntity {
@@ -23,4 +24,5 @@ export class TeamEntity {
     t => t.team,
   )
   members: TeamMemberEntity[];
+
 }

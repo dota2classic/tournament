@@ -1,12 +1,16 @@
-import { BracketEntryType, TournamentStatus } from '../../gateway/shared-types/tournament';
-import { EntryIdType } from '../tournament/bracket.service';
+import {
+  BracketEntryType, BracketType,
+  TournamentStatus,
+} from '../../gateway/shared-types/tournament';
+import { TeamDto } from './team.dto';
 
 export class CreateTournamentDto {
   name: string;
   entryType: BracketEntryType;
   startDate: number;
+  imageUrl: string;
+  strategy: BracketType
 }
-
 
 export class TournamentDto {
   id: number;
@@ -14,4 +18,31 @@ export class TournamentDto {
   entryType: BracketEntryType;
   status: TournamentStatus;
   startDate: number;
+  imageUrl: string;
+}
+
+export class SeedItemDto {
+  steam_id?: string;
+  result?: string;
+  team?: TeamDto
+  tbd?: boolean
+}
+
+export class SeedDto {
+  teams: SeedItemDto[];
+  date: string;
+  id: number;
+}
+
+export class BracketRoundDto {
+  title: string;
+  round: number;
+  seeds: SeedDto[];
+}
+
+
+export class BracketDto {
+  type: BracketType;
+  winning: BracketRoundDto[];
+  losing: BracketRoundDto[];
 }

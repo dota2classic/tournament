@@ -1,4 +1,4 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { Connection, Repository } from 'typeorm';
 
@@ -10,7 +10,12 @@ import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
 import { TeamEntity } from '../../db/entity/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BracketEntryType, BracketType } from '../../gateway/shared-types/tournament';
+import {
+  BracketEntryType,
+  BracketType,
+  TournamentStatus,
+} from '../../gateway/shared-types/tournament';
+import { TournamentParticipantEntity } from '../../db/entity/tournament-participant.entity';
 
 export type EntryIdType = string;
 
@@ -27,6 +32,10 @@ export class BracketService {
     @InjectRepository(BracketParticipantEntity)
     private readonly bracketParticipantEntityRepository: Repository<
       BracketParticipantEntity
+    >,
+    @InjectRepository(TournamentParticipantEntity)
+    private readonly tournamentParticipantEntityRepository: Repository<
+      TournamentParticipantEntity
     >,
   ) {
     this.manager = new BracketsManager(stor);
@@ -53,31 +62,51 @@ export class BracketService {
     return newArr;
   }
 
-  public async generateTournament(
-    tId: number,
-    type: BracketType,
-    entryType: BracketEntryType,
-    entries: EntryIdType[],
-  ) {
+  /**
+   * Calling this will lock tournament
+   * @param tId
+   * @param type
+   */
+  public async generateTournament(tId: number) {
+    const tournament = await this.tournamentEntityRepository.findOne(tId);
+    if (!tournament || tournament.status !== TournamentStatus.NEW) return;
+
+    const entries = (
+      await this.tournamentParticipantEntityRepository.find({
+        tournament_id: tId,
+      })
+    ).map(z => z.name);
+
     const example: InputStage = {
       name: 'Example',
       tournamentId: tId,
       type:
-        type === BracketType.DOUBLE_ELIMINATION
+        tournament.strategy === BracketType.DOUBLE_ELIMINATION
           ? 'double_elimination'
           : 'single_elimination',
       seeding: BracketService.formatToPower(entries),
-      settings: { seedOrdering: ['inner_outer'] },
+      settings: { seedOrdering: ['inner_outer'], grandFinal: 'simple' },
     };
 
     await this.manager.create(example);
+
+    tournament.status = TournamentStatus.ONGOING;
+    await this.tournamentEntityRepository.save(tournament);
   }
 
-  public async createTournament(name: string, type: BracketEntryType, startDate: number) {
+  public async createTournament(
+    name: string,
+    type: BracketEntryType,
+    startDate: number,
+    imageUrl: string,
+    strategy: BracketType,
+  ) {
     const t = new TournamentEntity();
     t.name = name;
     t.entryType = type;
     t.startDate = new Date(startDate);
+    t.imageUrl = imageUrl;
+    t.strategy = strategy;
     return await this.tournamentEntityRepository.save(t);
   }
 
@@ -116,7 +145,7 @@ export class BracketService {
     }
   }
 
-  public async registerTeam(tId: number, teamId: number) {
+  public async registerTeam(tId: number, teamId: string) {
     const t = await this.tournamentEntityRepository.findOne(tId);
     if (!t) throw new NotFoundException();
 
@@ -127,11 +156,10 @@ export class BracketService {
 
     // TODO: manage conflicting members?
 
-
-    const b = new BracketParticipantEntity();
+    const b = new TournamentParticipantEntity();
     b.tournament_id = t.id;
     b.name = team.id;
-    await this.bracketParticipantEntityRepository.save(b);
+    await this.tournamentParticipantEntityRepository.save(b);
   }
 
   public async registerSoloPlayer(tId: number, steam_id: string) {
@@ -140,9 +168,24 @@ export class BracketService {
 
     if (t.entryType !== BracketEntryType.PLAYER) throw new NotFoundException();
 
-    const b = new BracketParticipantEntity();
+    const b = new TournamentParticipantEntity();
     b.tournament_id = t.id;
     b.name = steam_id;
-    await this.bracketParticipantEntityRepository.save(b);
+    await this.tournamentParticipantEntityRepository.save(b);
+  }
+
+  public async registeredTeams(id: number): Promise<TeamEntity[]> {
+    const query = this.bracketParticipantEntityRepository
+      .createQueryBuilder('p')
+      .leftJoin(
+        TournamentEntity,
+        'tournament',
+        'p.tournament_id = tournament.id',
+      )
+      .leftJoinAndMapOne('p.team', TeamEntity, 'team', 'p.name = team.id::text')
+      .where('tournament.entryType = :type', { type: BracketEntryType.TEAM })
+      .andWhere('tournament.id = :id', { id });
+    const res = await query.getMany();
+    return res.map(t => t.team);
   }
 }

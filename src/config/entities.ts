@@ -9,6 +9,7 @@ import { TournamentEntity } from '../db/entity/tournament.entity';
 import { TeamEntity } from '../db/entity/team.entity';
 import { TeamMemberEntity } from '../db/entity/team-member.entity';
 import { TeamInvitationEntity } from '../db/entity/team-invitation.entity';
+import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 
 export const Entities = [
   TournamentEntity,
@@ -19,7 +20,8 @@ export const Entities = [
   BracketMatchEntity,
   TeamEntity,
   TeamMemberEntity,
-  TeamInvitationEntity
+  TeamInvitationEntity,
+  TournamentParticipantEntity
 ];
 
 export const devDbConfig: any = {

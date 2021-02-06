@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { BracketEntryType, TournamentStatus } from '../../gateway/shared-types/tournament';
+import { BracketEntryType, BracketType, TournamentStatus } from '../../gateway/shared-types/tournament';
 
 @Entity()
 export class TournamentEntity {
@@ -16,6 +16,12 @@ export class TournamentEntity {
   @Column({ default: TournamentStatus.NEW })
   status: TournamentStatus;
 
+  @Column()
+  strategy: BracketType;
+
+
+  @Column()
+  imageUrl: string
 
   @CreateDateColumn()
   created_at: Date

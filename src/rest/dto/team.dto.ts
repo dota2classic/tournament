@@ -1,3 +1,5 @@
+import { TournamentDto } from './tournament.dto';
+
 export class CreateTeamDto {
   public readonly name: string;
   public readonly tag: string;
@@ -8,12 +10,25 @@ export class CreateTeamDto {
 export class TeamMemberDto {
   public readonly steam_id: string;
 }
+
 export class TeamDto {
+
+  public readonly id: string;
   public readonly name: string;
   public readonly tag: string;
   public readonly imageUrl: string;
   public readonly creator: string;
-  public readonly members: TeamMemberDto[]
+  public readonly members: TeamMemberDto[];
+}
+
+
+export class CompactTeamDto {
+
+  public readonly id: string;
+  public readonly name: string;
+  public readonly tag: string;
+  public readonly imageUrl: string;
+  public readonly creator: string;
 }
 
 
