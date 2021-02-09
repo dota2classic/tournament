@@ -12,6 +12,8 @@ import { TournamentGameReadyEvent } from '../../gateway/events/tournament/tourna
 import { MatchmakingMode } from '../../gateway/shared-types/matchmaking-mode';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
 import { PlayerId } from '../../gateway/shared-types/player-id';
+import { Status } from 'brackets-model';
+import { UtilQuery } from '../../tournament/service/util-query';
 
 @Injectable()
 export class BracketMatchService {
@@ -30,14 +32,19 @@ export class BracketMatchService {
     private readonly bracketParticipantEntityRepository: Repository<
       BracketParticipantEntity
     >,
+    private readonly utilQuery: UtilQuery,
   ) {}
 
-  public async clearJob(tid: number, bid: number) {
+  private async clearJob(tid: number, bid: number) {
     try {
       this.schedulerRegistry.deleteCronJob(`initMatch:${tid}:${bid}`);
-    }catch (e){
+    } catch (e) {
       // if not match scheduled then ok.
     }
+  }
+
+  public async cancelMatchSchedule(tid: number, bid: number) {
+    return this.clearJob(tid, bid);
   }
 
   public async scheduleBracketMatch(tid: number, bid: number) {
@@ -46,6 +53,9 @@ export class BracketMatchService {
 
     const bm = await this.bracketMatchEntityRepository.findOne(bid);
     if (!bm) return;
+
+    // clear all old ones
+    await this.clearJob(tid, bid);
 
     if (tour.entryType === BracketEntryType.PLAYER) {
       // its 1x1 strategy, 30 mins between rounds
@@ -117,5 +127,17 @@ export class BracketMatchService {
       throw 'Not implemented';
     }
     console.log('OK HERE WE NEED TO START MATCH SOMEHOW KEKEKEKEKEKE');
+  }
+
+  async scheduleMatches() {
+    const pendingMatches = await this.bracketMatchEntityRepository.find({
+      status: Status.Ready,
+    });
+
+    for (const match of pendingMatches) {
+      const t = await this.utilQuery.matchTournamentId(match.id);
+
+      await this.scheduleBracketMatch(t, match.id);
+    }
   }
 }

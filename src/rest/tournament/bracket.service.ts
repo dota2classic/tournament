@@ -3,7 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection, Repository } from 'typeorm';
 
 import { BracketsManager } from 'brackets-manager';
-import { InputStage, ParticipantResult } from 'brackets-model';
+import { InputStage, ParticipantResult, Status } from 'brackets-model';
 import { BracketCrud } from './bracket.crud';
 import { TournamentEntity } from '../../db/entity/tournament.entity';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
@@ -18,8 +18,9 @@ import {
 import { TournamentParticipantEntity } from '../../db/entity/tournament-participant.entity';
 import { BracketMatchService } from './bracket-match.service';
 import { StageEntity } from '../../db/entity/stage.entity';
-import { FullTournamentDto } from '../dto/tournament.dto';
+import { FullTournamentDto, TournamentDto } from '../dto/tournament.dto';
 import { TeamMapper } from '../mapper/team.mapper';
+import { UtilQuery } from '../../tournament/service/util-query';
 
 export type EntryIdType = string;
 
@@ -47,6 +48,7 @@ export class BracketService {
       BracketMatchEntity
     >,
     private readonly mapper: TeamMapper,
+    private readonly utilQuery: UtilQuery,
   ) {
     this.manager = new BracketsManager(stor);
     this.tournamentEntityRepository = connection.getRepository(
@@ -101,14 +103,19 @@ export class BracketService {
       settings: { seedOrdering: ['inner_outer'], grandFinal: 'simple' },
     };
 
+    console.log(`Hello 0`, tournament);
+
     await this.manager.create(stageSetup);
 
     tournament.status = TournamentStatus.ONGOING;
     // just to sync things up.
     tournament.startDate = new Date();
 
+    console.log(`Hello`, tournament);
+
     await this.tournamentEntityRepository.save(tournament);
 
+    console.log(`Hello 2`, tournament);
     // ok here we need to find all
 
     const allMatches = await this.bracketMatchEntityRepository
@@ -168,6 +175,10 @@ export class BracketService {
     } else {
       throw 'pepe';
     }
+
+    await this.checkForTournamentFinish(
+      await this.utilQuery.matchTournamentId(matchId),
+    );
   }
 
   public async registerTeam(tId: number, teamId: string) {
@@ -192,6 +203,8 @@ export class BracketService {
     if (!t) throw new NotFoundException();
 
     if (t.entryType !== BracketEntryType.PLAYER) throw new NotFoundException();
+
+    if (t.status !== TournamentStatus.NEW) return;
 
     const participation = await this.tournamentParticipantEntityRepository.findOne(
       {
@@ -288,8 +301,125 @@ export class BracketService {
       .getMany();
 
     await Promise.all(
-      allMatches.map(async m => this.bmService.clearJob(tId, m.id)),
+      allMatches.map(async m => this.bmService.cancelMatchSchedule(tId, m.id)),
+    );
+  }
+
+  /**
+   * Technical lose for given id
+   * @param mId - matchID
+   * @param forfeitId - teamID or steamID
+   */
+  public async forfeit(mId: number, forfeitId: string) {
+    const m = await this.bracketMatchEntityRepository.findOne(mId);
+    const opp1 = await this.bracketParticipantEntityRepository.findOne(
+      m.opponent1?.id,
+    );
+    const opp2 = await this.bracketParticipantEntityRepository.findOne(
+      m.opponent2?.id,
     );
 
+    if (opp1.name === forfeitId) {
+      await this.manager.update.match({
+        id: m.id,
+        opponent1: {
+          id: opp1.id,
+          forfeit: true,
+        },
+      });
+    } else if (opp2.name === forfeitId) {
+      await this.manager.update.match({
+        id: m.id,
+        opponent2: {
+          id: opp2.id,
+          forfeit: true,
+        },
+      });
+    }
+
+    const t = await this.utilQuery.matchTournamentId(m.id);
+    await this.checkForTournamentFinish(t);
+
+    return this.bracketMatchEntityRepository.findOne(m.id);
+  }
+
+  public async findTournamentByMatchId(mid: number): Promise<TournamentDto> {
+    const query = this.bracketMatchEntityRepository
+      .createQueryBuilder('bm')
+      .where('bm.id = :id', { id: mid })
+      .leftJoinAndMapOne(
+        'bm.stage',
+        StageEntity,
+        'stage',
+        'stage.id = bm.stage_id',
+      );
+    const match = await query.getOne();
+    if (match.stage?.tournament_id) {
+      return this.fullTournament(match.stage?.tournament_id);
+    }
+  }
+
+  public async checkForTournamentFinish(tId: number) {
+    const tournament = await this.tournamentEntityRepository.findOne(tId);
+
+    if (!tournament) return false;
+
+    if (tournament.status === TournamentStatus.NEW) return false;
+    if (tournament.status === TournamentStatus.CANCELLED) return true;
+    if (tournament.status === TournamentStatus.FINISHED) return true;
+
+    const matches = await this.bracketMatchEntityRepository
+      .createQueryBuilder('bm')
+      .leftJoinAndMapOne(
+        'bm.stage',
+        StageEntity,
+        'stage',
+        'stage.id = bm.stage_id',
+      )
+      .where('stage.tournament_id = :tId', { tId })
+      .andWhere('bm.status not in (:...statuses)', {
+        statuses: [Status.Completed, Status.Archived],
+      })
+      .getCount();
+
+    if (matches === 0) {
+      tournament.status = TournamentStatus.FINISHED;
+      await this.tournamentEntityRepository.save(tournament);
+      return true;
+    }
+
+    return false;
+  }
+
+  public async setWinner(mId: number, winnerId: string) {
+    const m = await this.bracketMatchEntityRepository.findOne(mId);
+    const opp1 = await this.bracketParticipantEntityRepository.findOne(
+      m.opponent1?.id,
+    );
+    const opp2 = await this.bracketParticipantEntityRepository.findOne(
+      m.opponent2?.id,
+    );
+
+    if (opp1.name === winnerId) {
+      await this.manager.update.match({
+        id: m.id,
+        opponent1: {
+          id: opp1.id,
+          result: 'win',
+        },
+      });
+    } else if (opp2.name === winnerId) {
+      await this.manager.update.match({
+        id: m.id,
+        opponent2: {
+          id: opp2.id,
+          result: 'win',
+        },
+      });
+    }
+
+    const t = await this.utilQuery.matchTournamentId(m.id);
+    await this.checkForTournamentFinish(t);
+    return this.bracketMatchEntityRepository.findOne(m.id);
   }
 }

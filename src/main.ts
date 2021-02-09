@@ -4,11 +4,7 @@ import { BracketService } from './rest/tournament/bracket.service';
 import { REDIS_PASSWORD, REDIS_URL } from './config/env';
 import { Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import {
-  BracketEntryType,
-  BracketType,
-} from './gateway/shared-types/tournament';
-import { TeamService } from './rest/tournament/team.service';
+import { BracketMatchService } from './rest/tournament/bracket-match.service';
 
 const teamName = [
   'form',
@@ -84,7 +80,16 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   await app.listen(6100);
+  const bs = await app.get(BracketService);
 
+
+
+  await app.get(BracketMatchService).scheduleMatches()
+  // for (let i = 0; i < mockedParticipants.length; i++) {
+  //   await bs.registerSoloPlayer(6, mockedParticipants[i]);
+  // }
+
+  // await bs.forfeit(31, '[U:1:401982721]');
   // const tournTeam = await app
   //   .get<BracketService>(BracketService)
   //   .createTournament(
@@ -105,6 +110,7 @@ async function bootstrap() {
   // await app
   //   .get<BracketService>(BracketService)
   //   .generateTournament(tournTeam.id);
+
 
 }
 bootstrap();

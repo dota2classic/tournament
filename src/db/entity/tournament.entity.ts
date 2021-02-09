@@ -13,6 +13,7 @@ import {
 import { BracketParticipantEntity } from './bracket-participant.entity';
 import { TournamentParticipantEntity } from './tournament-participant.entity';
 
+
 @Entity()
 export class TournamentEntity {
   @PrimaryGeneratedColumn()
@@ -42,7 +43,7 @@ export class TournamentEntity {
   @OneToMany(
     e => BracketParticipantEntity,
     e => e.tournament,
-    { eager: true },
+    { eager: false },
   )
   participants: BracketParticipantEntity[];
 

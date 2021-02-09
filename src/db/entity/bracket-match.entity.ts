@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { Status as MatchStatus, ParticipantResult } from 'brackets-model';
+import { Status, ParticipantResult } from 'brackets-model';
 import { StageEntity } from './stage.entity';
 
 
@@ -24,8 +24,7 @@ export class BracketMatchEntity {
   number: number;
 
   @Column()
-  status: MatchStatus; // todo wtf?
-
+  status: Status; // todo wtf?
 
   @Column({ nullable: true })
   scheduledDate: Date
@@ -42,6 +41,7 @@ export class BracketMatchEntity {
    */
   @Column({ default: 0})
   teamOffset: number
+
 
   @Column({ type: 'simple-json', nullable: true })
   opponent1?: ParticipantResult
