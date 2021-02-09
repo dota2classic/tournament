@@ -119,7 +119,7 @@ export class BracketMatchService {
           tid,
           bid,
           tour.entryType === BracketEntryType.PLAYER
-            ? MatchmakingMode.TOURNAMENT_SOLOMID
+            ? MatchmakingMode.SOLOMID
             : MatchmakingMode.TOURNAMENT,
           defaultOffset[0],
           defaultOffset[1],
