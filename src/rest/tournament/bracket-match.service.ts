@@ -63,13 +63,13 @@ export class BracketMatchService {
       const round = await this.roundEntityRepository.findOne(bm.round_id);
       const roundNumber = round.number;
 
-      const minOffset = 30;
-      const offset = 1000 * 60 * minOffset; // 30 min offset
 
-      const matchDate = new Date(tStartDate.getTime() + offset * roundNumber);
 
       if (!bm.scheduledDate){
-        bm.scheduledDate = matchDate;
+        const minOffset = 30;
+        const offset = 1000 * 60 * minOffset; // 30 min offset
+
+        bm.scheduledDate = new Date(tStartDate.getTime() + offset * roundNumber);
         await this.bracketMatchEntityRepository.save(bm);
       }
 
@@ -77,7 +77,7 @@ export class BracketMatchService {
       this.schedulerRegistry.addCronJob(`initMatch:${tour.id}:${bm.id}`, job);
       job.start();
 
-      console.log(`Scheduled match ${bm.id} for ${matchDate}`);
+      console.log(`Scheduled match ${bm.id} for ${bm.scheduledDate}`);
     } else {
       // its 5x5 strategy, 70 mins between rounds or so
     }
