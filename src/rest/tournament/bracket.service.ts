@@ -337,7 +337,14 @@ export class BracketService {
       });
     }
 
+
+
     const t = await this.utilQuery.matchTournamentId(m.id);
+
+
+
+    await this.bmService.cancelMatchSchedule(t, m.id)
+
     await this.checkForTournamentFinish(t);
 
     return this.bracketMatchEntityRepository.findOne(m.id);
@@ -419,6 +426,7 @@ export class BracketService {
     }
 
     const t = await this.utilQuery.matchTournamentId(m.id);
+    await this.bmService.cancelMatchSchedule(t, m.id)
     await this.checkForTournamentFinish(t);
     return this.bracketMatchEntityRepository.findOne(m.id);
   }

@@ -9,11 +9,11 @@ import { CronJob } from 'cron';
 import { RoundEntity } from '../../db/entity/round.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { TournamentGameReadyEvent } from '../../gateway/events/tournament/tournament-game-ready.event';
-import { MatchmakingMode } from '../../gateway/shared-types/matchmaking-mode';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
 import { PlayerId } from '../../gateway/shared-types/player-id';
 import { Status } from 'brackets-model';
 import { UtilQuery } from '../../tournament/service/util-query';
+import { MatchmakingMode } from '../../gateway/shared-types/matchmaking-mode';
 
 @Injectable()
 export class BracketMatchService {
@@ -63,13 +63,13 @@ export class BracketMatchService {
       const round = await this.roundEntityRepository.findOne(bm.round_id);
       const roundNumber = round.number;
 
-
-
-      if (!bm.scheduledDate){
+      if (!bm.scheduledDate) {
         const minOffset = 30;
         const offset = 1000 * 60 * minOffset; // 30 min offset
 
-        bm.scheduledDate = new Date(tStartDate.getTime() + offset * roundNumber);
+        bm.scheduledDate = new Date(
+          tStartDate.getTime() + offset * roundNumber,
+        );
         await this.bracketMatchEntityRepository.save(bm);
       }
 
@@ -118,7 +118,9 @@ export class BracketMatchService {
         new TournamentGameReadyEvent(
           tid,
           bid,
-          MatchmakingMode.TOURNAMENT,
+          tour.entryType === BracketEntryType.PLAYER
+            ? MatchmakingMode.TOURNAMENT_SOLOMID
+            : MatchmakingMode.TOURNAMENT,
           defaultOffset[0],
           defaultOffset[1],
           tour.entryType,
