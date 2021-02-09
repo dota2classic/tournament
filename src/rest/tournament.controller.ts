@@ -178,6 +178,8 @@ export class TournamentController {
       m.scheduledDate = new Date(scheduleDto.scheduledDate);
       await this.bracketMatchEntityRepository.save(m);
 
+      console.log(`updated match new sch date = `, m.scheduledDate)
+
       const tourId = await this.utilQuery.matchTournamentId(m.id);
       await this.bmService.scheduleBracketMatch(tourId, m.id);
       return this.getTournamentMatch(m.id);

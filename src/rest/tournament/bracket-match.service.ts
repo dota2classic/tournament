@@ -68,11 +68,12 @@ export class BracketMatchService {
 
       const matchDate = new Date(tStartDate.getTime() + offset * roundNumber);
 
-      bm.scheduledDate = matchDate;
+      if (!bm.scheduledDate){
+        bm.scheduledDate = matchDate;
+        await this.bracketMatchEntityRepository.save(bm);
+      }
 
-      await this.bracketMatchEntityRepository.save(bm);
-
-      const job = new CronJob(matchDate, () => this.initMatch(tid, bid));
+      const job = new CronJob(bm.scheduledDate, () => this.initMatch(tid, bid));
       this.schedulerRegistry.addCronJob(`initMatch:${tour.id}:${bm.id}`, job);
       job.start();
 
