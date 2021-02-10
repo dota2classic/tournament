@@ -3,8 +3,17 @@ import { BracketCrud, TournamentBracketInfo } from '../tournament/bracket.crud';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
 import { TournamentEntity } from '../../db/entity/tournament.entity';
-import { BracketDto, MatchStatus, SeedItemDto, TournamentDto, TournamentMatchDto } from '../dto/tournament.dto';
-import { BracketEntryType, BracketType } from '../../gateway/shared-types/tournament';
+import {
+  BracketDto,
+  MatchStatus,
+  SeedItemDto,
+  TournamentDto,
+  TournamentMatchDto,
+} from '../dto/tournament.dto';
+import {
+  BracketEntryType,
+  BracketType,
+} from '../../gateway/shared-types/tournament';
 import { TeamEntity } from '../../db/entity/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -25,12 +34,14 @@ export class TournamentMapper {
   public mapTournament = (t: TournamentEntity): TournamentDto => {
     return {
       ...t,
-      startDate: t.startDate.getTime()
+      startDate: t.startDate.getTime(),
     };
   };
 
-
-  private  mapSeed = async (entryType: BracketEntryType, opp: ParticipantResult):Promise<SeedItemDto> => {
+  private mapSeed = async (
+    entryType: BracketEntryType,
+    opp: ParticipantResult,
+  ): Promise<SeedItemDto> => {
     if (!opp) return null;
     if (!opp.id)
       return {
@@ -56,7 +67,7 @@ export class TournamentMapper {
             .then(this.teamMapper.mapTeam),
         };
     }
-  }
+  };
 
   private async mapRound(entryType: BracketEntryType, round: RoundEntity) {
     const seeds = await this.crud.select<BracketMatchEntity>('match', {
@@ -151,10 +162,13 @@ export class TournamentMapper {
     }
   };
 
-  async mapTournamentMatch(type: BracketEntryType, m: BracketMatchEntity) : Promise<TournamentMatchDto> {
-    let ms: MatchStatus
+  async mapTournamentMatch(
+    type: BracketEntryType,
+    m: BracketMatchEntity,
+  ): Promise<TournamentMatchDto> {
+    let ms: MatchStatus;
 
-    switch (m.status){
+    switch (m.status) {
       case Status.Locked:
         ms = MatchStatus.Locked;
         break;
@@ -173,14 +187,13 @@ export class TournamentMapper {
       case Status.Archived:
         ms = MatchStatus.Archived;
         break;
-
     }
     return {
       ...m,
       scheduledDate: m.scheduledDate.getTime(),
-      opponent1: m.opponent1 && await this.mapSeed(type, m.opponent1),
-      opponent2: m.opponent2 && await this.mapSeed(type, m.opponent2),
-      status: ms
-    }
+      opponent1: m.opponent1 && (await this.mapSeed(type, m.opponent1)),
+      opponent2: m.opponent2 && (await this.mapSeed(type, m.opponent2)),
+      status: ms,
+    };
   }
 }

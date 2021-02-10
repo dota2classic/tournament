@@ -85,6 +85,7 @@ async function bootstrap() {
 
 
   await app.get(BracketMatchService).scheduleMatches()
+  await bs.getStandings(2)
   // for (let i = 0; i < mockedParticipants.length; i++) {
   //   await bs.registerSoloPlayer(1, mockedParticipants[i]);
   // }

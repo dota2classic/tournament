@@ -17,6 +17,9 @@ export class TournamentParticipantDto {
   public readonly steam_id?: string;
   public readonly team?: TeamDto;
 }
+
+
+
 export class TournamentDto {
   id: number;
   name: string;
@@ -24,7 +27,6 @@ export class TournamentDto {
   status: TournamentStatus;
   startDate: number;
   imageUrl: string;
-  // standings: SeedItemDto
 }
 
 
@@ -43,6 +45,7 @@ export class FullTournamentDto {
   startDate: number;
   imageUrl: string;
   participants: TournamentParticipantDto[];
+  standings?: TournamentStandingDto[]
 }
 
 export class SeedItemDto {

@@ -33,7 +33,9 @@ export class BracketMatchService {
       BracketParticipantEntity
     >,
     private readonly utilQuery: UtilQuery,
-  ) {}
+  ) {
+
+  }
 
   private async clearJob(tid: number, bid: number) {
     try {

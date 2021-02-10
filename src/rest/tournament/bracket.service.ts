@@ -10,17 +10,14 @@ import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
 import { TeamEntity } from '../../db/entity/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  BracketEntryType,
-  BracketType,
-  TournamentStatus,
-} from '../../gateway/shared-types/tournament';
+import { BracketEntryType, BracketType, TournamentStatus } from '../../gateway/shared-types/tournament';
 import { TournamentParticipantEntity } from '../../db/entity/tournament-participant.entity';
 import { BracketMatchService } from './bracket-match.service';
 import { StageEntity } from '../../db/entity/stage.entity';
-import { FullTournamentDto, TournamentDto } from '../dto/tournament.dto';
+import { FullTournamentDto, TournamentDto, TournamentStandingDto } from '../dto/tournament.dto';
 import { TeamMapper } from '../mapper/team.mapper';
 import { UtilQuery } from '../../tournament/service/util-query';
+import { RoundEntity } from '../../db/entity/round.entity';
 
 export type EntryIdType = string;
 
@@ -49,6 +46,8 @@ export class BracketService {
     >,
     private readonly mapper: TeamMapper,
     private readonly utilQuery: UtilQuery,
+    @InjectRepository(RoundEntity)
+    private readonly roundEntityRepository: Repository<RoundEntity>,
   ) {
     this.manager = new BracketsManager(stor);
     this.tournamentEntityRepository = connection.getRepository(
@@ -262,6 +261,8 @@ export class BracketService {
       relations: ['preParticipants'],
     });
 
+    // ok here we need to compute standings
+
     if (t.entryType === BracketEntryType.PLAYER) {
       // players
 
@@ -271,6 +272,7 @@ export class BracketService {
         participants: t.preParticipants.map(t => ({
           steam_id: t.name,
         })),
+        standings: t.status === TournamentStatus.FINISHED && await this.getStandings(t.id) || undefined
       };
     } else {
       const teams = await this.teamEntityRepository.findByIds(
@@ -283,6 +285,7 @@ export class BracketService {
         participants: teams.map(t => ({
           team: this.mapper.mapTeam(t),
         })),
+        standings: t.status === TournamentStatus.FINISHED && await this.getStandings(t.id) || undefined
       };
     }
   }
@@ -337,13 +340,9 @@ export class BracketService {
       });
     }
 
-
-
     const t = await this.utilQuery.matchTournamentId(m.id);
 
-
-
-    await this.bmService.cancelMatchSchedule(t, m.id)
+    await this.bmService.cancelMatchSchedule(t, m.id);
 
     await this.checkForTournamentFinish(t);
 
@@ -426,8 +425,89 @@ export class BracketService {
     }
 
     const t = await this.utilQuery.matchTournamentId(m.id);
-    await this.bmService.cancelMatchSchedule(t, m.id)
+    await this.bmService.cancelMatchSchedule(t, m.id);
     await this.checkForTournamentFinish(t);
     return this.bracketMatchEntityRepository.findOne(m.id);
+  }
+
+  public async getStandings(tId: number): Promise<TournamentStandingDto[]> {
+
+    const entry = await this.tournamentEntityRepository.findOne(tId).then(t => t.entryType)
+    const [rounds, count] = await this.bracketMatchEntityRepository
+      .createQueryBuilder('bm')
+      .innerJoin(StageEntity, 'stage', 'bm.stage_id = stage.id')
+      .innerJoin(RoundEntity, 'round', 'bm.round_id = round.id')
+      .where('stage.tournament_id = :tId', { tId })
+      .orderBy('round.number', 'DESC')
+      .getManyAndCount();
+
+    const opponents = rounds.flatMap(a =>
+      [a.opponent1, a.opponent2].filter(Boolean),
+    ); //.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+
+    const oppsWithScores = opponents.map(opp => {
+      return {
+        id: opp.id,
+        score: opp.forfeit ? 0 : opp.result === 'loss' ? 0 : 1,
+      };
+    });
+
+    const shit: {
+      [key: number]: { id: number; score: number };
+    } = {};
+
+    oppsWithScores.forEach(opp => {
+      if (opp.id in shit) {
+        shit[opp.id].score += opp.score;
+      } else shit[opp.id] = opp;
+    });
+
+    const groupedByScore: {
+      [key: number]: { id: number; score: number }[];
+    } = {};
+
+    Object.values(shit).forEach(opp => {
+      if (opp.score in groupedByScore) {
+        groupedByScore[opp.score].push(opp);
+      } else groupedByScore[opp.score] = [opp];
+    });
+
+    const standings: { id: number; place: number }[] = [];
+
+    const placeDetect = Object.keys(groupedByScore).map(Number).sort((a,b) => b - a)
+
+
+    Object.entries(groupedByScore)
+      .sort((a, b) => +b[0] - +a[0])
+      .forEach(([score, opps]) => {
+        opps.forEach(opp => {
+          standings.push({
+            id: opp.id,
+            place: placeDetect.indexOf(opp.score) + 1
+          })
+        })
+      });
+
+    switch (entry){
+      case BracketEntryType.PLAYER:
+        return Promise.all(standings.map(async a => {
+          const part = await this.bracketParticipantEntityRepository.findOne(a.id);
+          return {
+            steam_id: part.name,
+            position: a.place
+          }
+        }))
+      case BracketEntryType.TEAM:
+        return Promise.all(standings.map(async a => {
+          const part = await this.bracketParticipantEntityRepository.findOne(a.id);
+          const team = await this.teamEntityRepository.findOne(part.name)
+          return {
+            team: await this.mapper.mapTeam(team),
+            position: a.place
+          }
+        }));
+
+    }
+
   }
 }
