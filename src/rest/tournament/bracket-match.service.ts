@@ -63,6 +63,9 @@ export class BracketMatchService {
       const round = await this.roundEntityRepository.findOne(bm.round_id);
       const roundNumber = round.number;
 
+      bm.teamOffset = Math.round(Math.random());
+      await this.bracketMatchEntityRepository.save(bm);
+
       if (!bm.scheduledDate) {
         const minOffset = 30;
         const offset = 1000 * 60 * minOffset; // 30 min offset
@@ -88,8 +91,6 @@ export class BracketMatchService {
     const b = await this.bracketMatchEntityRepository.findOne(bid);
 
     // offset generation right before initing stuff
-    b.teamOffset = Math.round(Math.random());
-    await this.bracketMatchEntityRepository.save(b);
 
     console.log('Yahoo!! init match ye');
 
@@ -119,7 +120,7 @@ export class BracketMatchService {
           tid,
           bid,
           tour.entryType === BracketEntryType.PLAYER
-            ? MatchmakingMode.SOLOMID
+            ? MatchmakingMode.TOURNAMENT_SOLOMID
             : MatchmakingMode.TOURNAMENT,
           defaultOffset[0],
           defaultOffset[1],

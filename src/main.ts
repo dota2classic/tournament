@@ -86,7 +86,7 @@ async function bootstrap() {
 
   await app.get(BracketMatchService).scheduleMatches()
   // for (let i = 0; i < mockedParticipants.length; i++) {
-  //   await bs.registerSoloPlayer(6, mockedParticipants[i]);
+  //   await bs.registerSoloPlayer(1, mockedParticipants[i]);
   // }
 
   // await bs.forfeit(31, '[U:1:401982721]');
