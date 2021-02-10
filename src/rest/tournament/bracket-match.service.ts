@@ -71,7 +71,7 @@ export class BracketMatchService {
         const offset = 1000 * 60 * minOffset; // 30 min offset
 
         bm.scheduledDate = new Date(
-          tStartDate.getTime() + offset * roundNumber,
+          tStartDate.getTime() + offset * (roundNumber - 1) + 1000 * 60, // start 1 round with tournament start + minute
         );
         await this.bracketMatchEntityRepository.save(bm);
       }
