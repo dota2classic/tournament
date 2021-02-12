@@ -1,9 +1,10 @@
-import {
-  BracketEntryType,
-  BracketType,
-  TournamentStatus,
-} from '../../gateway/shared-types/tournament';
+import { BracketEntryType, BracketType, TournamentStatus } from '../../gateway/shared-types/tournament';
 import { TeamDto } from './team.dto';
+import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
+import { StageEntity } from '../../db/entity/stage.entity';
+import { GroupEntity } from '../../db/entity/group.entity';
+import { RoundEntity } from '../../db/entity/round.entity';
+import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 
 export class CreateTournamentDto {
   name: string;
@@ -18,8 +19,6 @@ export class TournamentParticipantDto {
   public readonly team?: TeamDto;
 }
 
-
-
 export class TournamentDto {
   id: number;
   name: string;
@@ -29,13 +28,11 @@ export class TournamentDto {
   imageUrl: string;
 }
 
-
 export class TournamentStandingDto {
   steam_id?: string;
   team?: TeamDto;
   position: number;
 }
-
 
 export class FullTournamentDto {
   id: number;
@@ -45,7 +42,7 @@ export class FullTournamentDto {
   startDate: number;
   imageUrl: string;
   participants: TournamentParticipantDto[];
-  standings?: TournamentStandingDto[]
+  standings?: TournamentStandingDto[];
 }
 
 export class SeedItemDto {
@@ -53,12 +50,21 @@ export class SeedItemDto {
   result?: string;
   team?: TeamDto;
   tbd?: boolean;
+  score?: number
+}
+
+export class MatchGameDto {
+  gameId: number;
+  bracketMatchId: number;
+  externalMatchId?: number;
+  scheduledDate?: number;
+  teamOffset: number;
+  number: number;
 }
 
 export class SeedDto {
   teams: SeedItemDto[];
-  date: string;
-  matchId?: number;
+  games: MatchGameDto[];
   id: number;
 }
 
@@ -73,8 +79,6 @@ export class BracketDto {
   winning: BracketRoundDto[];
   losing: BracketRoundDto[];
 }
-
-
 
 export enum MatchStatus {
   /** The two matches leading to this one are not completed yet. */
@@ -104,38 +108,27 @@ export class TournamentMatchDto {
 
   number: number;
 
+  games: MatchGameDto[]
+
   status: MatchStatus; // todo wtf?
-
-  scheduledDate: number;
-
-  /**
-   * d2c match id which will be assigned
-   */
-  externalMatchId: number;
-
-  /**
-   * It is random offset(1/0) which is used to determine teams of opponents
-   * This also guarantees we know which opponent is radiant/dire
-   */
-  teamOffset: number;
 
   opponent1?: SeedItemDto;
 
   opponent2?: SeedItemDto;
-
 }
 
-
-
-
 export class ScheduleTournamentMatchDto {
-  scheduledDate: number
+  gameId: number;
+  scheduledDate: number;
 }
 
 export class ForfeitDto {
-  forfeitId: string
+  gameId: number;
+  forfeitId: string;
 }
 
 export class SetMatchResultDto {
+  gameId: number;
   winnerId: string;
 }
+

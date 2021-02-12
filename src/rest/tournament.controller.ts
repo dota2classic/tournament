@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { BracketCrud } from './tournament/bracket.crud';
+import { BracketCrud, TournamentBracketInfo } from './tournament/bracket.crud';
 import { TournamentMapper } from './mapper/tournament.mapper';
 import { ApiTags } from '@nestjs/swagger';
 import {
@@ -19,6 +19,8 @@ import { TeamMapper } from './mapper/team.mapper';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { BracketMatchService } from './tournament/bracket-match.service';
 import { UtilQuery } from '../tournament/service/util-query';
+import { TournamentBracketInfoDto } from './dto/bracket.dto';
+import { BracketMapper } from './mapper/bracket.mapper';
 
 @Controller('tournament')
 @ApiTags('tournament')
@@ -36,6 +38,7 @@ export class TournamentController {
       BracketMatchEntity
     >,
     private readonly utilQuery: UtilQuery,
+    private readonly bracketMapper: BracketMapper
   ) {}
 
   @Get('/bracket/:id')
@@ -47,9 +50,9 @@ export class TournamentController {
   }
 
   @Get('/bracket2/:id')
-  async getBracket2(@Param('id') id: number) {
+  async getBracket2(@Param('id') id: number): Promise<TournamentBracketInfoDto> {
     // const tournament = await this.tournamentEntityRepository.findOne(id)
-    return this.crud.getBracket(id);
+    return this.crud.getBracket(id).then(this.bracketMapper.mapBracket);
   }
 
   @Post(`/create/:id`)
@@ -149,7 +152,7 @@ export class TournamentController {
     @Param('id') id: number,
     @Body() fDto: ForfeitDto,
   ): Promise<TournamentMatchDto> {
-    const m = await this.bracketService.forfeit(id, fDto.forfeitId);
+    const m = await this.bracketService.forfeit(fDto.gameId, id, fDto.forfeitId);
     const t = await this.bracketService.findTournamentByMatchId(id);
     return this.bracketMatchEntityRepository
       .findOne(id)
@@ -161,7 +164,7 @@ export class TournamentController {
     @Param('id') id: number,
     @Body() fDto: SetMatchResultDto,
   ): Promise<TournamentMatchDto> {
-    const m = await this.bracketService.setWinner(id, fDto.winnerId);
+    const m = await this.bracketService.setWinner(fDto.gameId, id, fDto.winnerId);
     const t = await this.bracketService.findTournamentByMatchId(id);
     return this.bracketMatchEntityRepository
       .findOne(id)

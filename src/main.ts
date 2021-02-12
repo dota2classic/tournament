@@ -5,6 +5,13 @@ import { REDIS_PASSWORD, REDIS_URL } from './config/env';
 import { Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { BracketMatchService } from './rest/tournament/bracket-match.service';
+import {
+  BracketEntryType,
+  BracketType,
+} from './gateway/shared-types/tournament';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { MatchGameEntity } from './db/entity/match-game.entity';
+import { Repository } from 'typeorm';
 
 const teamName = [
   'form',
@@ -34,7 +41,7 @@ const mockedParticipants = [
   '[U:1:251215321]',
   '[U:1:1081775503]',
   '[U:1:401982721]',
-  '[U:1:157787666]',
+  // '[U:1:157787666]',
   // '[U:1:1174929366]',
   // '[U:1:906350541]',
   // '[U:1:120230466]',
@@ -82,13 +89,26 @@ async function bootstrap() {
   await app.listen(6100);
   const bs = await app.get(BracketService);
 
+  await app.get(BracketMatchService).scheduleMatches();
+  // await bs.getStandings(2)
+
+  const t = await bs.createTournament(
+    '1x1 with double final',
+    BracketEntryType.PLAYER,
+    new Date().getTime() + 1000 * 60 * 60, // in an hour
+    'https://dota2classic.ru/api/static/icons/vk1.png',
+    BracketType.DOUBLE_ELIMINATION,
+    { round: 1, final: 1, grandFinal: 3 },
+  );
+
+  for (let i = 0; i < mockedParticipants.length; i++) {
+    await bs.registerSoloPlayer(t.id, mockedParticipants[i]);
+  }
 
 
-  await app.get(BracketMatchService).scheduleMatches()
-  await bs.getStandings(2)
-  // for (let i = 0; i < mockedParticipants.length; i++) {
-  //   await bs.registerSoloPlayer(1, mockedParticipants[i]);
-  // }
+  await bs.generateTournament(t.id)
+  // //
+  // @ts-ignore
 
   // await bs.forfeit(31, '[U:1:401982721]');
   // const tournTeam = await app
@@ -111,7 +131,5 @@ async function bootstrap() {
   // await app
   //   .get<BracketService>(BracketService)
   //   .generateTournament(tournTeam.id);
-
-
 }
 bootstrap();

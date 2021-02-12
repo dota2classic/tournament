@@ -2,7 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  ManyToMany, OneToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import {
@@ -12,7 +12,6 @@ import {
 } from '../../gateway/shared-types/tournament';
 import { BracketParticipantEntity } from './bracket-participant.entity';
 import { TournamentParticipantEntity } from './tournament-participant.entity';
-
 
 @Entity()
 export class TournamentEntity {
@@ -40,6 +39,12 @@ export class TournamentEntity {
   @Column()
   startDate: Date;
 
+  @Column({
+    type: 'simple-json',
+    default: { round: 1, final: 1, grandFinal: 1 },
+  })
+  bestOfConfig: BestOfStrategy;
+
   @OneToMany(
     e => BracketParticipantEntity,
     e => e.tournament,
@@ -53,4 +58,10 @@ export class TournamentEntity {
     { eager: false },
   )
   preParticipants: TournamentParticipantEntity[];
+}
+
+export interface BestOfStrategy {
+  round: number;
+  final: number;
+  grandFinal: number;
 }

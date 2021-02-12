@@ -21,6 +21,8 @@ import { AppService } from './app.service';
 import { MatchStartedHandler } from './tournament/event/match-started.handler';
 import { GameResultsHandler } from './tournament/event/game-results.handler';
 import { UtilQuery } from './tournament/service/util-query';
+import { BracketMapper } from './rest/mapper/bracket.mapper';
+import { BracketUpdatedHandler } from './tournament/event/bracket-updated.handler';
 
 @Module({
   imports: [
@@ -48,6 +50,7 @@ import { UtilQuery } from './tournament/service/util-query';
   providers: [
     AppService,
     TeamService,
+    BracketMapper,
     TeamMapper,
     BracketService,
     UserRepository,
@@ -58,6 +61,7 @@ import { UtilQuery } from './tournament/service/util-query';
 
     MatchStartedHandler,
     GameResultsHandler,
+    BracketUpdatedHandler,
     outerQuery(GetUserInfoQuery, 'QueryCore', qCache()),
   ],
 })

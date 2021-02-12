@@ -10,6 +10,7 @@ import { TeamEntity } from '../db/entity/team.entity';
 import { TeamMemberEntity } from '../db/entity/team-member.entity';
 import { TeamInvitationEntity } from '../db/entity/team-invitation.entity';
 import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { MatchGameEntity } from '../db/entity/match-game.entity';
 
 export const Entities = [
   TournamentEntity,
@@ -21,7 +22,8 @@ export const Entities = [
   TeamEntity,
   TeamMemberEntity,
   TeamInvitationEntity,
-  TournamentParticipantEntity
+  TournamentParticipantEntity,
+  MatchGameEntity
 ];
 
 export const devDbConfig: any = {
@@ -33,7 +35,7 @@ export const devDbConfig: any = {
   password: 'mypassword',
   entities: Entities,
   synchronize: true,
-  // dropSchema: true,
+  dropSchema: true,
   keepConnectionAlive: true,
 };
 

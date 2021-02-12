@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { CrudInterface, Table } from 'brackets-manager/dist/storage';
-import { OmitId } from 'brackets-manager/dist/types';
+import { CrudInterface, OmitId, Table } from 'brackets-manager-d2c/dist/types';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
-import { Connection, In } from 'typeorm';
+import { Connection, In, Repository } from 'typeorm';
 import { StageEntity } from '../../db/entity/stage.entity';
 import { GroupEntity } from '../../db/entity/group.entity';
 import { RoundEntity } from '../../db/entity/round.entity';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
+import { TournamentEntity } from '../../db/entity/tournament.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { inspect } from 'util';
 
 const mapTable = {
   participant: BracketParticipantEntity,
@@ -22,12 +24,13 @@ export interface TournamentBracketInfo {
   group: GroupEntity[];
   round: RoundEntity[];
   match: BracketMatchEntity[];
-  match_game: any[];
+  tournament: TournamentEntity
 }
 
 @Injectable()
 export class BracketCrud implements CrudInterface {
-  constructor(private readonly connection: Connection) {}
+  constructor(private readonly connection: Connection, @InjectRepository(TournamentEntity)
+  private readonly tournamentEntityRepository: Repository<TournamentEntity>,) {}
 
   delete<T>(table: Table, filter: Partial<T>): Promise<boolean> {
     throw 'not implemented';
@@ -37,6 +40,8 @@ export class BracketCrud implements CrudInterface {
   insert<T>(table: Table, values: OmitId<T>[]): Promise<boolean>;
   async insert(table: Table, value): Promise<number | boolean> {
     const rep = this.connection.getRepository(mapTable[table]);
+    console.log(`insert`, table, inspect(value))
+
     if (Array.isArray(value)) {
       await rep.save(value);
       return true;
@@ -69,6 +74,7 @@ export class BracketCrud implements CrudInterface {
     const rep = this.connection.getRepository(mapTable[table]);
     if (typeof id === 'object') throw 'not implemented';
 
+    console.log(`update`, id, inspect(value))
     await rep.update(id, value);
     return true;
   }
@@ -104,6 +110,8 @@ export class BracketCrud implements CrudInterface {
       },
     );
 
+    const tournament = await this.tournamentEntityRepository.findOne(tid)
+
     match.sort((a, b) => a.number - b.number)
 
     return {
@@ -112,7 +120,7 @@ export class BracketCrud implements CrudInterface {
       group,
       stage,
       match,
-      match_game: [],
+      tournament
     };
   }
 }
