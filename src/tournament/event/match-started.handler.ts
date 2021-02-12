@@ -4,6 +4,7 @@ import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MatchGameEntity } from '../../db/entity/match-game.entity';
+import { inspect } from 'util';
 
 @EventsHandler(MatchStartedEvent)
 export class MatchStartedHandler implements IEventHandler<MatchStartedEvent> {
@@ -17,15 +18,17 @@ export class MatchStartedHandler implements IEventHandler<MatchStartedEvent> {
   ) {}
 
   async handle(event: MatchStartedEvent) {
+    console.log("WE got match started event", event.info.tournamentId, event.info.tournamentMatchId)
     if (event.info.tournamentId && event.info.tournamentMatchId) {
       // its a  tournament game yahoo!!
       const game = await this.matchGameEntityRepository.findOne({
         id: event.info.tournamentMatchId,
       });
+      console.log(`Ok if there `, inspect(game))
       // attach match
       if (game) {
         game.externalMatchId = event.matchId;
-        await this.bracketMatchEntityRepository.save(game);
+        await this.matchGameEntityRepository.save(game);
       }
     } else return;
   }

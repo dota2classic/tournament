@@ -92,22 +92,22 @@ async function bootstrap() {
   await app.get(BracketMatchService).scheduleMatches();
   // await bs.getStandings(2)
 
-  const t = await bs.createTournament(
-    '1x1 with double final',
-    BracketEntryType.PLAYER,
-    new Date().getTime() + 1000 * 60 * 60, // in an hour
-    'https://dota2classic.ru/api/static/icons/vk1.png',
-    BracketType.SINGLE_ELIMINATION,
-    { round: 3, final: 3, grandFinal: 3 },
-  );
-
-  for (let i = 0; i < mockedParticipants.length; i++) {
-    await bs.registerSoloPlayer(t.id, mockedParticipants[i]);
-  }
-
-
-
-  await bs.generateTournament(t.id)
+  // const t = await bs.createTournament(
+  //   '1x1 with double final',
+  //   BracketEntryType.PLAYER,
+  //   new Date().getTime() + 1000 * 60 * 60, // in an hour
+  //   'https://dota2classic.ru/api/static/icons/vk1.png',
+  //   BracketType.SINGLE_ELIMINATION,
+  //   { round: 3, final: 3, grandFinal: 3 },
+  // );
+  //
+  // for (let i = 0; i < mockedParticipants.length; i++) {
+  //   await bs.registerSoloPlayer(t.id, mockedParticipants[i]);
+  // }
+  //
+  //
+  //
+  // await bs.generateTournament(t.id)
   // //
   // @ts-ignore
 
