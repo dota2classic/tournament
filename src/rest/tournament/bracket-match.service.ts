@@ -98,8 +98,12 @@ export class BracketMatchService {
     }
   }
 
-
-  public async scheduleBracketMatchGame(tid: number, bid: number, gameId: number, newDate: number) {
+  public async scheduleBracketMatchGame(
+    tid: number,
+    bid: number,
+    gameId: number,
+    newDate: number,
+  ) {
     const tour = await this.tournamentEntityRepository.findOne(tid);
     if (!tour) return;
 
@@ -113,9 +117,7 @@ export class BracketMatchService {
     game.scheduledDate = new Date(newDate);
     await this.matchGameEntityRepository.save(game);
     await this.setupCron(tid, bid, gameId, game.scheduledDate);
-
   }
-
 
   private async setupCron(
     tid: number,
@@ -147,13 +149,29 @@ export class BracketMatchService {
     const b = await this.bracketMatchEntityRepository.findOne(bid);
     const game = await this.matchGameEntityRepository.findOne(gid);
 
-
-    if(game.finished){
+    if (game.finished) {
       // not needed 4 some reason
-      console.log(`InitMatch not needed: game is finished.`)
+      console.log(`InitMatch not needed: game is finished.`);
       return;
     }
+
+    const allGames = await this.matchGameEntityRepository.find({
+      bm_id: b.id,
+    });
+    const isPreviousGameFinished =
+      game.number === 1 ||
+      allGames.find(t => t.number === game.number - 1)?.finished === true;
     // offset generation right before initing stuff
+
+    if (!isPreviousGameFinished) {
+      // need to reschedule
+      game.scheduledDate = new Date(
+        game.scheduledDate.getTime() + 1000 * 60 * 5,
+      );
+      await this.matchGameEntityRepository.save(game);
+      await this.setupCron(tid, bid, gid, game.scheduledDate); // re-schedule 5 mins later
+      return;
+    }
 
     console.log(`Time has come, start game ${gid}`);
 
