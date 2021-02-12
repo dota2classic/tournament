@@ -1,10 +1,5 @@
 import { BracketEntryType, BracketType, TournamentStatus } from '../../gateway/shared-types/tournament';
 import { TeamDto } from './team.dto';
-import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
-import { StageEntity } from '../../db/entity/stage.entity';
-import { GroupEntity } from '../../db/entity/group.entity';
-import { RoundEntity } from '../../db/entity/round.entity';
-import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 
 export class CreateTournamentDto {
   name: string;
@@ -50,7 +45,7 @@ export class SeedItemDto {
   result?: string;
   team?: TeamDto;
   tbd?: boolean;
-  score?: number
+  score?: number;
 }
 
 export class MatchGameDto {
@@ -96,25 +91,16 @@ export enum MatchStatus {
 }
 
 export class TournamentMatchDto {
-  id: number;
-
-  stage_id: number;
-
-  group_id: number;
-
-  round_id: number;
-
-  child_count: number;
-
-  number: number;
-
-  games: MatchGameDto[]
-
-  status: MatchStatus; // todo wtf?
-
-  opponent1?: SeedItemDto;
-
-  opponent2?: SeedItemDto;
+  public readonly id: number;
+  public readonly stage_id: number;
+  public readonly group_id: number;
+  public readonly round_id: number;
+  public readonly child_count: number;
+  public readonly number: number;
+  public readonly games: MatchGameDto[];
+  public readonly status: MatchStatus;
+  public readonly opponent1?: SeedItemDto;
+  public readonly opponent2?: SeedItemDto;
 }
 
 export class ScheduleTournamentMatchDto {
@@ -131,4 +117,3 @@ export class SetMatchResultDto {
   gameId: number;
   winnerId: string;
 }
-

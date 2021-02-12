@@ -17,6 +17,7 @@ import { MatchmakingMode } from '../../gateway/shared-types/matchmaking-mode';
 import { StageEntity } from '../../db/entity/stage.entity';
 import { MatchGameEntity } from '../../db/entity/match-game.entity';
 import { isDev } from '../../config/env';
+import { GroupEntity } from '../../db/entity/group.entity';
 
 @Injectable()
 export class BracketMatchService {
@@ -41,6 +42,8 @@ export class BracketMatchService {
     private readonly bracketParticipantEntityRepository: Repository<
       BracketParticipantEntity
     >,
+    @InjectRepository(GroupEntity)
+    private readonly groupEntityRepository: Repository<GroupEntity>,
     @InjectRepository(StageEntity)
     private readonly stageEntityRepository: Repository<StageEntity>,
     private readonly utilQuery: UtilQuery,
@@ -73,8 +76,6 @@ export class BracketMatchService {
 
     if (tour.entryType === BracketEntryType.PLAYER) {
       // its 1x1 strategy, 30 mins between rounds
-      const tStartDate = tour.startDate;
-      const round = await this.roundEntityRepository.findOne(bm.round_id);
 
       const games = await this.matchGameEntityRepository
         .find({
@@ -86,42 +87,31 @@ export class BracketMatchService {
       await Promise.all(games.map(async g => this.clearJob(tid, bid, g.id)));
 
       // 20 min for a game in 1x1
-      const minOffset = 20;
       for (let i = 0; i < games.length; i++) {
-        const offset = 1000 * 60 * minOffset; // 30 min offset
         const g = games[i];
-
-        g.scheduledDate = new Date(
-          tStartDate.getTime() + offset * (round.number - 1) + 1000 * 60, // start 1 round with tournament start + minute
-        );
         g.teamOffset = Math.round(Math.random());
         await this.matchGameEntityRepository.save(g);
-        const job = new CronJob(g.scheduledDate, () =>
-          this.initMatch(tid, bid, g.id),
-        );
-        this.schedulerRegistry.addCronJob(
-          BracketMatchService.keyForJob(tid, bid, g.id),
-          job,
-        );
-        job.start();
+        await this.setupCron(tid, bid, g.id, g.scheduledDate);
       }
-
-      // if (!bm.scheduledDate) {
-      //   const minOffset = 30;
-      //   const offset = 1000 * 60 * minOffset; // 30 min offset
-      //
-      //   bm.scheduledDate = new Date(
-      //     tStartDate.getTime() + offset * (roundNumber - 1) + 1000 * 60, // start 1 round with tournament start + minute
-      //   );
-      //   await this.bracketMatchEntityRepository.save(bm);
-      // }
-      //
-
-      //
-      // console.log(`Scheduled match ${bm.id} for ${bm.scheduledDate}`);
     } else {
       // its 5x5 strategy, 70 mins between rounds or so
     }
+  }
+
+  private async setupCron(
+    tid: number,
+    bid: number,
+    gid: number,
+    scheduledDate: Date,
+  ) {
+    await this.clearJob(tid, bid, gid);
+    const job = new CronJob(scheduledDate, () => this.initMatch(tid, bid, gid));
+    this.schedulerRegistry.addCronJob(
+      BracketMatchService.keyForJob(tid, bid, gid),
+      job,
+    );
+    job.start();
+    console.log(`Scheduled Game #${gid} of match #${bid} for ${scheduledDate}`);
   }
 
   /**
@@ -136,16 +126,23 @@ export class BracketMatchService {
   private async initMatch(tid: number, bid: number, gid: number) {
     const tour = await this.tournamentEntityRepository.findOne(tid);
     const b = await this.bracketMatchEntityRepository.findOne(bid);
+    const game = await this.matchGameEntityRepository.findOne(gid);
 
     // offset generation right before initing stuff
 
-    console.log('Yahoo!! init match ye');
+    console.log(`Time has come, start game ${gid}`);
 
     // no need to start matches if it's dev
     if (isDev) return;
 
     if (!b.opponent1?.id || !b.opponent2?.id) {
       console.error(`cant start match not enough opponents`);
+      // here we need to re-schedule
+      game.scheduledDate = new Date(
+        game.scheduledDate.getTime() + 1000 * 60 * 5,
+      );
+      await this.matchGameEntityRepository.save(game);
+      await this.setupCron(tid, bid, gid, game.scheduledDate); // re-schedule 5 mins later
       return;
     }
 
@@ -207,13 +204,12 @@ export class BracketMatchService {
     const bm = await this.bracketMatchEntityRepository.findOne(bid);
     if (!bm) return;
 
-    const stage = await this.stageEntityRepository.findOne({
-      id: bm.stage_id,
+    const group = await this.groupEntityRepository.findOne({
+      id: bm.group_id,
     });
 
-
     // BYE case
-    if(bm.opponent1 === null || bm.opponent2 === null){
+    if (bm.opponent1 === null || bm.opponent2 === null) {
       return;
     }
 
@@ -222,34 +218,55 @@ export class BracketMatchService {
       group_id: bm.group_id,
     });
 
+    let roundOffset: number = 0;
+    if (group.number === 1) {
+      // WB bracket/standart bracket
+      roundOffset = 0;
+    } else if (group.number === 2) {
+      // LB
+      // we need to add 1, because lower bracket only starts after first round of WB
+      roundOffset = 1;
+    } else if (group.number === 3) {
+      // GrandFinal
+      // we need to find LB and count rounds + offset
+      const roundsInLB = await this.roundEntityRepository
+        .createQueryBuilder('r')
+        .innerJoin(
+          GroupEntity,
+          'group',
+          'group.stage_id = r.stage_id and group.number = 2',
+        )
+        .getCount();
+
+      roundOffset = 1 + roundsInLB;
+    }
+
+    const roundNumber = round.number;
+
     const maxRounds = totalRounds.sort((a, b) => b.number - a.number)[0].number;
 
-    if(maxRounds === 1){
-      // it's grand final im SURE
+    const calcOffset = (i: number): number => {
+      // in minutes
+      const perGame = tour.entryType === BracketEntryType.PLAYER ? 15 : 60;
 
-      for (let i = 1; i <= tour.bestOfConfig.grandFinal; i++) {
-        const mg = new MatchGameEntity();
-        mg.bm_id = bm.id;
-        mg.number = i;
-        await this.matchGameEntityRepository.save(mg);
-      }
-    }else if (round.number === maxRounds) {
-      // it is casual finals
-      for (let i = 1; i <= tour.bestOfConfig.final; i++) {
-        const mg = new MatchGameEntity();
-        mg.bm_id = bm.id;
-        mg.number = i;
-        await this.matchGameEntityRepository.save(mg);
-      }
+      return (roundOffset + roundNumber + i) * perGame * 1000 * 60; // mins => millis
+    };
+
+    let bestOf: number;
+    if (group.number === 3) {
+      bestOf = tour.bestOfConfig.grandFinal;
+    } else if (round.number === maxRounds) {
+      bestOf = tour.bestOfConfig.final;
     } else {
-      // not finals - bo1
+      bestOf = tour.bestOfConfig.round;
+    }
 
-      for (let i = 1; i <= tour.bestOfConfig.round; i++) {
-        const mg = new MatchGameEntity();
-        mg.bm_id = bm.id;
-        mg.number = i;
-        await this.matchGameEntityRepository.save(mg);
-      }
+    for (let i = 1; i <= bestOf; i++) {
+      const mg = new MatchGameEntity();
+      mg.bm_id = bm.id;
+      mg.number = i;
+      mg.scheduledDate = new Date(new Date().getTime() + calcOffset(i));
+      await this.matchGameEntityRepository.save(mg);
     }
   }
 }

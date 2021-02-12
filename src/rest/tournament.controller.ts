@@ -19,7 +19,7 @@ import { TeamMapper } from './mapper/team.mapper';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { BracketMatchService } from './tournament/bracket-match.service';
 import { UtilQuery } from '../tournament/service/util-query';
-import { TournamentBracketInfoDto } from './dto/bracket.dto';
+import { BracketMatchDto, TournamentBracketInfoDto } from './dto/bracket.dto';
 import { BracketMapper } from './mapper/bracket.mapper';
 
 @Controller('tournament')
@@ -141,41 +141,41 @@ export class TournamentController {
   @Get('/tournament_match/:id')
   public async getTournamentMatch(
     @Param('id') id: number,
-  ): Promise<TournamentMatchDto> {
+  ): Promise<BracketMatchDto> {
     const m = await this.bracketMatchEntityRepository.findOne(id);
-    const tour = await this.bracketService.findTournamentByMatchId(id);
-    return this.mapper.mapTournamentMatch(tour.entryType, m);
+    const t = await this.bracketService.findTournamentByMatchId(id);
+    return this.bracketMapper.mapMatch(t.entryType, m);
   }
 
   @Post(`/tournament_match/:id/forfeit`)
   public async forfeit(
     @Param('id') id: number,
     @Body() fDto: ForfeitDto,
-  ): Promise<TournamentMatchDto> {
+  ): Promise<BracketMatchDto> {
     const m = await this.bracketService.forfeit(fDto.gameId, id, fDto.forfeitId);
     const t = await this.bracketService.findTournamentByMatchId(id);
     return this.bracketMatchEntityRepository
       .findOne(id)
-      .then(() => this.mapper.mapTournamentMatch(t.entryType, m));
+      .then(() => this.bracketMapper.mapMatch(t.entryType, m));
   }
 
   @Post(`/tournament_match/:id/winner`)
   public async setMatchWinner(
     @Param('id') id: number,
     @Body() fDto: SetMatchResultDto,
-  ): Promise<TournamentMatchDto> {
+  ): Promise<BracketMatchDto> {
     const m = await this.bracketService.setWinner(fDto.gameId, id, fDto.winnerId);
     const t = await this.bracketService.findTournamentByMatchId(id);
     return this.bracketMatchEntityRepository
       .findOne(id)
-      .then(() => this.mapper.mapTournamentMatch(t.entryType, m));
+      .then(() => this.bracketMapper.mapMatch(t.entryType, m));
   }
 
   @Post(`/tournament_match/:id/schedule`)
   public async scheduleTournamentMatch(
     @Param('id') id: number,
     @Body() scheduleDto: ScheduleTournamentMatchDto,
-  ): Promise<TournamentMatchDto> {
+  ): Promise<BracketMatchDto> {
     const m = await this.bracketMatchEntityRepository.findOne(id);
     if (m) {
       m.scheduledDate = new Date(scheduleDto.scheduledDate);

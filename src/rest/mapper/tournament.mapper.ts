@@ -197,7 +197,12 @@ export class TournamentMapper {
     let ms: MatchStatus;
 
     const games = await this.matchGameEntityRepository.find({
-      bm_id: m.id,
+      where: {
+        bm_id: m.id,
+      },
+      order: {
+        number: 'ASC',
+      },
     });
 
     switch (m.status) {
@@ -225,7 +230,7 @@ export class TournamentMapper {
       games: games.map(this.mapTournamentMatchGame),
       opponent1: m.opponent1 && (await this.mapSeed(type, m.opponent1)),
       opponent2: m.opponent2 && (await this.mapSeed(type, m.opponent2)),
-      status: ms,
+      status: ms
     };
   }
 }

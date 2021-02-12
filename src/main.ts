@@ -41,8 +41,8 @@ const mockedParticipants = [
   '[U:1:251215321]',
   '[U:1:1081775503]',
   '[U:1:401982721]',
-  // '[U:1:157787666]',
-  // '[U:1:1174929366]',
+  '[U:1:157787666]',
+  '[U:1:1174929366]',
   // '[U:1:906350541]',
   // '[U:1:120230466]',
   // '[U:1:234538375]',
@@ -97,13 +97,14 @@ async function bootstrap() {
     BracketEntryType.PLAYER,
     new Date().getTime() + 1000 * 60 * 60, // in an hour
     'https://dota2classic.ru/api/static/icons/vk1.png',
-    BracketType.DOUBLE_ELIMINATION,
-    { round: 1, final: 1, grandFinal: 3 },
+    BracketType.SINGLE_ELIMINATION,
+    { round: 1, final: 3, grandFinal: 3 },
   );
 
   for (let i = 0; i < mockedParticipants.length; i++) {
     await bs.registerSoloPlayer(t.id, mockedParticipants[i]);
   }
+
 
 
   await bs.generateTournament(t.id)

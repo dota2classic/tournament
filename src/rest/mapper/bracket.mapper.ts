@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { TournamentBracketInfo } from '../tournament/bracket.crud';
+import { BracketCrud, TournamentBracketInfo } from '../tournament/bracket.crud';
 import {
   BracketMatchDto,
   BracketMatchGameDto,
-  BracketParticipantDto,
+  BracketParticipantDto, ParticipantResultDto,
   TournamentBracketInfoDto,
 } from '../dto/bracket.dto';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
@@ -14,9 +14,9 @@ import { BracketEntryType } from '../../gateway/shared-types/tournament';
 import { TeamMapper } from './team.mapper';
 import { TeamEntity } from '../../db/entity/team.entity';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
-import { Status } from 'brackets-model';
 import { MatchGameEntity } from '../../db/entity/match-game.entity';
-import { MatchGameDto } from '../dto/tournament.dto';
+import { ParticipantResult, Result, Status } from 'brackets-model';
+import { MatchStatus, SeedItemDto, TournamentMatchDto } from '../dto/tournament.dto';
 
 @Injectable()
 export class BracketMapper {
@@ -28,13 +28,14 @@ export class BracketMapper {
     @InjectRepository(MatchGameEntity)
     private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
     private readonly teamMapper: TeamMapper,
+    private readonly crud: BracketCrud
   ) {}
 
   private mapParticipant = async (
-    t: TournamentEntity,
+    entryType: BracketEntryType,
     b: BracketParticipantEntity,
   ): Promise<BracketParticipantDto> => {
-    switch (t.entryType) {
+    switch (entryType) {
       case BracketEntryType.PLAYER:
         return {
           steam_id: b.name,
@@ -58,24 +59,35 @@ export class BracketMapper {
     return {
       ...b,
       participant: await Promise.all(
-        b.participant.map(p => this.mapParticipant(b.tournament, p)),
+        b.participant.map(p => this.mapParticipant(b.tournament.entryType, p)),
       ),
-      match: await Promise.all(
-        b.match.map(m => this.mapMatch(b.tournament, m))
-      )
+      match: await Promise.all(b.match.map(e => this.mapMatch(b.tournament.entryType, e))),
     };
   };
 
-  private mapMatch = async (tournament: TournamentEntity, m: BracketMatchEntity): Promise<BracketMatchDto> => {
+  private mapOpponent = async (
+    entryType: BracketEntryType,
+    opp: ParticipantResult,
+  ): Promise<ParticipantResultDto> => {
 
+    const part: BracketParticipantEntity = await this.crud.select('participant', opp.id)
+
+    return {
+      ...opp,
+      participant: await this.mapParticipant(entryType, part)
+    }
+  };
+
+
+  public mapMatch = async (entryType: BracketEntryType, m: BracketMatchEntity): Promise<BracketMatchDto> => {
     const games = await this.matchGameEntityRepository.find({
       where: {
         bm_id: m.id,
       },
       order: {
-        'number': 'ASC'
-      }
-    })
+        number: 'ASC',
+      },
+    });
     return {
       id: m.id,
       stage_id: m.stage_id,
@@ -84,10 +96,13 @@ export class BracketMapper {
       child_count: m.child_count,
       number: m.number,
       status: m.status,
-      opponent1: m.opponent1,
-      opponent2: m.opponent2,
-      games: games.map(this.mapMatchGame)
-    }
+      opponent1: m.opponent1 && await this.mapOpponent(entryType, m.opponent1),
+      opponent2: m.opponent2 && await this.mapOpponent(entryType, m.opponent2),
+      games: games.map(this.mapMatchGame),
+      startDate:
+        (games.length && games[0].scheduledDate.getTime()) ||
+        new Date().getTime(),
+    };
   };
 
   private mapMatchGame = (mg: MatchGameEntity): BracketMatchGameDto => {
@@ -98,6 +113,6 @@ export class BracketMapper {
       scheduledDate: mg.scheduledDate.getTime(),
       teamOffset: mg.teamOffset,
       number: mg.number,
-    }
-  }
+    };
+  };
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CrudInterface, OmitId, Table } from 'brackets-manager-d2c/dist/types';
+import { CrudInterface, OmitId, Table } from 'brackets-manager/dist/types';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
 import { Connection, In, Repository } from 'typeorm';
 import { StageEntity } from '../../db/entity/stage.entity';
@@ -40,7 +40,6 @@ export class BracketCrud implements CrudInterface {
   insert<T>(table: Table, values: OmitId<T>[]): Promise<boolean>;
   async insert(table: Table, value): Promise<number | boolean> {
     const rep = this.connection.getRepository(mapTable[table]);
-    console.log(`insert`, table, inspect(value))
 
     if (Array.isArray(value)) {
       await rep.save(value);
@@ -74,7 +73,6 @@ export class BracketCrud implements CrudInterface {
     const rep = this.connection.getRepository(mapTable[table]);
     if (typeof id === 'object') throw 'not implemented';
 
-    console.log(`update`, id, inspect(value))
     await rep.update(id, value);
     return true;
   }

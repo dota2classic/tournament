@@ -25,7 +25,7 @@ export class BracketMatchDto {
   status: Status;
   opponent1?: ParticipantResultDto;
   opponent2?: ParticipantResultDto;
-
+  startDate: number;
   games: BracketMatchGameDto[];
 }
 
@@ -40,6 +40,10 @@ export class ParticipantResultDto {
   score?: number;
   /** Tells what is the result of a duel for this participant. */
   result?: Result;
+
+  tbd?: boolean
+
+  participant?: BracketParticipantDto
 }
 
 export class BracketMatchGameDto {
@@ -49,6 +53,7 @@ export class BracketMatchGameDto {
   externalMatchId?: number;
   teamOffset: number;
   scheduledDate: number;
+
 }
 
 export class BracketParticipantDto {

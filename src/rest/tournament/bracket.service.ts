@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { Connection, Repository } from 'typeorm';
 
-import { BracketsManager } from 'brackets-manager-d2c';
+import { BracketsManager } from 'brackets-manager';
 import { InputStage, ParticipantResult, Status } from 'brackets-model';
 import { BracketCrud } from './bracket.crud';
 import {
@@ -33,7 +33,7 @@ import { RoundEntity } from '../../db/entity/round.entity';
 import { MatchGameEntity } from '../../db/entity/match-game.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { BracketUpdatedEvent } from '../event/bracket-updated.event';
-import { getMatchLocation } from 'brackets-manager-d2c/dist/helpers';
+import { getMatchLocation } from 'brackets-manager/dist/helpers';
 
 export type EntryIdType = string;
 
@@ -142,6 +142,7 @@ export class BracketService {
       .where('stage.tournament_id = :tId', { tId })
       .orderBy('bm.id', 'ASC')
       .getMany();
+
 
     await Promise.all(
       allMatches.map(async m => this.bmService.generateGames(tId, m.id)),
