@@ -25,13 +25,6 @@ export class BracketUpdatedHandler
       .orderBy('bm.id', 'ASC')
       .getMany();
 
-
-    console.log(`Bracket updated, need to process`, allMatches.map(t => t.id))
-    // await Promise.all(
-    //   allMatches.map(m => this.bracketService.checkMatchResults(m.id)),
-    // );
-
-
     await this.bracketService.checkMatchResults(event.matchId)
 
     await this.bracketService.checkForTournamentFinish(event.tournamentId);

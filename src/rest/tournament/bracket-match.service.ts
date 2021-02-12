@@ -128,6 +128,12 @@ export class BracketMatchService {
     const b = await this.bracketMatchEntityRepository.findOne(bid);
     const game = await this.matchGameEntityRepository.findOne(gid);
 
+
+    if(game.finished){
+      // not needed 4 some reason
+      console.log(`InitMatch not needed: game is finished.`)
+      return;
+    }
     // offset generation right before initing stuff
 
     console.log(`Time has come, start game ${gid}`);

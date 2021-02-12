@@ -143,7 +143,6 @@ export class BracketService {
       .orderBy('bm.id', 'ASC')
       .getMany();
 
-
     await Promise.all(
       allMatches.map(async m => this.bmService.generateGames(tId, m.id)),
     );
@@ -371,6 +370,7 @@ export class BracketService {
     );
 
     game.winner = opp1.name === forfeitId ? opp2.id : opp1.id;
+    game.finished = true;
     await this.matchGameEntityRepository.save(game);
 
     if (opp1.name === forfeitId) {
@@ -469,6 +469,7 @@ export class BracketService {
     );
 
     g.winner = winnerId === opp1.name ? opp1.id : opp2.id;
+    g.finished = true;
     await this.matchGameEntityRepository.save(g);
 
     if (opp1.name === winnerId) {
@@ -504,14 +505,10 @@ export class BracketService {
     return this.bracketMatchEntityRepository.findOne(m.id);
   }
 
-
   public async checkMatchResults(mId: number) {
     const matchGames = await this.matchGameEntityRepository.find({
       bm_id: mId,
     });
-
-    const unfinishedGames = matchGames.filter(t => !t.winner);
-    if (unfinishedGames.length > 0) return;
 
     // ok it's done
 
@@ -534,6 +531,65 @@ export class BracketService {
 
     scores[opp1.id] = scores[opp1.id] || 0;
     scores[opp2.id] = scores[opp2.id] || 0;
+
+    // more than half
+    const scoreToWin = Math.ceil(matchGames.length / 2);
+
+    const unfinishedGames = matchGames.filter(t => !t.winner);
+    if (unfinishedGames.length > 0) {
+      const t = await this.utilQuery.matchTournamentId(m.id);
+      // find case where 2 - 0 in bo3 for e.g.
+
+      if (scores[opp1.id] >= scoreToWin) {
+        await this.manager.update.match({
+          id: m.id,
+          opponent1: {
+            id: opp1.id,
+            score: scores[opp1.id],
+            result: 'win',
+          },
+          opponent2: {
+            id: opp2.id,
+            score: scores[opp2.id] || 0,
+            result: 'loss',
+          },
+        });
+        // we need to unschedule all unfinished games - we already have result for match
+        await Promise.all(
+          unfinishedGames.map(async game => {
+            game.finished = true;
+            await this.matchGameEntityRepository.save(game);
+            await this.bmService.cancelMatchSchedule(t, m.id, game.id);
+          }),
+        );
+      } else if (scores[opp2.id] >= scoreToWin) {
+        await this.manager.update.match({
+          id: m.id,
+          opponent1: {
+            id: opp1.id,
+            score: scores[opp1.id],
+            result: 'loss',
+          },
+          opponent2: {
+            id: opp2.id,
+            score: scores[opp2.id] || 0,
+            result: 'win',
+          },
+        });
+        // we need to unschedule all unfinished games - we already have result for match
+        await Promise.all(
+          unfinishedGames.map(async game => {
+            game.finished = true;
+            await this.matchGameEntityRepository.save(game);
+            await this.bmService.cancelMatchSchedule(t, m.id, game.id);
+          }),
+        );
+      } else {
+        return;
+      }
+
+      return;
+    }
 
     await this.manager.update.match({
       id: m.id,

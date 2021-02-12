@@ -98,7 +98,7 @@ async function bootstrap() {
     new Date().getTime() + 1000 * 60 * 60, // in an hour
     'https://dota2classic.ru/api/static/icons/vk1.png',
     BracketType.SINGLE_ELIMINATION,
-    { round: 1, final: 3, grandFinal: 3 },
+    { round: 3, final: 3, grandFinal: 3 },
   );
 
   for (let i = 0; i < mockedParticipants.length; i++) {

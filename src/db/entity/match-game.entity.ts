@@ -32,6 +32,9 @@ export class MatchGameEntity {
   teamOffset: number
 
 
+  @Column({ default: false })
+  finished: boolean
+
   @Column({ nullable: true })
   scheduledDate: Date
   /**

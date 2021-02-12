@@ -52,8 +52,8 @@ export class BracketMatchGameDto {
   number: number;
   externalMatchId?: number;
   teamOffset: number;
+  finished: boolean;
   scheduledDate: number;
-
 }
 
 export class BracketParticipantDto {
