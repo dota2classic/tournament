@@ -98,6 +98,25 @@ export class BracketMatchService {
     }
   }
 
+
+  public async scheduleBracketMatchGame(tid: number, bid: number, gameId: number, newDate: number) {
+    const tour = await this.tournamentEntityRepository.findOne(tid);
+    if (!tour) return;
+
+    // clear all old ones
+
+    const game = await this.matchGameEntityRepository.findOne(gameId);
+
+    // clear previous schedule if there is
+    await this.clearJob(tid, game.bm_id, gameId);
+
+    game.scheduledDate = new Date(newDate);
+    await this.matchGameEntityRepository.save(game);
+    await this.setupCron(tid, bid, gameId, game.scheduledDate);
+
+  }
+
+
   private async setupCron(
     tid: number,
     bid: number,
@@ -164,14 +183,14 @@ export class BracketMatchService {
         [new PlayerId(opp1.name)],
         [new PlayerId(opp2.name)],
       ];
-      if (b.teamOffset === 1) {
+      if (game.teamOffset === 1) {
         // if offset is present we change teams
         defaultOffset = [defaultOffset[1], defaultOffset[0]];
       }
       this.ebus.publish(
         new TournamentGameReadyEvent(
-          tid,
-          bid,
+          tid, // tournament id
+          gid, // game id
           tour.entryType === BracketEntryType.PLAYER
             ? MatchmakingMode.TOURNAMENT_SOLOMID
             : MatchmakingMode.TOURNAMENT,

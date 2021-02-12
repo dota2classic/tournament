@@ -27,7 +27,10 @@ export class MatchGameEntity {
   @Column({ nullable: true })
   externalMatchId?: number
 
-
+  /**
+   * It is random offset(1/0) which is used to determine teams of opponents
+   * This also guarantees we know which opponent is radiant/dire
+   */
   @Column({ default: 0})
   teamOffset: number
 

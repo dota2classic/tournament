@@ -6,7 +6,8 @@ import {
   CreateTournamentDto,
   ForfeitDto,
   FullTournamentDto,
-  ScheduleTournamentMatchDto, SetMatchResultDto,
+  ScheduleTournamentMatchDto,
+  SetMatchResultDto,
   TournamentDto,
   TournamentMatchDto,
 } from './dto/tournament.dto';
@@ -21,6 +22,7 @@ import { BracketMatchService } from './tournament/bracket-match.service';
 import { UtilQuery } from '../tournament/service/util-query';
 import { BracketMatchDto, TournamentBracketInfoDto } from './dto/bracket.dto';
 import { BracketMapper } from './mapper/bracket.mapper';
+import { MatchGameEntity } from '../db/entity/match-game.entity';
 
 @Controller('tournament')
 @ApiTags('tournament')
@@ -37,8 +39,10 @@ export class TournamentController {
     private readonly bracketMatchEntityRepository: Repository<
       BracketMatchEntity
     >,
+    @InjectRepository(MatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
     private readonly utilQuery: UtilQuery,
-    private readonly bracketMapper: BracketMapper
+    private readonly bracketMapper: BracketMapper,
   ) {}
 
   @Get('/bracket/:id')
@@ -50,7 +54,9 @@ export class TournamentController {
   }
 
   @Get('/bracket2/:id')
-  async getBracket2(@Param('id') id: number): Promise<TournamentBracketInfoDto> {
+  async getBracket2(
+    @Param('id') id: number,
+  ): Promise<TournamentBracketInfoDto> {
     // const tournament = await this.tournamentEntityRepository.findOne(id)
     return this.crud.getBracket(id).then(this.bracketMapper.mapBracket);
   }
@@ -86,6 +92,11 @@ export class TournamentController {
         dto.startDate,
         dto.imageUrl,
         dto.strategy,
+        {
+          round: dto.roundBestOf || 1,
+          final: dto.finalBestOf || 1,
+          grandFinal: dto.grandFinalBestOf || 1,
+        },
       )
       .then(it => this.bracketService.fullTournament(it.id));
   }
@@ -152,7 +163,11 @@ export class TournamentController {
     @Param('id') id: number,
     @Body() fDto: ForfeitDto,
   ): Promise<BracketMatchDto> {
-    const m = await this.bracketService.forfeit(fDto.gameId, id, fDto.forfeitId);
+    const m = await this.bracketService.forfeit(
+      fDto.gameId,
+      id,
+      fDto.forfeitId,
+    );
     const t = await this.bracketService.findTournamentByMatchId(id);
     return this.bracketMatchEntityRepository
       .findOne(id)
@@ -164,7 +179,11 @@ export class TournamentController {
     @Param('id') id: number,
     @Body() fDto: SetMatchResultDto,
   ): Promise<BracketMatchDto> {
-    const m = await this.bracketService.setWinner(fDto.gameId, id, fDto.winnerId);
+    const m = await this.bracketService.setWinner(
+      fDto.gameId,
+      id,
+      fDto.winnerId,
+    );
     const t = await this.bracketService.findTournamentByMatchId(id);
     return this.bracketMatchEntityRepository
       .findOne(id)
@@ -178,13 +197,13 @@ export class TournamentController {
   ): Promise<BracketMatchDto> {
     const m = await this.bracketMatchEntityRepository.findOne(id);
     if (m) {
-      m.scheduledDate = new Date(scheduleDto.scheduledDate);
-      await this.bracketMatchEntityRepository.save(m);
-
-      console.log(`updated match new sch date = `, m.scheduledDate)
-
       const tourId = await this.utilQuery.matchTournamentId(m.id);
-      await this.bmService.scheduleBracketMatch(tourId, m.id);
+      await this.bmService.scheduleBracketMatchGame(
+        tourId,
+        m.id,
+        scheduleDto.gameId,
+        scheduleDto.scheduledDate,
+      );
       return this.getTournamentMatch(m.id);
     }
   }

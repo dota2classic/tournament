@@ -1,10 +1,9 @@
 import { Controller, Logger } from '@nestjs/common';
-import { EventPattern, MessagePattern } from '@nestjs/microservices';
-import { GetPlayerInfoQuery } from './gateway/queries/GetPlayerInfo/get-player-info.query';
-import { GetPlayerInfoQueryResult } from './gateway/queries/GetPlayerInfo/get-player-info-query.result';
+import { EventPattern } from '@nestjs/microservices';
 import { Constructor, EventBus } from '@nestjs/cqrs';
 import { MatchStartedEvent } from './gateway/events/match-started.event';
 import { GameResultsEvent } from './gateway/events/gs/game-results.event';
+import { MatchCancelledEvent } from './gateway/events/match-cancelled.event';
 
 @Controller()
 export class RedisController {
@@ -22,6 +21,10 @@ export class RedisController {
     this.event(MatchStartedEvent, data);
   }
 
+  @EventPattern(MatchCancelledEvent.name)
+  async MatchCancelledEvent(data: MatchCancelledEvent) {
+    this.event(MatchCancelledEvent, data);
+  }
 
   @EventPattern(GameResultsEvent.name)
   async GameResultsEvent(data: GameResultsEvent) {

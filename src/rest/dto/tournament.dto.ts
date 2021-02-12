@@ -7,6 +7,9 @@ export class CreateTournamentDto {
   startDate: number;
   imageUrl: string;
   strategy: BracketType;
+  roundBestOf: number;
+  finalBestOf: number;
+  grandFinalBestOf: number;
 }
 
 export class TournamentParticipantDto {

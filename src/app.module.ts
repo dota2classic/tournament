@@ -23,6 +23,7 @@ import { GameResultsHandler } from './tournament/event/game-results.handler';
 import { UtilQuery } from './tournament/service/util-query';
 import { BracketMapper } from './rest/mapper/bracket.mapper';
 import { BracketUpdatedHandler } from './tournament/event/bracket-updated.handler';
+import { MatchCancelledHandler } from './tournament/event/match-cancelled.handler';
 
 @Module({
   imports: [
@@ -58,6 +59,8 @@ import { BracketUpdatedHandler } from './tournament/event/bracket-updated.handle
     BracketMatchService,
     BracketCrud,
     UtilQuery,
+
+    MatchCancelledHandler,
 
     MatchStartedHandler,
     GameResultsHandler,

@@ -29,20 +29,6 @@ export class BracketMatchEntity {
   @Column({ nullable: true })
   scheduledDate: Date
 
-  /**
-   * d2c match id which will be assigned
-   */
-  @Column({ nullable: true })
-  externalMatchId: number;
-
-  /**
-   * It is random offset(1/0) which is used to determine teams of opponents
-   * This also guarantees we know which opponent is radiant/dire
-   */
-  @Column({ default: 0})
-  teamOffset: number
-
-
   @Column({ type: 'simple-json', nullable: true })
   opponent1?: ParticipantResult
 

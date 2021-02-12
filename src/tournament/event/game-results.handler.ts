@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 import { Repository } from 'typeorm';
 import { BracketService } from '../../rest/tournament/bracket.service';
+import { MatchGameEntity } from '../../db/entity/match-game.entity';
+import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
 
 @EventsHandler(GameResultsEvent)
 export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
@@ -12,30 +14,39 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
     private readonly bracketMatchEntityRepository: Repository<
       BracketMatchEntity
     >,
+    @InjectRepository(MatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
     private readonly bService: BracketService,
+    @InjectRepository(BracketParticipantEntity)
+    private readonly bracketParticipantEntityRepository: Repository<
+      BracketParticipantEntity
+    >,
   ) {}
 
   async handle(event: GameResultsEvent) {
-    const connectedMatch = await this.bracketMatchEntityRepository.findOne({
+    const game = await this.matchGameEntityRepository.findOne({
       externalMatchId: event.matchId,
     });
+    if (!game) return;
 
-    if (!connectedMatch) return;
+    const match = await this.bracketMatchEntityRepository.findOne(game.bm_id);
 
-    if (!connectedMatch.opponent1?.id || !connectedMatch.opponent2?.id) {
+    if (!match) return;
+
+    if (!match.opponent1?.id || !match.opponent2?.id) {
       console.error(`WTF?`);
       return;
     }
 
-    const offset = connectedMatch.teamOffset;
-
     // offset = 0 => radiant = opp1, dire = opp2
     // offset = 1 => radiant = opp2, dire = opp1
-    const winCondition = offset === 0 ? event.radiantWin : !event.radiantWin;
+    const winCondition =
+      game.teamOffset === 0 ? event.radiantWin : !event.radiantWin;
 
-    await this.bService.matchResults(
-      connectedMatch.id,
-      winCondition ? connectedMatch.opponent1.id : connectedMatch.opponent2.id,
-    );
+    const winnerId = winCondition ? match.opponent1.id : match.opponent2.id;
+
+    const res = await this.bracketParticipantEntityRepository.findOne(winnerId);
+
+    await this.bService.setWinner(game.id, match.id, res.name);
   }
 }
