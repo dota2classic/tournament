@@ -60,7 +60,12 @@ export class TeamService {
     const t = await this.fullTeam(teamId);
 
     if (!t) return;
+
+    // can't join if its 5 guys
     if (t.members.length >= 5) return;
+
+    // can't join if it's locked
+    if (t.locked) return;
 
     const existingMembership = await this.teamMemberEntityRepository.findOne({
       steam_id: steam_id,
@@ -82,6 +87,7 @@ export class TeamService {
     return this.teamEntityRepository.findOne(
       {
         id,
+        archived: false
       },
       { relations: ['members'] },
     );
@@ -102,7 +108,6 @@ export class TeamService {
   public async inviteToTeam(inviter: string, steam_id: string) {
     const team = await this.findTeamOf(inviter);
 
-    console.log(JSON.stringify(team));
     if (!team) throw new NotFoundException();
 
     // we cant invite if 5 in team
@@ -151,5 +156,47 @@ export class TeamService {
       .getMany();
 
     return res.map(t => t.tournament);
+  }
+
+  public async leaveTeam(steamId: string) {
+    const team = await this.findTeamOf(steamId);
+    if (team && !team.locked) {
+      if (team.creator === steamId) {
+        // if creator leaves team, team is deleted
+        const members = await this.teamMemberEntityRepository.find({
+          teamId: team.id,
+        });
+        // delete all members
+        await this.teamMemberEntityRepository.delete(members.map(t => t.id));
+        team.archived = true;
+        await this.teamEntityRepository.save(team);
+        return;
+      }
+      const membership = await this.teamMemberEntityRepository.findOne({
+        steam_id: steamId,
+        teamId: team.id,
+      });
+      if (membership) {
+        await this.teamMemberEntityRepository.delete(membership);
+      }
+    }
+    return team;
+  }
+
+  public async kickFromTeam(requesterSteamId: string, kickedSteamId: string) {
+    const team = await this.findTeamOf(requesterSteamId);
+
+    // can't kick myself
+    if (requesterSteamId === kickedSteamId) return;
+    if (team && !team.locked && team.creator === requesterSteamId) {
+      const membership = await this.teamMemberEntityRepository.findOne({
+        steam_id: kickedSteamId,
+        teamId: team.id,
+      });
+      if (membership) {
+        await this.teamMemberEntityRepository.delete(membership);
+      }
+    }
+    return team;
   }
 }

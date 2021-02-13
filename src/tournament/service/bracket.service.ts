@@ -3,8 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection, Repository } from 'typeorm';
 
 import { BracketsManager } from 'brackets-manager';
-import { InputStage, ParticipantResult, Status } from 'brackets-model';
-import { BracketCrud } from '../../rest/tournament/bracket.crud';
+import { InputStage, Status } from 'brackets-model';
 import {
   BestOfStrategy,
   TournamentEntity,
@@ -208,7 +207,7 @@ export class BracketService {
   public async registerTeamByPlayer(tId: number, steamId: string) {
     const team = await this.teamEntityRepository
       .createQueryBuilder('t')
-      .innerJoin(TeamMemberEntity, 'mem', 'mem.teamId = t.id')
+      .innerJoinAndSelect('t.members', 'mem')
       .where('mem.steam_id = :steamId', { steamId })
       .getOne();
 
@@ -221,10 +220,19 @@ export class BracketService {
 
     // TODO: manage conflicting members?
 
+    if (team.members.length !== 5) {
+      // not full;
+      return;
+    }
+
     const b = new TournamentParticipantEntity();
     b.tournament_id = t.id;
     b.name = team.id;
     await this.tournamentParticipantEntityRepository.save(b);
+
+    // lock team so members dont change
+    team.locked = true;
+    await this.teamEntityRepository.save(team);
   }
 
   public async registerSoloPlayer(tId: number, steam_id: string) {
@@ -359,12 +367,6 @@ export class BracketService {
     tournament.status = TournamentStatus.CANCELLED;
     await this.tournamentEntityRepository.save(tournament);
 
-    // const allMatches = await this.bracketMatchEntityRepository
-    //   .createQueryBuilder('bm')
-    //   .leftJoin(StageEntity, 'stage', 'stage.id = bm.stage_id')
-    //   .where('stage.tournament_id = :tId', { tId })
-    //   .getMany();
-
     const allGames = await this.matchGameEntityRepository
       .createQueryBuilder('mg')
       .innerJoin(BracketMatchEntity, 'bm', 'bm.id = mg.bm_id')
@@ -377,6 +379,8 @@ export class BracketService {
         this.bmService.cancelMatchSchedule(tId, m.bm_id, m.id),
       ),
     );
+
+    await this.unlockTeams(tournament.id);
   }
 
   /**
@@ -477,10 +481,30 @@ export class BracketService {
     if (matches === 0) {
       tournament.status = TournamentStatus.FINISHED;
       await this.tournamentEntityRepository.save(tournament);
+
+      // here we unlock teams
+      await this.unlockTeams(tournament.id);
+
       return true;
     }
 
     return false;
+  }
+
+  private async unlockTeams(tournamentId: number) {
+    const t = await this.tournamentEntityRepository.findOne(tournamentId);
+    if (!t) return;
+    if (t.entryType === BracketEntryType.PLAYER) return;
+
+    const parts = await this.tournamentParticipantEntityRepository.find({
+      tournament_id: tournamentId,
+    });
+    const unlocker = parts.map(async part => {
+      const team = await this.teamEntityRepository.findOne(part.name);
+      team.locked = false;
+      await this.teamEntityRepository.save(team);
+    });
+    await Promise.all(unlocker);
   }
 
   public async checkMatchResults(mId: number) {

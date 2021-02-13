@@ -10,6 +10,15 @@ export class CreateTeamDto {
 export class TeamMemberDto {
   public readonly steam_id: string;
 }
+export class LeaveTeamDto {
+  steamId: string;
+}
+
+export class KickFromTeamDto {
+  requesterSteamId: string;
+  kickedSteamId: string;
+}
+
 
 export class TeamDto {
 
@@ -18,6 +27,7 @@ export class TeamDto {
   public readonly tag: string;
   public readonly imageUrl: string;
   public readonly creator: string;
+  public readonly locked: boolean
   public readonly members: TeamMemberDto[];
 }
 
@@ -29,6 +39,7 @@ export class CompactTeamDto {
   public readonly tag: string;
   public readonly imageUrl: string;
   public readonly creator: string;
+  public readonly locked: boolean
 }
 
 

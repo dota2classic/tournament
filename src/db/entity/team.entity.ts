@@ -16,6 +16,15 @@ export class TeamEntity {
   @Column()
   tag: string;
 
+
+  @Column({ default: false })
+  archived: boolean
+  /**
+   * We need to lock teams if they applied to a tournament
+   */
+  @Column({ default: false})
+  locked: boolean;
+
   @Column()
   imageUrl: string;
 

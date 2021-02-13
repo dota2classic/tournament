@@ -112,21 +112,21 @@ async function bootstrap() {
   await app.get(BracketMatchService).scheduleMatches();
   // await bs.getStandings(2)
 
-  const t = await bs.createTournament(
-    'Team tournament',
-    BracketEntryType.TEAM,
-    new Date().getTime() + 1000 * 60 * 60, // in an hour
-    'https://dota2classic.ru/api/static/icons/vk1.png',
-    BracketType.SINGLE_ELIMINATION,
-    { round: 1, final: 1, grandFinal: 1 },
-  );
-
-  await ts.createTeam(
-    'Uchiha gang',
-    'UG',
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Mangekyou_Sharingan_Shisui.svg/1200px-Mangekyou_Sharingan_Shisui.svg.png',
-    '[U:1:1062901073]',
-  );
+  // const t = await bs.createTournament(
+  //   'Team tournament',
+  //   BracketEntryType.TEAM,
+  //   new Date().getTime() + 1000 * 60 * 60, // in an hour
+  //   'https://dota2classic.ru/api/static/icons/vk1.png',
+  //   BracketType.SINGLE_ELIMINATION,
+  //   { round: 1, final: 1, grandFinal: 1 },
+  // );
+  //
+  // await ts.createTeam(
+  //   'Uchiha gang',
+  //   'UG',
+  //   'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Mangekyou_Sharingan_Shisui.svg/1200px-Mangekyou_Sharingan_Shisui.svg.png',
+  //   '[U:1:1062901073]',
+  // );
   //
   // for (let i = 0; i < 4; i++) {
   //   const startOffset = i * 5;

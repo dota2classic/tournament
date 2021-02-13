@@ -14,6 +14,7 @@ export class TeamMapper {
     members: team.members.map(t => ({
       steam_id: t.steam_id,
     })),
+    locked: team.locked
   });
 
 
@@ -23,6 +24,7 @@ export class TeamMapper {
     id: team.id,
     imageUrl: team.imageUrl,
     creator: team.creator,
+    locked: team.locked
   });
 
 

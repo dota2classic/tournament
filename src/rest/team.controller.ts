@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   CreateTeamDto,
-  CreateTeamInviteDto,
+  CreateTeamInviteDto, KickFromTeamDto, LeaveTeamDto,
   SubmitInvitationDto,
   TeamDto,
   TeamInvitationDto,
@@ -57,6 +57,9 @@ export class TeamController {
   public async listTeams(): Promise<TeamDto[]> {
     return this.teamEntityRepository
       .find({
+        where: {
+          archived: false,
+        },
         relations: ['members'],
       })
       .then(t => t.map(this.teamMapper.mapTeam));
@@ -77,6 +80,22 @@ export class TeamController {
     @Body() dto: SubmitInvitationDto,
   ) {
     await this.teamService.submitInvitation(id, dto.accept);
+  }
+
+
+
+  @Post(`/kick_from_team`)
+  public async kickFromTeam(@Body() dto: KickFromTeamDto): Promise<TeamDto> {
+    return this.teamService
+      .kickFromTeam(dto.requesterSteamId, dto.kickedSteamId)
+      .then(this.teamMapper.mapTeam);
+  }
+
+  @Post(`/leave_team`)
+  public async leaveTeam(@Body() dto: LeaveTeamDto): Promise<TeamDto> {
+    return this.teamService
+      .leaveTeam(dto.steamId)
+      .then(this.teamMapper.mapTeam);
   }
 
   @Post(`/create`)
