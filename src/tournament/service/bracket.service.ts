@@ -224,6 +224,13 @@ export class BracketService {
       return;
     }
 
+    const existingParticipation =await this.tournamentParticipantEntityRepository.findOne({
+      tournament_id: t.id,
+      name: team.id
+    });
+
+    if(existingParticipation) return;
+
     const b = new TournamentParticipantEntity();
     b.tournament_id = t.id;
     b.name = team.id;
