@@ -41,6 +41,7 @@ export class BracketGameTimerReadyHandler
   ) {}
 
   async handle(event: BracketGameTimerReadyEvent) {
+    this.logger.log(`Ok here we need to start tournament match`)
     await this.initMatch(event.tournamentId, event.matchId, event.gameId);
   }
 

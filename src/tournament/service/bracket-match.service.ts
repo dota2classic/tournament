@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
-import { In, Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TournamentEntity } from '../../db/entity/tournament.entity';
-import { BracketEntryType } from '../../gateway/shared-types/tournament';
+import { BracketEntryType, TournamentStatus } from '../../gateway/shared-types/tournament';
 import { RoundEntity } from '../../db/entity/round.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
@@ -17,6 +17,9 @@ import { GameScheduleService } from './game-schedule.service';
 
 @Injectable()
 export class BracketMatchService {
+
+  private readonly logger = new Logger(BracketMatchService.name);
+
   private static keyForJob = (
     tournamentId: number,
     bracketMatchId: number,
@@ -87,9 +90,21 @@ export class BracketMatchService {
   }
 
   async scheduleMatches() {
-    const pendingMatches = await this.bracketMatchEntityRepository.find({
-      status: Not(In([Status.Completed, Status.Archived])),
-    });
+    const pendingMatches = await this.bracketMatchEntityRepository
+      .createQueryBuilder('bm')
+      .innerJoin(StageEntity, 'stage', 'bm.stage_id = stage.id')
+      .innerJoin(
+        TournamentEntity,
+        'tournament',
+        'tournament.id = stage.tournament_id',
+      )
+      .where('tournament.status = :status', {
+        status: TournamentStatus.ONGOING,
+      })
+      .andWhere('bm.status not in (:...statuses)', {
+        statuses: [Status.Completed, Status.Archived],
+      })
+      .getMany()
 
     // todo promise.all
 
@@ -98,6 +113,8 @@ export class BracketMatchService {
 
       await this.scheduleBracketMatch(t, match.id);
     }
+
+    this.logger.log(`Scheduled ${pendingMatches.length} matches`)
   }
 
   /**
