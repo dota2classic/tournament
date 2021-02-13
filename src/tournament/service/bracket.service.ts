@@ -302,6 +302,8 @@ export class BracketService {
     if (!participation) return;
 
     await this.tournamentParticipantEntityRepository.delete(participation);
+    team.locked = false;
+    await this.teamEntityRepository.save(team);
   }
 
   public async registeredTeams(id: number): Promise<TeamEntity[]> {
