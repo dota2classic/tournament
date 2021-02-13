@@ -8,7 +8,6 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TeamMemberEntity } from '../../db/entity/team-member.entity';
 import { TeamInvitationEntity } from '../../db/entity/team-invitation.entity';
-import { FullTournamentDto } from '../dto/tournament.dto';
 import { TournamentEntity } from '../../db/entity/tournament.entity';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
 import { BracketEntryType } from '../../gateway/shared-types/tournament';
@@ -88,8 +87,22 @@ export class TeamService {
     );
   }
 
-  public async inviteToTeam(id: string, inviter: string, steam_id: string) {
-    const team = await this.fullTeam(id);
+  private async findTeamOf(steamId: string) {
+    return this.teamMemberEntityRepository
+      .findOne(
+        {
+          steam_id: steamId,
+        },
+        {
+          relations: ['team', 'team.members'],
+        },
+      )
+      .then(t => t.team);
+  }
+  public async inviteToTeam(inviter: string, steam_id: string) {
+    const team = await this.findTeamOf(inviter);
+
+    console.log(JSON.stringify(team));
     if (!team) throw new NotFoundException();
 
     // we cant invite if 5 in team
@@ -100,15 +113,16 @@ export class TeamService {
 
     const existingInvite = await this.teamInvitationEntityRepository.findOne({
       steam_id,
-      teamId: id,
+      teamId: team.id,
     });
 
     if (existingInvite) return;
 
     const inv = new TeamInvitationEntity();
-    inv.teamId = id;
+    inv.teamId = team.id;
     inv.steam_id = steam_id;
     await this.teamInvitationEntityRepository.save(inv);
+    return this.fullTeam(team.id);
   }
 
   public async submitInvitation(id: number, accept: boolean) {

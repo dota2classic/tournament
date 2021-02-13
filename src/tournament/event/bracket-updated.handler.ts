@@ -1,10 +1,11 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { BracketUpdatedEvent } from '../../rest/event/bracket-updated.event';
-import { BracketService } from '../../rest/tournament/bracket.service';
+import { BracketService } from '../service/bracket.service';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StageEntity } from '../../db/entity/stage.entity';
+import { BracketMatchService } from '../service/bracket-match.service';
 
 @EventsHandler(BracketUpdatedEvent)
 export class BracketUpdatedHandler
@@ -15,17 +16,15 @@ export class BracketUpdatedHandler
     private readonly bracketMatchEntityRepository: Repository<
       BracketMatchEntity
     >,
+    private readonly bracketMatchService: BracketMatchService
   ) {}
 
   async handle(event: BracketUpdatedEvent) {
-    const allMatches = await this.bracketMatchEntityRepository
-      .createQueryBuilder('bm')
-      .leftJoin(StageEntity, 'stage', 'stage.id = bm.stage_id')
-      .where('stage.tournament_id = :tId', { tId: event.tournamentId })
-      .orderBy('bm.id', 'ASC')
-      .getMany();
 
-    await this.bracketService.checkMatchResults(event.matchId)
+    await this.bracketService.checkMatchResults(event.matchId);
+
+    // clear schedules
+    await this.bracketMatchService.cancelMatchSchedule(event.tournamentId, event.matchId, event.gameId);
 
     await this.bracketService.checkForTournamentFinish(event.tournamentId);
   }

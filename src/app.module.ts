@@ -5,7 +5,7 @@ import { isDev, REDIS_PASSWORD, REDIS_URL } from './config/env';
 import { devDbConfig, Entities, prodDbConfig } from './config/entities';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
-import { BracketService } from './rest/tournament/bracket.service';
+import { BracketService } from './tournament/service/bracket.service';
 import { BracketCrud } from './rest/tournament/bracket.crud';
 import { TournamentController } from './rest/tournament.controller';
 import { TournamentMapper } from './rest/mapper/tournament.mapper';
@@ -13,10 +13,10 @@ import { qCache, UserRepository } from './rest/caches/user.repository';
 import { outerQuery } from './gateway/util/outerQuery';
 import { GetUserInfoQuery } from './gateway/queries/GetUserInfo/get-user-info.query';
 import { TeamController } from './rest/team.controller';
-import { TeamService } from './rest/tournament/team.service';
+import { TeamService } from './tournament/service/team.service';
 import { TeamMapper } from './rest/mapper/team.mapper';
 import { ScheduleModule } from '@nestjs/schedule';
-import { BracketMatchService } from './rest/tournament/bracket-match.service';
+import { BracketMatchService } from './tournament/service/bracket-match.service';
 import { AppService } from './app.service';
 import { MatchStartedHandler } from './tournament/event/match-started.handler';
 import { GameResultsHandler } from './tournament/event/game-results.handler';
@@ -24,6 +24,11 @@ import { UtilQuery } from './tournament/service/util-query';
 import { BracketMapper } from './rest/mapper/bracket.mapper';
 import { BracketUpdatedHandler } from './tournament/event/bracket-updated.handler';
 import { MatchCancelledHandler } from './tournament/event/match-cancelled.handler';
+import { MatchGameService } from './tournament/service/match-game.service';
+import { BracketsManager } from 'brackets-manager';
+import { BracketGameResultHandler } from './tournament/event/bracket-game-result/bracket-game-result.handler';
+import { BracketGameTimerReadyHandler } from './tournament/event/bracket-game-timer-ready/bracket-game-timer-ready.handler';
+import { GameScheduleService } from './tournament/service/game-schedule.service';
 
 @Module({
   imports: [
@@ -59,8 +64,20 @@ import { MatchCancelledHandler } from './tournament/event/match-cancelled.handle
     BracketMatchService,
     BracketCrud,
     UtilQuery,
-
+    GameScheduleService,
     MatchCancelledHandler,
+
+    MatchGameService,
+    BracketGameResultHandler,
+    BracketGameTimerReadyHandler,
+
+    {
+      provide: BracketsManager,
+      useFactory: (crud: BracketCrud) => {
+        return new BracketsManager(crud);
+      },
+      inject: [BracketCrud],
+    },
 
     MatchStartedHandler,
     GameResultsHandler,

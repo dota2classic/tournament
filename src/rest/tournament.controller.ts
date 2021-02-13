@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { BracketCrud, TournamentBracketInfo } from './tournament/bracket.crud';
+import { BracketCrud } from './tournament/bracket.crud';
 import { TournamentMapper } from './mapper/tournament.mapper';
 import { ApiTags } from '@nestjs/swagger';
 import {
@@ -9,20 +9,22 @@ import {
   ScheduleTournamentMatchDto,
   SetMatchResultDto,
   TournamentDto,
-  TournamentMatchDto,
 } from './dto/tournament.dto';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BracketService } from './tournament/bracket.service';
+import { BracketService } from '../tournament/service/bracket.service';
 import { CompactTeamDto } from './dto/team.dto';
 import { TeamMapper } from './mapper/team.mapper';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
-import { BracketMatchService } from './tournament/bracket-match.service';
+import { BracketMatchService } from '../tournament/service/bracket-match.service';
 import { UtilQuery } from '../tournament/service/util-query';
 import { BracketMatchDto, TournamentBracketInfoDto } from './dto/bracket.dto';
 import { BracketMapper } from './mapper/bracket.mapper';
 import { MatchGameEntity } from '../db/entity/match-game.entity';
+import { EventBus } from '@nestjs/cqrs';
+import { GameScheduleService } from '../tournament/service/game-schedule.service';
+import { MatchGameService } from '../tournament/service/match-game.service';
 
 @Controller('tournament')
 @ApiTags('tournament')
@@ -43,6 +45,9 @@ export class TournamentController {
     private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
     private readonly utilQuery: UtilQuery,
     private readonly bracketMapper: BracketMapper,
+    private readonly ebus: EventBus,
+    private readonly scheduler: GameScheduleService,
+    private readonly matchGameService: MatchGameService,
   ) {}
 
   @Get('/bracket/:id')
@@ -125,12 +130,12 @@ export class TournamentController {
     return this.bracketService.fullTournament(id);
   }
 
-  @Post(`/:id/join_tournament_team/:team_id`)
+  @Post(`/:id/join_tournament_team/:steam_id`)
   public async registerTeam(
     @Param('id') tId: number,
-    @Param('team_id') teamId: string,
+    @Param('steam_id') steamId: string,
   ) {
-    return this.bracketService.registerTeam(tId, teamId);
+    return this.bracketService.registerTeamByPlayer(tId, steamId);
   }
 
   @Post(`/:id/join_tournament_solo/:steam_id`)
@@ -141,12 +146,20 @@ export class TournamentController {
     return this.bracketService.registerSoloPlayer(tId, steam_id);
   }
 
+  @Post(`/:id/leave_tournament_team/:steam_id`)
+  public async leaveTournamentTeam(
+    @Param('id') tId: number,
+    @Param('steam_id') steamId: string,
+  ) {
+    return this.bracketService.leaveTournamentAsTeam(tId, steamId);
+  }
+
   @Post(`/:id/leave_tournament_solo/:steam_id`)
   public async leaveTournamentPlayer(
     @Param('id') tId: number,
     @Param('steam_id') steam_id: string,
   ) {
-    return this.bracketService.leaveSoloPlayer(tId, steam_id);
+    return this.bracketService.leaveTournamentAsPlayer(tId, steam_id);
   }
 
   @Get('/tournament_match/:id')
@@ -158,36 +171,14 @@ export class TournamentController {
     return this.bracketMapper.mapMatch(t.entryType, m);
   }
 
-  @Post(`/tournament_match/:id/forfeit`)
-  public async forfeit(
-    @Param('id') id: number,
-    @Body() fDto: ForfeitDto,
-  ): Promise<BracketMatchDto> {
-    const m = await this.bracketService.forfeit(
-      fDto.gameId,
-      id,
-      fDto.forfeitId,
-    );
-    const t = await this.bracketService.findTournamentByMatchId(id);
-    return this.bracketMatchEntityRepository
-      .findOne(id)
-      .then(() => this.bracketMapper.mapMatch(t.entryType, m));
-  }
 
   @Post(`/tournament_match/:id/winner`)
   public async setMatchWinner(
     @Param('id') id: number,
-    @Body() fDto: SetMatchResultDto,
+    @Body() dto: SetMatchResultDto,
   ): Promise<BracketMatchDto> {
-    const m = await this.bracketService.setWinner(
-      fDto.gameId,
-      id,
-      fDto.winnerId,
-    );
-    const t = await this.bracketService.findTournamentByMatchId(id);
-    return this.bracketMatchEntityRepository
-      .findOne(id)
-      .then(() => this.bracketMapper.mapMatch(t.entryType, m));
+    await this.matchGameService.setWinner(dto.gameId, dto.winnerId);
+    return this.getTournamentMatch(id);
   }
 
   @Post(`/tournament_match/:id/schedule`)
@@ -196,15 +187,16 @@ export class TournamentController {
     @Body() scheduleDto: ScheduleTournamentMatchDto,
   ): Promise<BracketMatchDto> {
     const m = await this.bracketMatchEntityRepository.findOne(id);
-    if (m) {
-      const tourId = await this.utilQuery.matchTournamentId(m.id);
-      await this.bmService.scheduleBracketMatchGame(
-        tourId,
-        m.id,
-        scheduleDto.gameId,
-        scheduleDto.scheduledDate,
-      );
-      return this.getTournamentMatch(m.id);
-    }
+    if (!m) return;
+
+    const tourId = await this.utilQuery.matchTournamentId(m.id);
+    await this.scheduler.scheduleGame(
+      tourId,
+      m.id,
+      scheduleDto.gameId,
+      scheduleDto.scheduledDate,
+    );
+
+    return this.getTournamentMatch(m.id);
   }
 }

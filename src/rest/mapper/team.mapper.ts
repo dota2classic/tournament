@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { TeamEntity } from '../../db/entity/team.entity';
-import { CompactTeamDto, TeamDto } from '../dto/team.dto';
+import { CompactTeamDto, TeamDto, TeamInvitationDto } from '../dto/team.dto';
+import { TeamInvitationEntity } from '../../db/entity/team-invitation.entity';
 
 @Injectable()
 export class TeamMapper {
@@ -23,4 +24,11 @@ export class TeamMapper {
     imageUrl: team.imageUrl,
     creator: team.creator,
   });
+
+
+
+  public mapTeamInvite = (invite: TeamInvitationEntity): TeamInvitationDto => ({
+    team: this.mapTeamCompact(invite.team),
+    inviteId: invite.id
+  })
 }

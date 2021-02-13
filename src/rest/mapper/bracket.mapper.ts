@@ -51,7 +51,7 @@ export class BracketMapper {
         return {
           tournament_id: b.tournament_id,
           team: this.teamMapper.mapTeam(
-            await this.teamEntityRepository.findOne(b.name),
+            await this.teamEntityRepository.findOne(b.name, { relations: ['members']}),
           ),
           id: b.id,
         };

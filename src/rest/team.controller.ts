@@ -5,16 +5,18 @@ import {
   CreateTeamInviteDto,
   SubmitInvitationDto,
   TeamDto,
+  TeamInvitationDto,
 } from './dto/team.dto';
-import { TeamService } from './tournament/team.service';
+import { TeamService } from '../tournament/service/team.service';
 import { TeamMapper } from './mapper/team.mapper';
 import { TeamEntity } from '../db/entity/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { FullTournamentDto, TournamentDto } from './dto/tournament.dto';
+import { TournamentDto } from './dto/tournament.dto';
 import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
 import { TournamentMapper } from './mapper/tournament.mapper';
 import { TeamMemberEntity } from '../db/entity/team-member.entity';
+import { TeamInvitationEntity } from '../db/entity/team-invitation.entity';
 
 @Controller('team')
 @ApiTags('team')
@@ -31,6 +33,10 @@ export class TeamController {
     >,
     @InjectRepository(TeamMemberEntity)
     private readonly teamMemberEntityRepository: Repository<TeamMemberEntity>,
+    @InjectRepository(TeamInvitationEntity)
+    private readonly teamInvitationEntityRepository: Repository<
+      TeamInvitationEntity
+    >,
   ) {}
 
   @Get(`/view/:id`)
@@ -60,8 +66,9 @@ export class TeamController {
   public async inviteToTeam(
     @Body() dto: CreateTeamInviteDto,
   ): Promise<TeamDto> {
-    await this.teamService.inviteToTeam(dto.teamId, dto.inviter, dto.invited);
-    return this.getTeam(dto.teamId);
+    return this.teamService
+      .inviteToTeam(dto.inviter, dto.invited)
+      .then(this.teamMapper.mapTeam);
   }
 
   @Post(`/submit_invite/:id`)
@@ -80,7 +87,9 @@ export class TeamController {
   }
 
   @Get('team_of/:id')
-  public async getTeamOf(@Param('id') steamId: string): Promise<TeamDto | undefined> {
+  public async getTeamOf(
+    @Param('id') steamId: string,
+  ): Promise<TeamDto | undefined> {
     const membership = await this.teamMemberEntityRepository.findOne(
       {
         steam_id: steamId,
@@ -89,11 +98,22 @@ export class TeamController {
         relations: ['team', 'team.members'],
       },
     );
-
-
-    if(membership){
-      return this.teamMapper.mapTeam(membership.team)
+    if (membership) {
+      return this.teamMapper.mapTeam(membership.team);
     }
+  }
 
+  @Get('team_invites/:steamId')
+  public async getTeamInvites(
+    @Param('steamId') steamId: string,
+  ): Promise<TeamInvitationDto[]> {
+    return this.teamInvitationEntityRepository
+      .find({
+        where: {
+          steam_id: steamId,
+        },
+        relations: ['team', 'team.members'],
+      })
+      .then(t => Promise.all(t.map(this.teamMapper.mapTeamInvite)));
   }
 }

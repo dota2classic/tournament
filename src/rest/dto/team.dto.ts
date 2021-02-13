@@ -40,5 +40,10 @@ export class SubmitInvitationDto {
 export class CreateTeamInviteDto {
   public readonly inviter: string;
   public readonly invited: string;
-  public readonly teamId: string;
+}
+
+
+export class TeamInvitationDto {
+  team: CompactTeamDto;
+  inviteId: number;
 }

@@ -3,9 +3,10 @@ import { GameResultsEvent } from '../../gateway/events/gs/game-results.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 import { Repository } from 'typeorm';
-import { BracketService } from '../../rest/tournament/bracket.service';
+import { BracketService } from '../service/bracket.service';
 import { MatchGameEntity } from '../../db/entity/match-game.entity';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
+import { MatchGameService } from '../service/match-game.service';
 
 @EventsHandler(GameResultsEvent)
 export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
@@ -21,6 +22,7 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
     private readonly bracketParticipantEntityRepository: Repository<
       BracketParticipantEntity
     >,
+    private readonly matchGameService: MatchGameService,
   ) {}
 
   async handle(event: GameResultsEvent) {
@@ -47,6 +49,6 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
 
     const res = await this.bracketParticipantEntityRepository.findOne(winnerId);
 
-    await this.bService.setWinner(game.id, match.id, res.name);
+    await this.matchGameService.setWinner(game.id, res.name);
   }
 }
