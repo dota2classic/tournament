@@ -33,6 +33,7 @@ import { MatchGameEntity } from '../../db/entity/match-game.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { BracketUpdatedEvent } from '../../rest/event/bracket-updated.event';
 import { TeamMemberEntity } from '../../db/entity/team-member.entity';
+import { TeamService } from './team.service';
 
 export type EntryIdType = string;
 
@@ -65,6 +66,7 @@ export class BracketService {
     private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
     private readonly ebus: EventBus,
     private readonly manager: BracketsManager,
+    private readonly teamService: TeamService,
   ) {
     this.tournamentEntityRepository = connection.getRepository(
       TournamentEntity,
@@ -205,12 +207,9 @@ export class BracketService {
   // }
 
   public async registerTeamByPlayer(tId: number, steamId: string) {
-    const team = await this.teamEntityRepository
-      .createQueryBuilder('t')
-      .innerJoinAndSelect('t.members', 'mem')
-      .where('mem.steam_id = :steamId', { steamId })
-      .getOne();
+    const team = await this.teamService.findTeamOf(steamId);
 
+    console.log(team);
     if (!team) throw new NotFoundException();
 
     const t = await this.tournamentEntityRepository.findOne(tId);

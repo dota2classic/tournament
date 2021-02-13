@@ -40,8 +40,6 @@ export class TeamService {
     });
     if (isTagTaken) throw new ForbiddenException();
 
-    // todo, mr Itachi, we need to lock team rosters while in tournaments :)
-    // gl when it comes up
 
     const t = new TeamEntity();
     t.creator = created_by;
@@ -93,7 +91,7 @@ export class TeamService {
     );
   }
 
-  private async findTeamOf(steamId: string) {
+  public async findTeamOf(steamId: string) {
     return this.teamMemberEntityRepository
       .findOne(
         {
