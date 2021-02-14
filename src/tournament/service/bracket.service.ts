@@ -34,6 +34,7 @@ import { EventBus } from '@nestjs/cqrs';
 import { BracketUpdatedEvent } from '../../rest/event/bracket-updated.event';
 import { TeamMemberEntity } from '../../db/entity/team-member.entity';
 import { TeamService } from './team.service';
+import { shuffle } from '../../util/shuffle';
 
 export type EntryIdType = string;
 
@@ -116,7 +117,7 @@ export class BracketService {
         tournament.strategy === BracketType.DOUBLE_ELIMINATION
           ? 'double_elimination'
           : 'single_elimination',
-      seeding: BracketService.formatToPower(entries),
+      seeding: shuffle(BracketService.formatToPower(entries)),
       settings: {
         // seedOrdering: ['natural', 'natural', 'natural'],
         grandFinal: 'simple',
