@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { TeamEntity } from '../../db/entity/team.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,7 +6,7 @@ import { TeamMemberEntity } from '../../db/entity/team-member.entity';
 import { TeamInvitationEntity } from '../../db/entity/team-invitation.entity';
 import { TournamentEntity } from '../../db/entity/tournament.entity';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
-import { BracketEntryType } from '../../gateway/shared-types/tournament';
+import { BracketEntryType, TournamentStatus } from '../../gateway/shared-types/tournament';
 
 @Injectable()
 export class TeamService {
@@ -39,7 +35,6 @@ export class TeamService {
       tag,
     });
     if (isTagTaken) throw new ForbiddenException();
-
 
     const t = new TeamEntity();
     t.creator = created_by;
@@ -85,7 +80,7 @@ export class TeamService {
     return this.teamEntityRepository.findOne(
       {
         id,
-        archived: false
+        archived: false,
       },
       { relations: ['members'] },
     );
@@ -150,6 +145,9 @@ export class TeamService {
         'p.tournament_id = tour.id',
       )
       .where('tour.entryType = :type', { type: BracketEntryType.TEAM })
+      .andWhere('tour.status in (:...statuses)', {
+        statuses: [TournamentStatus.NEW, TournamentStatus.ONGOING, TournamentStatus.FINISHED],
+      })
       .andWhere('p.name = :teamId', { teamId })
       .getMany();
 

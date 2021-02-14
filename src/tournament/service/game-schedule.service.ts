@@ -66,17 +66,22 @@ export class GameScheduleService {
     scheduledDate: Date,
   ) {
     await this.clearJob(tournamentId, matchId, gameId);
-    const job = new CronJob(scheduledDate, () =>
-      this.ebus.publish(
-        new BracketGameTimerReadyEvent(tournamentId, matchId, gameId),
-      ),
-    );
-    this.schedulerRegistry.addCronJob(
-      GameScheduleService.keyForJob(tournamentId, matchId, gameId),
-      job,
-    );
-    job.start();
-    this.logger.log(`Scheduled game ${gameId} of match ${matchId} for ${scheduledDate}`);
+    try {
+      const job = new CronJob(scheduledDate, () =>
+        this.ebus.publish(
+          new BracketGameTimerReadyEvent(tournamentId, matchId, gameId),
+        ),
+      );
+      this.schedulerRegistry.addCronJob(
+        GameScheduleService.keyForJob(tournamentId, matchId, gameId),
+        job,
+      );
+      job.start();
+      this.logger.log(`Scheduled game ${gameId} of match ${matchId} for ${scheduledDate}`);
+    }catch (e){
+      this.logger.warn(`Couldn't schedule game ${gameId} of match ${matchId} for ${scheduledDate}`, e);
+    }
+
   }
 
 

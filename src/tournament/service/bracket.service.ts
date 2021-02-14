@@ -595,8 +595,6 @@ export class BracketService {
             await this.bmService.cancelMatchSchedule(t, m.id, game.id);
           }),
         );
-      } else {
-        return;
       }
 
       return;

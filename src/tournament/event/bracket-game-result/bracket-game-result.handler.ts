@@ -28,11 +28,15 @@ export class BracketGameResultHandler
     const match = await this.bracketMatchEntityRepository.findOne(game.bm_id);
 
     const winSide = event.winner;
+    const loseSide = event.winner === 'opponent1' ? 'opponent2' : 'opponent1';
 
     await this.manager.update.match({
       id: game.bm_id,
       [winSide]: {
         score: (match[winSide]?.score || 0) + 1,
+      },
+      [loseSide]: {
+        score: match[loseSide]?.score || 0,
       },
     });
 
