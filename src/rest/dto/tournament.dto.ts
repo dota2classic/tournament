@@ -24,6 +24,7 @@ export class TournamentDto {
   status: TournamentStatus;
   startDate: number;
   imageUrl: string;
+  description: string;
 }
 
 export class TournamentStandingDto {
@@ -41,6 +42,7 @@ export class FullTournamentDto {
   imageUrl: string;
   participants: TournamentParticipantDto[];
   standings?: TournamentStandingDto[];
+  description: string;
 }
 
 export class SeedItemDto {

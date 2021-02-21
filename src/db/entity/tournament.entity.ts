@@ -1,15 +1,5 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
-import {
-  BracketEntryType,
-  BracketType,
-  TournamentStatus,
-} from '../../gateway/shared-types/tournament';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { BracketEntryType, BracketType, TournamentStatus } from '../../gateway/shared-types/tournament';
 import { BracketParticipantEntity } from './bracket-participant.entity';
 import { TournamentParticipantEntity } from './tournament-participant.entity';
 
@@ -29,6 +19,9 @@ export class TournamentEntity {
 
   @Column()
   strategy: BracketType;
+
+  @Column({ default: '' })
+  description: string;
 
   @Column()
   imageUrl: string;
