@@ -1,6 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Status, ParticipantResult } from 'brackets-model';
 import { StageEntity } from './stage.entity';
+import { GroupEntity } from './group.entity';
+import { RoundEntity } from './round.entity';
 
 
 @Entity()
@@ -38,4 +40,13 @@ export class BracketMatchEntity {
 
 
   stage?: StageEntity
+
+
+  @ManyToOne(() => GroupEntity)
+  @JoinColumn({ name: 'group_id'})
+  group?: GroupEntity
+
+  @ManyToOne(() => RoundEntity)
+  @JoinColumn({ name: 'round_id'})
+  round?: RoundEntity
 }

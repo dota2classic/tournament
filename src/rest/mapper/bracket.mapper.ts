@@ -22,6 +22,7 @@ import {
   SeedItemDto,
   TournamentMatchDto,
 } from '../dto/tournament.dto';
+import { inspect } from 'util';
 
 @Injectable()
 export class BracketMapper {
@@ -39,7 +40,8 @@ export class BracketMapper {
   private mapParticipant = async (
     entryType: BracketEntryType,
     b: BracketParticipantEntity,
-  ): Promise<BracketParticipantDto> => {
+  ): Promise<BracketParticipantDto | undefined> => {
+    if(b.name === undefined) return undefined;
     switch (entryType) {
       case BracketEntryType.PLAYER:
         return {
@@ -80,7 +82,6 @@ export class BracketMapper {
       'participant',
       opp.id,
     );
-
     return {
       ...opp,
       participant: await this.mapParticipant(entryType, part),

@@ -30,7 +30,7 @@ export class TournamentDto {
 export class TournamentStandingDto {
   steam_id?: string;
   team?: TeamDto;
-  position: number;
+  position: string;
 }
 
 export class FullTournamentDto {

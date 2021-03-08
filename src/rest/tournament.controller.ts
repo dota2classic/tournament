@@ -65,7 +65,6 @@ export class TournamentController {
     // const tournament = await this.tournamentEntityRepository.findOne(id)
     return this.crud.getBracket(id).then(this.bracketMapper.mapBracket);
   }
-
   @Post(`/create/:id`)
   public async startTournament(
     @Param('id')
