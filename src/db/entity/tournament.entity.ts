@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } f
 import { BracketEntryType, BracketType, TournamentStatus } from '../../gateway/shared-types/tournament';
 import { BracketParticipantEntity } from './bracket-participant.entity';
 import { TournamentParticipantEntity } from './tournament-participant.entity';
+import { Dota2Version } from '../../gateway/shared-types/dota2version';
 
 @Entity()
 export class TournamentEntity {
@@ -13,6 +14,9 @@ export class TournamentEntity {
 
   @Column()
   name: string;
+
+  @Column({ default: Dota2Version.Dota_681 })
+  version: Dota2Version
 
   @Column({ default: TournamentStatus.NEW })
   status: TournamentStatus;

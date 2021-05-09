@@ -95,6 +95,7 @@ export class TournamentController {
         dto.entryType,
         dto.startDate,
         dto.imageUrl,
+        dto.version,
         dto.strategy,
         {
           round: dto.roundBestOf || 1,

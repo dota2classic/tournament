@@ -35,6 +35,7 @@ import { BracketUpdatedEvent } from '../../rest/event/bracket-updated.event';
 import { TeamMemberEntity } from '../../db/entity/team-member.entity';
 import { TeamService } from './team.service';
 import { shuffle } from '../../util/shuffle';
+import { Dota2Version } from '../../gateway/shared-types/dota2version';
 
 export type EntryIdType = string;
 
@@ -155,6 +156,7 @@ export class BracketService {
     type: BracketEntryType,
     startDate: number,
     imageUrl: string,
+    version: Dota2Version,
     strategy: BracketType,
     bestOfStrategy: BestOfStrategy = { round: 1, final: 1, grandFinal: 1 },
   ) {
@@ -163,6 +165,7 @@ export class BracketService {
     t.entryType = type;
     t.startDate = new Date(startDate);
     t.imageUrl = imageUrl;
+    t.version = version
     t.strategy = strategy;
     t.bestOfConfig = bestOfStrategy;
     return await this.tournamentEntityRepository.save(t);

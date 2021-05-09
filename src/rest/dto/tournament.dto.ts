@@ -1,5 +1,6 @@
 import { BracketEntryType, BracketType, TournamentStatus } from '../../gateway/shared-types/tournament';
 import { TeamDto } from './team.dto';
+import { Dota2Version } from '../../gateway/shared-types/dota2version';
 
 export class CreateTournamentDto {
   name: string;
@@ -7,6 +8,7 @@ export class CreateTournamentDto {
   startDate: number;
   imageUrl: string;
   strategy: BracketType;
+  version: Dota2Version;
   roundBestOf: number;
   finalBestOf: number;
   grandFinalBestOf: number;
@@ -22,6 +24,7 @@ export class TournamentDto {
   name: string;
   entryType: BracketEntryType;
   status: TournamentStatus;
+  version: Dota2Version;
   startDate: number;
   imageUrl: string;
   description: string;
@@ -38,6 +41,7 @@ export class FullTournamentDto {
   name: string;
   entryType: BracketEntryType;
   status: TournamentStatus;
+  version: Dota2Version;
   startDate: number;
   imageUrl: string;
   participants: TournamentParticipantDto[];

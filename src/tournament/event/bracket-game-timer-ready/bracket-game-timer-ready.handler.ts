@@ -15,6 +15,7 @@ import { BracketParticipantEntity } from '../../../db/entity/bracket-participant
 import { TeamEntity } from '../../../db/entity/team.entity';
 import { GameScheduleService } from '../../service/game-schedule.service';
 import { inspect } from 'util';
+import { Dota2Version } from '../../../gateway/shared-types/dota2version';
 
 @EventsHandler(BracketGameTimerReadyEvent)
 export class BracketGameTimerReadyHandler
@@ -119,6 +120,7 @@ export class BracketGameTimerReadyHandler
         tournamentId,
         gameId,
         MatchmakingMode.TOURNAMENT_SOLOMID,
+        tour.version,
         teams[0],
         teams[1],
       );
@@ -142,6 +144,7 @@ export class BracketGameTimerReadyHandler
         tournamentId,
         gameId,
         MatchmakingMode.TOURNAMENT,
+        tour.version,
         teams[0],
         teams[1],
       );
@@ -163,6 +166,7 @@ export class BracketGameTimerReadyHandler
     tournamentId: number,
     gameId: number,
     mode: MatchmakingMode,
+    version: Dota2Version,
     radiant: PlayerId[],
     dire: PlayerId[],
   ) {
@@ -171,6 +175,7 @@ export class BracketGameTimerReadyHandler
         tournamentId, // tournament id
         gameId, // game id
         mode,
+        version,
         radiant,
         dire,
       ),
