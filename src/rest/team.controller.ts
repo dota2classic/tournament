@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   CreateTeamDto,
-  CreateTeamInviteDto, KickFromTeamDto, LeaveTeamDto,
+  CreateTeamInviteDto, EditTeamDto, KickFromTeamDto, LeaveTeamDto,
   SubmitInvitationDto,
   TeamDto,
   TeamInvitationDto,
@@ -42,6 +42,12 @@ export class TeamController {
   @Get(`/view/:id`)
   public async getTeam(@Param('id') id: string): Promise<TeamDto> {
     return this.teamService.fullTeam(id).then(this.teamMapper.mapTeam);
+  }
+
+
+  @Post(`/edit/:id`)
+  public async editTeam(@Param('id') id: string, @Body() dto: EditTeamDto): Promise<TeamDto> {
+    return this.teamService.editTeam(id, dto).then(this.teamMapper.mapTeam);
   }
 
   @Get('tournament_list/:id')

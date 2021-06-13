@@ -614,6 +614,14 @@
     multer "1.4.2"
     tslib "2.0.3"
 
+"@nestjs/schedule@^0.4.2":
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/@nestjs/schedule/-/schedule-0.4.3.tgz#e780bfc52c2505ec5bbd7261033a7749f0808a20"
+  integrity sha512-EowkpwD09lrdMFzjt/kNQgaq6MG0GrNadNoOEebbfyA0qBU0UTg7J+FVullTR9+5HtaegqqAuWDvZlVoGHYz+Q==
+  dependencies:
+    cron "1.7.2"
+    uuid "8.3.2"
+
 "@nestjs/schematics@^7.0.0", "@nestjs/schematics@^7.1.0":
   version "7.2.6"
   resolved "https://registry.yarnpkg.com/@nestjs/schematics/-/schematics-7.2.6.tgz#cc2c029927550f9b551947053849ebff66c99803"
@@ -746,6 +754,14 @@
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/@types/cookiejar/-/cookiejar-2.1.2.tgz#66ad9331f63fe8a3d3d9d8c6e3906dd10f6446e8"
   integrity sha512-t73xJJrvdTjXrn4jLS9VSGRbz0nUY3cl2DMGDU48lKl+HR9dbbjW2A9r3g40VA++mQpy6uuHg33gy7du2BKpog==
+
+"@types/cron@^1.7.2":
+  version "1.7.2"
+  resolved "https://registry.yarnpkg.com/@types/cron/-/cron-1.7.2.tgz#e9fb420da616920dae82d13adfca53282ffaab6e"
+  integrity sha512-AEpNLRcsVSc5AdseJKNHpz0d4e8+ow+abTaC0fKDbAU86rF1evoFF0oC2fV9FdqtfVXkG2LKshpLTJCFOpyvTg==
+  dependencies:
+    "@types/node" "*"
+    moment ">=2.14.0"
 
 "@types/eslint-scope@^3.7.0":
   version "3.7.0"
@@ -1602,18 +1618,24 @@ braces@^3.0.1, braces@~3.0.2:
   dependencies:
     fill-range "^7.0.1"
 
-brackets-manager@^1.2.3:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/brackets-manager/-/brackets-manager-1.2.3.tgz#3b806771c7a976e6bfedbca33e267c06c60f1e0f"
-  integrity sha512-0sJN6Dy3EpSL2abSES42G/iPKcJUuA1ZH61wvxu7+8e9DHtZBQv2pNrvqdaVFg0y9X35FCUZRN5SmS9WgJPyHw==
+brackets-manager@^1.3.3:
+  version "1.3.3"
+  resolved "https://registry.yarnpkg.com/brackets-manager/-/brackets-manager-1.3.3.tgz#ab480ba716a143ec3819174da4464b3176e0e91f"
+  integrity sha512-EvXkKdoB511QARK3V5ctM4jPqYLqE6U3vm3Eff7YsVy2qDZLAM7AqG0u5ysj7qyRIi+bXOX3RcL4Yg9biJa6Jw==
   dependencies:
-    brackets-model "^1.3.5"
+    brackets-model "^1.3.7"
     node-json-db "^1.0.3"
+    rfdc "^1.2.0"
 
 brackets-model@^1.3.5:
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/brackets-model/-/brackets-model-1.3.5.tgz#37c33509dc2b88c49036d877b7afbfcb47e9aa0f"
   integrity sha512-eE5FwfrjGlOh1+BJ1MHyV5fp6e2qsyI28ig5S3G04DmjjrkfIC8wuDf2T6Zy9S3Vi47GM6k2HpOaHRNWDwPZxA==
+
+brackets-model@^1.3.7:
+  version "1.3.7"
+  resolved "https://registry.yarnpkg.com/brackets-model/-/brackets-model-1.3.7.tgz#ea7495d37ddfc08230bd17bc1fb8b342f1d997fb"
+  integrity sha512-bZftcskS0pYBRy9Ut4zgETLfUHsg5eoVwy2rk3S5UsNGqS6oAbjWiUMbLVlRjAlrW/yp2QjnvTyrgGQjNmc4mQ==
 
 browser-process-hrtime@^1.0.0:
   version "1.0.0"
@@ -2084,6 +2106,13 @@ cosmiconfig@^6.0.0:
     parse-json "^5.0.0"
     path-type "^4.0.0"
     yaml "^1.7.2"
+
+cron@1.7.2:
+  version "1.7.2"
+  resolved "https://registry.yarnpkg.com/cron/-/cron-1.7.2.tgz#2ea1f35c138a07edac2ac5af5084ed6fee5723db"
+  integrity sha512-+SaJ2OfeRvfQqwXQ2kgr0Y5pzBR/lijf5OpnnaruwWnmI799JfWr2jN2ItOV9s3A/+TFOt6mxvKzQq5F0Jp6VQ==
+  dependencies:
+    moment-timezone "^0.5.x"
 
 cross-spawn@^6.0.0:
   version "6.0.5"
@@ -4422,6 +4451,18 @@ mkdirp@^0.5.1:
   dependencies:
     minimist "^1.2.5"
 
+moment-timezone@^0.5.x:
+  version "0.5.33"
+  resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.5.33.tgz#b252fd6bb57f341c9b59a5ab61a8e51a73bbd22c"
+  integrity sha512-PTc2vcT8K9J5/9rDEPe5czSIKgLoGsH8UNpA4qZTVw0Vd/Uz19geE9abbIOQKaAQFcnQ3v5YEXrbSc5BpshH+w==
+  dependencies:
+    moment ">= 2.9.0"
+
+"moment@>= 2.9.0", moment@>=2.14.0:
+  version "2.29.1"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
+  integrity sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
+
 ms@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
@@ -5412,6 +5453,11 @@ ret@~0.1.10:
   version "0.1.15"
   resolved "https://registry.yarnpkg.com/ret/-/ret-0.1.15.tgz#b8a4825d5bdb1fc3f6f53c2bc33f81388681c7bc"
   integrity sha512-TTlYpa+OL+vMMNG24xSlQGEJ3B/RzEfUlLct7b5G/ytav+wPrplCpVMFuwzXbkecJrb6IYo1iFb0S9v37754mg==
+
+rfdc@^1.2.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/rfdc/-/rfdc-1.3.0.tgz#d0b7c441ab2720d05dc4cf26e01c89631d9da08b"
+  integrity sha512-V2hovdzFbOi77/WajaSMXk2OLm+xNIeQdMMuB7icj7bk6zi2F8GGAxigcnDFpJHbNyNcgyJDiP+8nOrY5cZGrA==
 
 rimraf@2.6.3:
   version "2.6.3"

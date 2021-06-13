@@ -15,7 +15,7 @@ export class TournamentEntity {
   @Column()
   name: string;
 
-  @Column({ default: Dota2Version.Dota_681 })
+  @Column()
   version: Dota2Version
 
   @Column({ default: TournamentStatus.NEW })

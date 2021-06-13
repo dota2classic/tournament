@@ -32,7 +32,7 @@ export class BracketCrud implements CrudInterface {
   constructor(private readonly connection: Connection, @InjectRepository(TournamentEntity)
   private readonly tournamentEntityRepository: Repository<TournamentEntity>,) {}
 
-  delete<T>(table: Table, filter: Partial<T>): Promise<boolean> {
+  delete<T>(table: Table, filter?: Partial<T>): Promise<boolean> {
     throw 'not implemented';
   }
 

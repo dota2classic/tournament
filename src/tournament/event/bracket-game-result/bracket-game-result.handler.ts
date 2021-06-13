@@ -34,9 +34,11 @@ export class BracketGameResultHandler
       id: game.bm_id,
       [winSide]: {
         score: (match[winSide]?.score || 0) + 1,
+        position: match[winSide]?.position
       },
       [loseSide]: {
         score: match[loseSide]?.score || 0,
+        position: match[loseSide]?.position
       },
     });
 

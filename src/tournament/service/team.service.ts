@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { TeamEntity } from '../../db/entity/team.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,7 +10,11 @@ import { TeamMemberEntity } from '../../db/entity/team-member.entity';
 import { TeamInvitationEntity } from '../../db/entity/team-invitation.entity';
 import { TournamentEntity } from '../../db/entity/tournament.entity';
 import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
-import { BracketEntryType, TournamentStatus } from '../../gateway/shared-types/tournament';
+import {
+  BracketEntryType,
+  TournamentStatus,
+} from '../../gateway/shared-types/tournament';
+import { EditTeamDto } from '../../rest/dto/team.dto';
 
 @Injectable()
 export class TeamService {
@@ -146,7 +154,11 @@ export class TeamService {
       )
       .where('tour.entryType = :type', { type: BracketEntryType.TEAM })
       .andWhere('tour.status in (:...statuses)', {
-        statuses: [TournamentStatus.NEW, TournamentStatus.ONGOING, TournamentStatus.FINISHED],
+        statuses: [
+          TournamentStatus.NEW,
+          TournamentStatus.ONGOING,
+          TournamentStatus.FINISHED,
+        ],
       })
       .andWhere('p.name = :teamId', { teamId })
       .getMany();
@@ -193,6 +205,23 @@ export class TeamService {
         await this.teamMemberEntityRepository.delete(membership);
       }
     }
+    return team;
+  }
+
+  async editTeam(id: string, dto: EditTeamDto): Promise<TeamEntity> {
+    const team = await this.teamEntityRepository.findOne(
+      {
+        id,
+        archived: false,
+      },
+      { relations: ['members'] },
+    );
+
+    if (dto.name) team.name = dto.name;
+    if (dto.imageUrl) team.imageUrl = dto.imageUrl;
+    if (dto.tag) team.tag = dto.tag;
+
+    await this.teamEntityRepository.save(team)
     return team;
   }
 }

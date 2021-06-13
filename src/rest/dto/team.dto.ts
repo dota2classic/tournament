@@ -18,7 +18,11 @@ export class KickFromTeamDto {
   requesterSteamId: string;
   kickedSteamId: string;
 }
-
+export class EditTeamDto {
+  name?: string;
+  tag?: string;
+  imageUrl?: string;
+}
 
 export class TeamDto {
 

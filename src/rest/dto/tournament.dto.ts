@@ -8,7 +8,7 @@ export class CreateTournamentDto {
   startDate: number;
   imageUrl: string;
   strategy: BracketType;
-  version: Dota2Version;
+  version: string;
   roundBestOf: number;
   finalBestOf: number;
   grandFinalBestOf: number;

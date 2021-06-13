@@ -51,6 +51,11 @@ export class BracketService {
     private readonly bracketParticipantEntityRepository: Repository<
       BracketParticipantEntity
     >,
+    @InjectRepository(StageEntity)
+    private readonly stageEntityRepository: Repository<
+      StageEntity
+      >,
+
     @InjectRepository(TournamentParticipantEntity)
     private readonly tournamentParticipantEntityRepository: Repository<
       TournamentParticipantEntity
@@ -156,7 +161,7 @@ export class BracketService {
     type: BracketEntryType,
     startDate: number,
     imageUrl: string,
-    version: Dota2Version,
+    version: string,
     strategy: BracketType,
     bestOfStrategy: BestOfStrategy = { round: 1, final: 1, grandFinal: 1 },
   ) {
@@ -165,9 +170,10 @@ export class BracketService {
     t.entryType = type;
     t.startDate = new Date(startDate);
     t.imageUrl = imageUrl;
-    t.version = version
+    t.version = version as Dota2Version
     t.strategy = strategy;
     t.bestOfConfig = bestOfStrategy;
+    console.log(t)
     return await this.tournamentEntityRepository.save(t);
   }
 
@@ -619,6 +625,48 @@ export class BracketService {
     });
   }
 
+  public async getStandings3(tId: number): Promise<TournamentStandingDto[]>{
+    const stage = await this.stageEntityRepository.findOne({
+      tournament_id: tId
+    });
+    const entry = await this.tournamentEntityRepository
+      .findOne(tId)
+      .then(t => t.entryType);
+
+    const standings = await this.manager.get.finalStandings(stage.id)
+
+    switch (entry) {
+      case BracketEntryType.PLAYER:
+        return Promise.all(
+          standings.map(async a => {
+            const part = await this.bracketParticipantEntityRepository.findOne(
+              a.id,
+            );
+            return {
+              steam_id: part.name,
+              position: a.rank.toString(),
+            };
+          }),
+        );
+      case BracketEntryType.TEAM:
+        return Promise.all(
+          standings.map(async a => {
+            const part = await this.bracketParticipantEntityRepository.findOne(
+              a.id,
+            );
+            const team = await this.teamEntityRepository.findOne(part.name, {
+              relations: ['members'],
+            });
+            return {
+              team: await this.mapper.mapTeam(team),
+              position: a.rank.toString(),
+            };
+          }),
+        );
+    }
+
+  }
+
   public async getStandings2(tId: number): Promise<TournamentStandingDto[]> {
     const entry = await this.tournamentEntityRepository
       .findOne(tId)
@@ -632,13 +680,12 @@ export class BracketService {
       .orderBy('round.number', 'DESC')
       .getManyAndCount();
 
-    const orderedRounds = rounds
-      .sort(
-        (r1, r2) =>
-          r2.group.number * 1000 +
-          r2.number -
-          (r1.group.number * 1000 + r1.number),
-      )
+    const orderedRounds = rounds.sort(
+      (r1, r2) =>
+        r2.group.number * 1000 +
+        r2.number -
+        (r1.group.number * 1000 + r1.number),
+    );
 
     const standings: any[] = [];
 
