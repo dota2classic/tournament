@@ -31,7 +31,7 @@ export class BracketMatchDto {
 
 export class ParticipantResultDto {
   /** If `null`, the participant is to be determined. */
-  id: number | null;
+  id: string | number | null;
   /** Indicates where the participant comes from. */
   position?: number;
   /** If this participant forfeits, the other automatically wins. */

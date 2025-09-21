@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity()
+@Entity('tournament_group')
 export class GroupEntity {
 
   @PrimaryGeneratedColumn()

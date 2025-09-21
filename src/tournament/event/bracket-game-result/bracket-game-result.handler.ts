@@ -24,8 +24,8 @@ export class BracketGameResultHandler
   ) {}
 
   async handle(event: BracketGameResultEvent) {
-    const game = await this.matchGameEntityRepository.findOne(event.gameId);
-    const match = await this.bracketMatchEntityRepository.findOne(game.bm_id);
+    const game = await this.matchGameEntityRepository.findOneById(event.gameId);
+    const match = await this.bracketMatchEntityRepository.findOneById(game.bm_id);
 
     const winSide = event.winner;
     const loseSide = event.winner === 'opponent1' ? 'opponent2' : 'opponent1';

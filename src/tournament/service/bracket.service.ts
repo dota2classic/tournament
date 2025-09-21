@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { Connection, Repository } from 'typeorm';
+import { Connection, In, Repository } from 'typeorm';
 
 import { BracketsManager } from 'brackets-manager';
 import { InputStage, ParticipantResult, Status } from 'brackets-model';
@@ -52,9 +52,7 @@ export class BracketService {
       BracketParticipantEntity
     >,
     @InjectRepository(StageEntity)
-    private readonly stageEntityRepository: Repository<
-      StageEntity
-      >,
+    private readonly stageEntityRepository: Repository<StageEntity>,
 
     @InjectRepository(TournamentParticipantEntity)
     private readonly tournamentParticipantEntityRepository: Repository<
@@ -104,11 +102,11 @@ export class BracketService {
    * @param type
    */
   public async generateTournament(tId: number) {
-    const tournament = await this.tournamentEntityRepository.findOne(tId);
+    const tournament = await this.tournamentEntityRepository.findOneById(tId);
     if (!tournament || tournament.status !== TournamentStatus.NEW) return;
 
     const entries = (
-      await this.tournamentParticipantEntityRepository.find({
+      await this.tournamentParticipantEntityRepository.findBy({
         tournament_id: tId,
       })
     ).map(z => z.name);
@@ -170,10 +168,10 @@ export class BracketService {
     t.entryType = type;
     t.startDate = new Date(startDate);
     t.imageUrl = imageUrl;
-    t.version = version as Dota2Version
+    t.version = version as Dota2Version;
     t.strategy = strategy;
     t.bestOfConfig = bestOfStrategy;
-    console.log(t)
+    console.log(t);
     return await this.tournamentEntityRepository.save(t);
   }
 
@@ -221,7 +219,7 @@ export class BracketService {
 
     if (!team) throw new NotFoundException();
 
-    const t = await this.tournamentEntityRepository.findOne(tId);
+    const t = await this.tournamentEntityRepository.findOneById(tId);
     if (!t) throw new NotFoundException();
 
     if (t.entryType !== BracketEntryType.TEAM) throw new NotFoundException();
@@ -233,7 +231,7 @@ export class BracketService {
       return;
     }
 
-    const existingParticipation = await this.tournamentParticipantEntityRepository.findOne(
+    const existingParticipation = await this.tournamentParticipantEntityRepository.findOneBy(
       {
         tournament_id: t.id,
         name: team.id,
@@ -253,14 +251,14 @@ export class BracketService {
   }
 
   public async registerSoloPlayer(tId: number, steam_id: string) {
-    const t = await this.tournamentEntityRepository.findOne(tId);
+    const t = await this.tournamentEntityRepository.findOneById(tId);
     if (!t) throw new NotFoundException();
 
     if (t.entryType !== BracketEntryType.PLAYER) throw new NotFoundException();
 
     if (t.status !== TournamentStatus.NEW) return;
 
-    const participation = await this.tournamentParticipantEntityRepository.findOne(
+    const participation = await this.tournamentParticipantEntityRepository.findOneBy(
       {
         name: steam_id,
         tournament_id: tId,
@@ -277,14 +275,14 @@ export class BracketService {
   }
 
   public async leaveTournamentAsPlayer(tId: number, steam_id: string) {
-    const t = await this.tournamentEntityRepository.findOne(tId);
+    const t = await this.tournamentEntityRepository.findOneById(tId);
     if (!t) throw new NotFoundException();
 
     if (t.entryType !== BracketEntryType.PLAYER) throw new NotFoundException();
 
     if (t.status !== TournamentStatus.NEW) throw new NotFoundException();
 
-    const participation = await this.tournamentParticipantEntityRepository.findOne(
+    const participation = await this.tournamentParticipantEntityRepository.findOneBy(
       {
         name: steam_id,
         tournament_id: tId,
@@ -305,12 +303,12 @@ export class BracketService {
 
     if (!team) throw new NotFoundException();
 
-    const t = await this.tournamentEntityRepository.findOne(tId);
+    const t = await this.tournamentEntityRepository.findOneById(tId);
     if (!t) throw new NotFoundException();
 
     if (t.entryType !== BracketEntryType.TEAM) throw new NotFoundException();
 
-    const participation = await this.tournamentParticipantEntityRepository.findOne(
+    const participation = await this.tournamentParticipantEntityRepository.findOneBy(
       {
         name: team.id,
         tournament_id: tId,
@@ -340,7 +338,8 @@ export class BracketService {
   }
 
   public async fullTournament(id: number): Promise<FullTournamentDto> {
-    const t = await this.tournamentEntityRepository.findOne(id, {
+    const t = await this.tournamentEntityRepository.findOne({
+      where: { id: id },
       relations: ['preParticipants'],
     });
 
@@ -361,10 +360,10 @@ export class BracketService {
           undefined,
       };
     } else {
-      const teams = await this.teamEntityRepository.findByIds(
-        t.preParticipants.map(t => t.name),
-        { relations: ['members'] },
-      );
+      const teams = await this.teamEntityRepository.find({
+        where: { id: In(t.preParticipants.map(t => t.name)) },
+        relations: ['members'],
+      });
       return {
         ...t,
         startDate: t.startDate.getTime(),
@@ -380,7 +379,7 @@ export class BracketService {
   }
 
   public async cancelTournament(tId: number) {
-    const tournament = await this.tournamentEntityRepository.findOne(tId);
+    const tournament = await this.tournamentEntityRepository.findOneById(tId);
     if (!tournament) return;
 
     tournament.status = TournamentStatus.CANCELLED;
@@ -409,13 +408,13 @@ export class BracketService {
    * @param forfeitId - teamID or steamID
    */
   public async forfeit(gameId: number, mId: number, forfeitId: string) {
-    const m = await this.bracketMatchEntityRepository.findOne(mId);
-    const game = await this.matchGameEntityRepository.findOne(gameId);
+    const m = await this.bracketMatchEntityRepository.findOneById(mId);
+    const game = await this.matchGameEntityRepository.findOneById(gameId);
 
-    const opp1 = await this.bracketParticipantEntityRepository.findOne(
+    const opp1 = await this.bracketParticipantEntityRepository.findOneById(
       m.opponent1?.id,
     );
-    const opp2 = await this.bracketParticipantEntityRepository.findOne(
+    const opp2 = await this.bracketParticipantEntityRepository.findOneById(
       m.opponent2?.id,
     );
 
@@ -455,7 +454,7 @@ export class BracketService {
 
     this.ebus.publish(new BracketUpdatedEvent(t, m.id, gameId));
 
-    return this.bracketMatchEntityRepository.findOne(m.id);
+    return this.bracketMatchEntityRepository.findOneById(m.id);
   }
 
   public async findTournamentByMatchId(mid: number): Promise<TournamentDto> {
@@ -475,7 +474,7 @@ export class BracketService {
   }
 
   public async checkForTournamentFinish(tId: number) {
-    const tournament = await this.tournamentEntityRepository.findOne(tId);
+    const tournament = await this.tournamentEntityRepository.findOneById(tId);
 
     if (!tournament) return false;
 
@@ -511,15 +510,15 @@ export class BracketService {
   }
 
   private async unlockTeams(tournamentId: number) {
-    const t = await this.tournamentEntityRepository.findOne(tournamentId);
+    const t = await this.tournamentEntityRepository.findOneById(tournamentId);
     if (!t) return;
     if (t.entryType === BracketEntryType.PLAYER) return;
 
-    const parts = await this.tournamentParticipantEntityRepository.find({
+    const parts = await this.tournamentParticipantEntityRepository.findBy({
       tournament_id: tournamentId,
     });
     const unlocker = parts.map(async part => {
-      const team = await this.teamEntityRepository.findOne(part.name);
+      const team = await this.teamEntityRepository.findOneById(part.name);
       team.locked = false;
       await this.teamEntityRepository.save(team);
     });
@@ -527,7 +526,7 @@ export class BracketService {
   }
 
   public async checkMatchResults(mId: number) {
-    const matchGames = await this.matchGameEntityRepository.find({
+    const matchGames = await this.matchGameEntityRepository.findBy({
       bm_id: mId,
     });
 
@@ -541,12 +540,12 @@ export class BracketService {
       scores[mg.winner] = (scores[mg.winner] || 0) + 1;
     }
 
-    const m = await this.bracketMatchEntityRepository.findOne(mId);
+    const m = await this.bracketMatchEntityRepository.findOneById(mId);
 
-    const opp1 = await this.bracketParticipantEntityRepository.findOne(
+    const opp1 = await this.bracketParticipantEntityRepository.findOneById(
       m.opponent1?.id,
     );
-    const opp2 = await this.bracketParticipantEntityRepository.findOne(
+    const opp2 = await this.bracketParticipantEntityRepository.findOneById(
       m.opponent2?.id,
     );
 
@@ -625,21 +624,21 @@ export class BracketService {
     });
   }
 
-  public async getStandings3(tId: number): Promise<TournamentStandingDto[]>{
-    const stage = await this.stageEntityRepository.findOne({
-      tournament_id: tId
+  public async getStandings3(tId: number): Promise<TournamentStandingDto[]> {
+    const stage = await this.stageEntityRepository.findOneBy({
+      tournament_id: tId,
     });
     const entry = await this.tournamentEntityRepository
-      .findOne(tId)
+      .findOneById(tId)
       .then(t => t.entryType);
 
-    const standings = await this.manager.get.finalStandings(stage.id)
+    const standings = await this.manager.get.finalStandings(stage.id);
 
     switch (entry) {
       case BracketEntryType.PLAYER:
         return Promise.all(
           standings.map(async a => {
-            const part = await this.bracketParticipantEntityRepository.findOne(
+            const part = await this.bracketParticipantEntityRepository.findOneById(
               a.id,
             );
             return {
@@ -651,10 +650,11 @@ export class BracketService {
       case BracketEntryType.TEAM:
         return Promise.all(
           standings.map(async a => {
-            const part = await this.bracketParticipantEntityRepository.findOne(
+            const part = await this.bracketParticipantEntityRepository.findOneById(
               a.id,
             );
-            const team = await this.teamEntityRepository.findOne(part.name, {
+            const team = await this.teamEntityRepository.findOne({
+              where: { id: part.name },
               relations: ['members'],
             });
             return {
@@ -664,12 +664,11 @@ export class BracketService {
           }),
         );
     }
-
   }
 
   public async getStandings2(tId: number): Promise<TournamentStandingDto[]> {
     const entry = await this.tournamentEntityRepository
-      .findOne(tId)
+      .findOneById(tId)
       .then(t => t.entryType);
     const [rounds, count] = await this.bracketMatchEntityRepository
       .createQueryBuilder('bm')
@@ -742,7 +741,7 @@ export class BracketService {
       case BracketEntryType.PLAYER:
         return Promise.all(
           standings.map(async a => {
-            const part = await this.bracketParticipantEntityRepository.findOne(
+            const part = await this.bracketParticipantEntityRepository.findOneBy(
               a.id,
             );
             return {
@@ -754,10 +753,11 @@ export class BracketService {
       case BracketEntryType.TEAM:
         return Promise.all(
           standings.map(async a => {
-            const part = await this.bracketParticipantEntityRepository.findOne(
+            const part = await this.bracketParticipantEntityRepository.findOneBy(
               a.id,
             );
-            const team = await this.teamEntityRepository.findOne(part.name, {
+            const team = await this.teamEntityRepository.findOne({
+              where: { id: part.name },
               relations: ['members'],
             });
             return {

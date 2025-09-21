@@ -1,0 +1,15 @@
+rabbitmq:
+  host: 45.131.187.213
+  port: 5672
+  user: guest
+  password: guest
+postgres:
+  host: 45.131.187.213
+  port: 5432
+  username: postgres
+  password: e9070b909e4a01b11084fd17597bd79e
+fluentbit:
+  disabled: true
+redis:
+  host: 45.131.187.213
+  password: 518ac9eda40f60d41fe6c53da43b149d

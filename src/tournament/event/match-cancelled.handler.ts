@@ -14,7 +14,7 @@ export class MatchCancelledHandler
 
   async handle(event: MatchCancelledEvent) {
     if (event.info.tournamentId && event.info.tournamentMatchId) {
-      const game = await this.matchGameEntityRepository.findOne({
+      const game = await this.matchGameEntityRepository.findOneBy({
         id: event.info.tournamentMatchId,
       });
 

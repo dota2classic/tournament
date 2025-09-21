@@ -1,11 +1,16 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Status, ParticipantResult } from 'brackets-model';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { ParticipantResult, Status } from 'brackets-model';
 import { StageEntity } from './stage.entity';
 import { GroupEntity } from './group.entity';
 import { RoundEntity } from './round.entity';
 
-
-@Entity()
+@Entity('bracket_match')
 export class BracketMatchEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -28,25 +33,22 @@ export class BracketMatchEntity {
   @Column()
   status: Status; // todo wtf?
 
-  @Column({ nullable: true })
-  scheduledDate: Date
+  @Column({ nullable: true, type: 'timestamptz' })
+  scheduledDate: Date;
 
   @Column({ type: 'simple-json', nullable: true })
-  opponent1?: ParticipantResult
+  opponent1?: ParticipantResult;
 
+  @Column({ type: 'simple-json', nullable: true })
+  opponent2?: ParticipantResult;
 
-  @Column({ type: 'simple-json', nullable: true})
-  opponent2?: ParticipantResult
-
-
-  stage?: StageEntity
-
+  stage?: StageEntity;
 
   @ManyToOne(() => GroupEntity)
-  @JoinColumn({ name: 'group_id'})
-  group?: GroupEntity
+  @JoinColumn({ name: 'group_id', referencedColumnName: 'id' })
+  group?: GroupEntity;
 
   @ManyToOne(() => RoundEntity)
-  @JoinColumn({ name: 'round_id'})
-  round?: RoundEntity
+  @JoinColumn({ name: 'round_id', referencedColumnName: 'id' })
+  round?: RoundEntity;
 }

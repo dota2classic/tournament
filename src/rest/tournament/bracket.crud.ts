@@ -8,7 +8,6 @@ import { RoundEntity } from '../../db/entity/round.entity';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 import { TournamentEntity } from '../../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { inspect } from 'util';
 
 const mapTable = {
   participant: BracketParticipantEntity,
@@ -24,13 +23,16 @@ export interface TournamentBracketInfo {
   group: GroupEntity[];
   round: RoundEntity[];
   match: BracketMatchEntity[];
-  tournament: TournamentEntity
+  tournament: TournamentEntity;
 }
 
 @Injectable()
 export class BracketCrud implements CrudInterface {
-  constructor(private readonly connection: Connection, @InjectRepository(TournamentEntity)
-  private readonly tournamentEntityRepository: Repository<TournamentEntity>,) {}
+  constructor(
+    private readonly connection: Connection,
+    @InjectRepository(TournamentEntity)
+    private readonly tournamentEntityRepository: Repository<TournamentEntity>,
+  ) {}
 
   delete<T>(table: Table, filter?: Partial<T>): Promise<boolean> {
     throw 'not implemented';
@@ -51,7 +53,7 @@ export class BracketCrud implements CrudInterface {
     }
   }
   select<T>(table: Table): Promise<T[] | null>;
-  select<T>(table: Table, id: number): Promise<T | null>;
+  select<T>(table: Table, id: number | string): Promise<T | null>;
   select<T>(table: Table, filter: Partial<T>): Promise<T[] | null>;
   select(table: Table, id?): any {
     const rep = this.connection.getRepository(mapTable[table]);
@@ -59,7 +61,7 @@ export class BracketCrud implements CrudInterface {
       // its a filter
       return rep.find(id);
     } else if (typeof id === 'number') {
-      return rep.findOne(id);
+      return rep.findOneById(id);
     }
   }
 
@@ -108,9 +110,9 @@ export class BracketCrud implements CrudInterface {
       },
     );
 
-    const tournament = await this.tournamentEntityRepository.findOne(tid)
+    const tournament = await this.tournamentEntityRepository.findOneById(tid);
 
-    match.sort((a, b) => a.number - b.number)
+    match.sort((a, b) => a.number - b.number);
 
     return {
       participant,
@@ -118,7 +120,7 @@ export class BracketCrud implements CrudInterface {
       group,
       stage,
       match,
-      tournament
+      tournament,
     };
   }
 }

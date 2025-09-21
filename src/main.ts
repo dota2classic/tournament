@@ -8,6 +8,9 @@ import { BracketMatchService } from './tournament/service/bracket-match.service'
 import { BracketEntryType, BracketType } from './gateway/shared-types/tournament';
 import { MatchGameService } from './tournament/service/match-game.service';
 import { TeamService } from './tournament/service/team.service';
+import { WinstonWrapper } from '@dota2classic/nest_logger';
+import configuration from './config/configuration';
+import { ConfigService } from '@nestjs/config';
 
 const teamName = [
   'form',
@@ -79,19 +82,31 @@ const teamSetup = [
 ];
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const parsedConfig = configuration();
+  const config = new ConfigService(parsedConfig);
+
+  const app = await NestFactory.create(AppModule, {
+    logger: new WinstonWrapper(
+      config.get('fluentbit.host'),
+      config.get<number>('fluentbit.port'),
+      config.get<string>('fluentbit.application'),
+      config.get<boolean>('fluentbit.disabled'),
+    ),
+  });
+
 
   app.connectMicroservice({
     transport: Transport.REDIS,
     options: {
-      url: REDIS_URL(),
+      url: `redis://${config.get("redis.host")}:6379`,
+      host: config.get("redis.host"),
       retryAttempts: Infinity,
-      password: REDIS_PASSWORD(),
       retryDelay: 5000,
+      password: config.get("redis.password"),
     },
   });
   //
-  await app.startAllMicroservicesAsync();
+  await app.startAllMicroservices();
   app.enableCors();
 
   const options = new DocumentBuilder()
@@ -105,12 +120,9 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   await app.listen(6100);
-  const bs = await app.get(BracketService);
-  const ts = await app.get(TeamService);
-  const mgs = await app.get(MatchGameService);
-
-  await app.get(BracketMatchService).scheduleMatches();
-  // await bs.getStandings(2)
+  //
+  // await app.get(BracketMatchService).scheduleMatches();
+  // // await bs.getStandings(2)
 
   // const t = await bs.createTournament(
   //   'Team tournament',

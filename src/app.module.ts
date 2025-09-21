@@ -1,17 +1,13 @@
-import { CacheModule, Module } from '@nestjs/common';
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { Module } from '@nestjs/common';
 import { RedisController } from './redis.controller';
-import { isDev, REDIS_PASSWORD, REDIS_URL } from './config/env';
-import { devDbConfig, Entities, prodDbConfig } from './config/entities';
+import { ClientsModule, RedisOptions, Transport } from '@nestjs/microservices';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
 import { BracketService } from './tournament/service/bracket.service';
 import { BracketCrud } from './rest/tournament/bracket.crud';
 import { TournamentController } from './rest/tournament.controller';
 import { TournamentMapper } from './rest/mapper/tournament.mapper';
-import { qCache, UserRepository } from './rest/caches/user.repository';
-import { outerQuery } from './gateway/util/outerQuery';
-import { GetUserInfoQuery } from './gateway/queries/GetUserInfo/get-user-info.query';
+import { UserRepository } from './rest/caches/user.repository';
 import { TeamController } from './rest/team.controller';
 import { TeamService } from './tournament/service/team.service';
 import { TeamMapper } from './rest/mapper/team.mapper';
@@ -29,28 +25,54 @@ import { BracketsManager } from 'brackets-manager';
 import { BracketGameResultHandler } from './tournament/event/bracket-game-result/bracket-game-result.handler';
 import { BracketGameTimerReadyHandler } from './tournament/event/bracket-game-timer-ready/bracket-game-timer-ready.handler';
 import { GameScheduleService } from './tournament/service/game-schedule.service';
+import configuration from './config/configuration';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { Entities } from './config/entities';
+import { getTypeormConfig } from './config/typeorm.config';
 
 @Module({
   imports: [
-    CacheModule.register(),
+    ConfigModule.forRoot({
+      load: [configuration],
+      isGlobal: true,
+    }),
     ScheduleModule.forRoot(),
     CqrsModule,
-    TypeOrmModule.forRoot(
-      (isDev ? devDbConfig : prodDbConfig) as TypeOrmModuleOptions,
-    ),
+    TypeOrmModule.forRootAsync({
+      useFactory(config: ConfigService): TypeOrmModuleOptions {
+        return {
+          ...getTypeormConfig(config),
+          type: 'postgres',
+          migrations: ['dist/db/migrations/*.*'],
+          migrationsRun: true,
+          logging: ['error'],
+        };
+      },
+      imports: [],
+      inject: [ConfigService],
+    }),
     TypeOrmModule.forFeature(Entities),
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'QueryCore',
-        transport: Transport.REDIS,
-        options: {
-          url: REDIS_URL(),
-          password: REDIS_PASSWORD(),
-          retryAttempts: Infinity,
-          retryDelay: 5000,
+        useFactory(config: ConfigService): RedisOptions {
+          return {
+            transport: Transport.REDIS,
+            options: {
+              host: config.get('redis.host'),
+              password: config.get('redis.password'),
+              reconnectOnError: () => true,
+              connectTimeout: 3000,
+              retryAttempts: 100000,
+              maxRetriesPerRequest: 10,
+              keepAlive: 1,
+            },
+          };
         },
+        inject: [ConfigService],
+        imports: [],
       },
-    ] as any),
+    ]),
   ],
   controllers: [RedisController, TeamController, TournamentController],
   providers: [
@@ -82,7 +104,6 @@ import { GameScheduleService } from './tournament/service/game-schedule.service'
     MatchStartedHandler,
     GameResultsHandler,
     BracketUpdatedHandler,
-    outerQuery(GetUserInfoQuery, 'QueryCore', qCache()),
   ],
 })
 export class AppModule {}

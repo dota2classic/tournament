@@ -52,7 +52,7 @@ export class TournamentController {
 
   @Get('/bracket/:id')
   async getBracket(@Param('id') id: number) {
-    const tournament = await this.tournamentEntityRepository.findOne(id);
+    const tournament = await this.tournamentEntityRepository.findOneById(id);
     return this.crud
       .getBracket(id)
       .then(t => this.mapper.mapBracket(t, tournament));
@@ -166,7 +166,7 @@ export class TournamentController {
   public async getTournamentMatch(
     @Param('id') id: number,
   ): Promise<BracketMatchDto> {
-    const m = await this.bracketMatchEntityRepository.findOne(id);
+    const m = await this.bracketMatchEntityRepository.findOneById(id);
     const t = await this.bracketService.findTournamentByMatchId(id);
     return this.bracketMapper.mapMatch(t.entryType, m);
   }
@@ -186,7 +186,7 @@ export class TournamentController {
     @Param('id') id: number,
     @Body() scheduleDto: ScheduleTournamentMatchDto,
   ): Promise<BracketMatchDto> {
-    const m = await this.bracketMatchEntityRepository.findOne(id);
+    const m = await this.bracketMatchEntityRepository.findOneById(id);
     if (!m) return;
 
     const tourId = await this.utilQuery.matchTournamentId(m.id);

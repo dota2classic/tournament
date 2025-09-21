@@ -1,16 +1,17 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { TournamentEntity } from './tournament.entity';
 import { TeamEntity } from './team.entity';
 
-@Entity()
+@Entity('bracket_participant')
 export class BracketParticipantEntity {
-
   @PrimaryGeneratedColumn()
   id: number;
-
-
-  @Column()
-  tournament_id: number;
 
 
   /**
@@ -19,12 +20,16 @@ export class BracketParticipantEntity {
   @Column()
   name: string;
 
+  @ManyToOne(
+    () => TournamentEntity,
+    t => t.participants,
+  )
+  @JoinColumn({ name: 'tournament_id' })
+  tournament?: TournamentEntity;
 
 
-  @ManyToOne(t => TournamentEntity, t => t.participants)
-  @JoinColumn({ name: 'tournament_id'})
-  tournament?: TournamentEntity
+  @Column()
+  tournament_id: number;
 
-  team?: TeamEntity
-
+  team?: TeamEntity;
 }

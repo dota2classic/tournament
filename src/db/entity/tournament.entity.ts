@@ -4,7 +4,7 @@ import { BracketParticipantEntity } from './bracket-participant.entity';
 import { TournamentParticipantEntity } from './tournament-participant.entity';
 import { Dota2Version } from '../../gateway/shared-types/dota2version';
 
-@Entity()
+@Entity('tournament')
 export class TournamentEntity {
   @PrimaryGeneratedColumn()
   id: number;

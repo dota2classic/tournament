@@ -48,7 +48,7 @@ export class GameScheduleService {
     gameId: number,
     newDate: number,
   ) {
-    const game = await this.matchGameEntityRepository.findOne(gameId);
+    const game = await this.matchGameEntityRepository.findOneBy({ id: gameId });
     // clear previous schedule if there is
     await this.clearJob(tournamentId, game.bm_id, gameId);
 
@@ -77,13 +77,14 @@ export class GameScheduleService {
         job,
       );
       job.start();
-      this.logger.log(`Scheduled game ${gameId} of match ${matchId} for ${scheduledDate}`);
-    }catch (e){
-      this.logger.warn(`Couldn't schedule game ${gameId} of match ${matchId} for ${scheduledDate}`, e);
+      this.logger.log(
+        `Scheduled game ${gameId} of match ${matchId} for ${scheduledDate}`,
+      );
+    } catch (e) {
+      this.logger.warn(
+        `Couldn't schedule game ${gameId} of match ${matchId} for ${scheduledDate}`,
+        e,
+      );
     }
-
   }
-
-
-
 }

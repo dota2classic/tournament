@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity()
+@Entity('tournament_round')
 export class RoundEntity {
   @PrimaryGeneratedColumn()
   id: number;

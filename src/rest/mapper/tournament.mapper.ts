@@ -38,7 +38,13 @@ export class TournamentMapper {
 
   public mapTournament = (t: TournamentEntity): TournamentDto => {
     return {
-      ...t,
+      id: t.id,
+      name: t.name,
+      entryType: t.entryType,
+      status: t.status,
+      version: t.version,
+      imageUrl: t.imageUrl,
+      description: t.description,
       startDate: t.startDate.getTime(),
     };
   };
@@ -69,7 +75,7 @@ export class TournamentMapper {
         return {
           result: opp.result,
           team: await this.teamEntityRepository
-            .findOne(rr.name, { relations: ['members'] })
+            .findOne({ where: { id: rr.name }, relations: ['members'] })
             .then(this.teamMapper.mapTeam),
 
           score: opp.score,
@@ -93,7 +99,9 @@ export class TournamentMapper {
       seeds: await Promise.all(
         seeds.map(async match => {
           const games = await this.matchGameEntityRepository.find({
-            bm_id: match.id,
+            where: {
+              bm_id: match.id,
+            },
           });
 
           const teams = await Promise.all(
@@ -124,7 +132,10 @@ export class TournamentMapper {
                     result: opp.result,
                     score: opp.score,
                     team: await this.teamEntityRepository
-                      .findOne(rr.name, { relations: ['members'] })
+                      .findOne({
+                        where: { id: rr.name },
+                        relations: ['members'],
+                      })
                       .then(this.teamMapper.mapTeam),
                   };
               }
@@ -230,7 +241,7 @@ export class TournamentMapper {
       games: games.map(this.mapTournamentMatchGame),
       opponent1: m.opponent1 && (await this.mapSeed(type, m.opponent1)),
       opponent2: m.opponent2 && (await this.mapSeed(type, m.opponent2)),
-      status: ms
+      status: ms,
     };
   }
 }

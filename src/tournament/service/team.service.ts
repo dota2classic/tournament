@@ -39,7 +39,7 @@ export class TeamService {
     imageUrl: string,
     created_by: string, // steam id
   ): Promise<TeamEntity> {
-    const isTagTaken = await this.teamEntityRepository.findOne({
+    const isTagTaken = await this.teamEntityRepository.findOneBy({
       tag,
     });
     if (isTagTaken) throw new ForbiddenException();
@@ -68,7 +68,7 @@ export class TeamService {
     // can't join if it's locked
     if (t.locked) return;
 
-    const existingMembership = await this.teamMemberEntityRepository.findOne({
+    const existingMembership = await this.teamMemberEntityRepository.findOneBy({
       steam_id: steam_id,
     });
 
@@ -85,25 +85,23 @@ export class TeamService {
   }
 
   public async fullTeam(id: string) {
-    return this.teamEntityRepository.findOne(
-      {
+    return this.teamEntityRepository.findOne({
+      where: {
         id,
         archived: false,
       },
-      { relations: ['members'] },
-    );
+      relations: ['members'],
+    });
   }
 
   public async findTeamOf(steamId: string) {
     return this.teamMemberEntityRepository
-      .findOne(
-        {
+      .findOne({
+        where: {
           steam_id: steamId,
         },
-        {
-          relations: ['team', 'team.members'],
-        },
-      )
+        relations: ['team', 'team.members'],
+      })
       .then(t => t.team);
   }
   public async inviteToTeam(inviter: string, steam_id: string) {
@@ -117,7 +115,7 @@ export class TeamService {
     // only member can invite
     if (!team.members.find(t => t.steam_id === inviter)) return;
 
-    const existingInvite = await this.teamInvitationEntityRepository.findOne({
+    const existingInvite = await this.teamInvitationEntityRepository.findOneBy({
       steam_id,
       teamId: team.id,
     });
@@ -132,7 +130,7 @@ export class TeamService {
   }
 
   public async submitInvitation(id: number, accept: boolean) {
-    const inv = await this.teamInvitationEntityRepository.findOne(id);
+    const inv = await this.teamInvitationEntityRepository.findOneBy({ id });
     if (!inv) return;
 
     try {
@@ -171,7 +169,7 @@ export class TeamService {
     if (team && !team.locked) {
       if (team.creator === steamId) {
         // if creator leaves team, team is deleted
-        const members = await this.teamMemberEntityRepository.find({
+        const members = await this.teamMemberEntityRepository.findBy({
           teamId: team.id,
         });
         // delete all members
@@ -180,7 +178,7 @@ export class TeamService {
         await this.teamEntityRepository.save(team);
         return;
       }
-      const membership = await this.teamMemberEntityRepository.findOne({
+      const membership = await this.teamMemberEntityRepository.findOneBy({
         steam_id: steamId,
         teamId: team.id,
       });
@@ -198,8 +196,10 @@ export class TeamService {
     if (requesterSteamId === kickedSteamId) return;
     if (team && !team.locked && team.creator === requesterSteamId) {
       const membership = await this.teamMemberEntityRepository.findOne({
-        steam_id: kickedSteamId,
-        teamId: team.id,
+        where: {
+          steam_id: kickedSteamId,
+          teamId: team.id,
+        },
       });
       if (membership) {
         await this.teamMemberEntityRepository.delete(membership);
@@ -209,19 +209,19 @@ export class TeamService {
   }
 
   async editTeam(id: string, dto: EditTeamDto): Promise<TeamEntity> {
-    const team = await this.teamEntityRepository.findOne(
-      {
+    const team = await this.teamEntityRepository.findOne({
+      where: {
         id,
         archived: false,
       },
-      { relations: ['members'] },
-    );
+      relations: ['members'],
+    });
 
     if (dto.name) team.name = dto.name;
     if (dto.imageUrl) team.imageUrl = dto.imageUrl;
     if (dto.tag) team.tag = dto.tag;
 
-    await this.teamEntityRepository.save(team)
+    await this.teamEntityRepository.save(team);
     return team;
   }
 }

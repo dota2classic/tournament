@@ -70,7 +70,7 @@ export class BracketMatchService {
 
   public async scheduleBracketMatch(tournamentId: number, matchId: number) {
     const games = await this.matchGameEntityRepository
-      .find({
+      .findBy({
         bm_id: matchId,
       })
       .then(t => t.sort((a, b) => a.number - b.number));
@@ -123,13 +123,13 @@ export class BracketMatchService {
    * @param bid - bracket match ID
    */
   public async generateGames(tid: number, bid: number) {
-    const tour = await this.tournamentEntityRepository.findOne(tid);
+    const tour = await this.tournamentEntityRepository.findOneById(tid);
     if (!tour) return;
 
-    const bm = await this.bracketMatchEntityRepository.findOne(bid);
+    const bm = await this.bracketMatchEntityRepository.findOneById(bid);
     if (!bm) return;
 
-    const group = await this.groupEntityRepository.findOne({
+    const group = await this.groupEntityRepository.findOneBy({
       id: bm.group_id,
     });
 
@@ -138,12 +138,12 @@ export class BracketMatchService {
       return;
     }
 
-    const round = await this.roundEntityRepository.findOne(bm.round_id);
-    const totalRounds = await this.roundEntityRepository.find({
+    const round = await this.roundEntityRepository.findOneById(bm.round_id);
+    const totalRounds = await this.roundEntityRepository.findBy({
       group_id: bm.group_id,
     });
 
-    let roundOffset: number = 0;
+    let roundOffset = 0;
     if (group.number === 1) {
       // WB bracket/standart bracket
       roundOffset = 0;

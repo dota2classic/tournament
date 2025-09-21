@@ -14,7 +14,6 @@ import { Logger } from '@nestjs/common';
 import { BracketParticipantEntity } from '../../../db/entity/bracket-participant.entity';
 import { TeamEntity } from '../../../db/entity/team.entity';
 import { GameScheduleService } from '../../service/game-schedule.service';
-import { inspect } from 'util';
 import { Dota2Version } from '../../../gateway/shared-types/dota2version';
 
 @EventsHandler(BracketGameTimerReadyEvent)
@@ -42,12 +41,13 @@ export class BracketGameTimerReadyHandler
   ) {}
 
   async handle(event: BracketGameTimerReadyEvent) {
-    this.logger.log(`Ok here we need to start tournament match`)
+    this.logger.log(`Ok here we need to start tournament match`);
     await this.initMatch(event.tournamentId, event.matchId, event.gameId);
   }
 
+
   private async isPreviousGameFinished(game: MatchGameEntity) {
-    const allGames = await this.matchGameEntityRepository.find({
+    const allGames = await this.matchGameEntityRepository.findBy({
       bm_id: game.bm_id,
     });
     return (
@@ -61,13 +61,15 @@ export class BracketGameTimerReadyHandler
     matchId: number,
     gameId: number,
   ) {
-    const tour = await this.tournamentEntityRepository.findOne(tournamentId);
-    const b = await this.bracketMatchEntityRepository.findOne(matchId);
-    const game = await this.matchGameEntityRepository.findOne(gameId);
+    const tour = await this.tournamentEntityRepository.findOneById(
+      tournamentId,
+    );
+    const b = await this.bracketMatchEntityRepository.findOneById(matchId);
+    const game = await this.matchGameEntityRepository.findOneById(gameId);
 
     // no need to start matches if it's dev
     if (isDev) {
-      this.logger.log(`Dev mode, not processing timer-ready event`)
+      this.logger.log(`Dev mode, not processing timer-ready event`);
       // this.logger.log(inspect(game))
       return;
     }
@@ -104,10 +106,10 @@ export class BracketGameTimerReadyHandler
       return;
     }
 
-    const opp1 = await this.bracketParticipantEntityRepository.findOne(
+    const opp1 = await this.bracketParticipantEntityRepository.findOneById(
       b.opponent1.id,
     );
-    const opp2 = await this.bracketParticipantEntityRepository.findOne(
+    const opp2 = await this.bracketParticipantEntityRepository.findOneById(
       b.opponent2.id,
     );
 
@@ -126,10 +128,14 @@ export class BracketGameTimerReadyHandler
       );
     } else {
       // ok here we query teams
-      const team1 = await this.teamEntityRepository.findOne(opp1.name, {
+      const team1 = await this.teamEntityRepository.findOne({
+        where: { id: opp1.name },
         relations: ['members'],
       });
-      const team2 = await this.teamEntityRepository.findOne(opp2.name, {
+      const team2 = await this.teamEntityRepository.findOne({
+        where: {
+          id: opp2.name,
+        },
         relations: ['members'],
       });
 

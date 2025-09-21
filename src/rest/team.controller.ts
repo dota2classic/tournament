@@ -2,7 +2,10 @@ import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   CreateTeamDto,
-  CreateTeamInviteDto, EditTeamDto, KickFromTeamDto, LeaveTeamDto,
+  CreateTeamInviteDto,
+  EditTeamDto,
+  KickFromTeamDto,
+  LeaveTeamDto,
   SubmitInvitationDto,
   TeamDto,
   TeamInvitationDto,
@@ -44,9 +47,11 @@ export class TeamController {
     return this.teamService.fullTeam(id).then(this.teamMapper.mapTeam);
   }
 
-
   @Post(`/edit/:id`)
-  public async editTeam(@Param('id') id: string, @Body() dto: EditTeamDto): Promise<TeamDto> {
+  public async editTeam(
+    @Param('id') id: string,
+    @Body() dto: EditTeamDto,
+  ): Promise<TeamDto> {
     return this.teamService.editTeam(id, dto).then(this.teamMapper.mapTeam);
   }
 
@@ -88,8 +93,6 @@ export class TeamController {
     await this.teamService.submitInvitation(id, dto.accept);
   }
 
-
-
   @Post(`/kick_from_team`)
   public async kickFromTeam(@Body() dto: KickFromTeamDto): Promise<TeamDto> {
     return this.teamService
@@ -115,14 +118,10 @@ export class TeamController {
   public async getTeamOf(
     @Param('id') steamId: string,
   ): Promise<TeamDto | undefined> {
-    const membership = await this.teamMemberEntityRepository.findOne(
-      {
-        steam_id: steamId,
-      },
-      {
-        relations: ['team', 'team.members'],
-      },
-    );
+    const membership = await this.teamMemberEntityRepository.findOne({
+      where: { steam_id: steamId },
+      relations: ['team', 'team.members'],
+    });
     if (membership) {
       return this.teamMapper.mapTeam(membership.team);
     }

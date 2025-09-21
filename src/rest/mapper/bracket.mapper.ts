@@ -16,13 +16,7 @@ import { TeamMapper } from './team.mapper';
 import { TeamEntity } from '../../db/entity/team.entity';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 import { MatchGameEntity } from '../../db/entity/match-game.entity';
-import { ParticipantResult, Result, Status } from 'brackets-model';
-import {
-  MatchStatus,
-  SeedItemDto,
-  TournamentMatchDto,
-} from '../dto/tournament.dto';
-import { inspect } from 'util';
+import { ParticipantResult, Status } from 'brackets-model';
 
 @Injectable()
 export class BracketMapper {
@@ -41,7 +35,7 @@ export class BracketMapper {
     entryType: BracketEntryType,
     b: BracketParticipantEntity,
   ): Promise<BracketParticipantDto | undefined> => {
-    if(b.name === undefined) return undefined;
+    if (b.name === undefined) return undefined;
     switch (entryType) {
       case BracketEntryType.PLAYER:
         return {
@@ -53,7 +47,10 @@ export class BracketMapper {
         return {
           tournament_id: b.tournament_id,
           team: this.teamMapper.mapTeam(
-            await this.teamEntityRepository.findOne(b.name, { relations: ['members']}),
+            await this.teamEntityRepository.findOne({
+              where: { id: b.name },
+              relations: ['members'],
+            }),
           ),
           id: b.id,
         };
