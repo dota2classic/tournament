@@ -3,18 +3,18 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { TeamEntity } from '../../db/entity/team.entity';
+import { TeamEntity } from '../db/entity/team.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { TeamMemberEntity } from '../../db/entity/team-member.entity';
-import { TeamInvitationEntity } from '../../db/entity/team-invitation.entity';
-import { TournamentEntity } from '../../db/entity/tournament.entity';
-import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
+import { TeamMemberEntity } from '../db/entity/team-member.entity';
+import { TeamInvitationEntity } from '../db/entity/team-invitation.entity';
+import { TournamentEntity } from '../db/entity/tournament.entity';
+import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
 import {
   BracketEntryType,
   TournamentStatus,
-} from '../../gateway/shared-types/tournament';
-import { EditTeamDto } from '../../rest/dto/team.dto';
+} from '../gateway/shared-types/tournament';
+import { EditTeamDto } from '../model/team.dto';
 
 @Injectable()
 export class TeamService {

@@ -1,6 +1,6 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { MatchCancelledEvent } from '../../gateway/events/match-cancelled.event';
-import { MatchGameEntity } from '../../db/entity/match-game.entity';
+import { MatchCancelledEvent } from '../gateway/events/match-cancelled.event';
+import { MatchGameEntity } from '../db/entity/match-game.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 

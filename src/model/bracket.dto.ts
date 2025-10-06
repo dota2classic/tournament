@@ -1,11 +1,8 @@
-import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
-import { StageEntity } from '../../db/entity/stage.entity';
-import { GroupEntity } from '../../db/entity/group.entity';
-import { RoundEntity } from '../../db/entity/round.entity';
-import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
+import { StageEntity } from '../db/entity/stage.entity';
+import { GroupEntity } from '../db/entity/group.entity';
+import { RoundEntity } from '../db/entity/round.entity';
 import { TeamDto } from './team.dto';
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
-import { ParticipantResult, Result, Status } from 'brackets-model';
+import { Result, Status } from 'brackets-model';
 
 export class TournamentBracketInfoDto {
   participant: BracketParticipantDto[];
@@ -41,9 +38,9 @@ export class ParticipantResultDto {
   /** Tells what is the result of a duel for this participant. */
   result?: Result;
 
-  tbd?: boolean
+  tbd?: boolean;
 
-  participant?: BracketParticipantDto
+  participant?: BracketParticipantDto;
 }
 
 export class BracketMatchGameDto {

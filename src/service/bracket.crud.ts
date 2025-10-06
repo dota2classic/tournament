@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { CrudInterface, OmitId, Table } from 'brackets-manager/dist/types';
-import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
+import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
 import { Connection, In, Repository } from 'typeorm';
-import { StageEntity } from '../../db/entity/stage.entity';
-import { GroupEntity } from '../../db/entity/group.entity';
-import { RoundEntity } from '../../db/entity/round.entity';
-import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
-import { TournamentEntity } from '../../db/entity/tournament.entity';
+import { StageEntity } from '../db/entity/stage.entity';
+import { GroupEntity } from '../db/entity/group.entity';
+import { RoundEntity } from '../db/entity/round.entity';
+import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
+import { TournamentEntity } from '../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
 const mapTable = {

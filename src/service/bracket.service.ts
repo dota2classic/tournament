@@ -7,35 +7,35 @@ import { InputStage, ParticipantResult, Status } from 'brackets-model';
 import {
   BestOfStrategy,
   TournamentEntity,
-} from '../../db/entity/tournament.entity';
-import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
-import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
-import { TeamEntity } from '../../db/entity/team.entity';
+} from '../db/entity/tournament.entity';
+import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
+import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
+import { TeamEntity } from '../db/entity/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   BracketEntryType,
   BracketType,
   TournamentStatus,
-} from '../../gateway/shared-types/tournament';
-import { TournamentParticipantEntity } from '../../db/entity/tournament-participant.entity';
+} from '../gateway/shared-types/tournament';
+import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 import { BracketMatchService } from './bracket-match.service';
-import { StageEntity } from '../../db/entity/stage.entity';
+import { StageEntity } from '../db/entity/stage.entity';
 import {
   FullTournamentDto,
   TournamentDto,
   TournamentStandingDto,
-} from '../../rest/dto/tournament.dto';
+} from '../model/tournament.dto';
 
-import { TeamMapper } from '../../rest/mapper/team.mapper';
+import { TeamMapper } from '../mapper/team.mapper';
 import { UtilQuery } from './util-query';
-import { RoundEntity } from '../../db/entity/round.entity';
-import { MatchGameEntity } from '../../db/entity/match-game.entity';
+import { RoundEntity } from '../db/entity/round.entity';
+import { MatchGameEntity } from '../db/entity/match-game.entity';
 import { EventBus } from '@nestjs/cqrs';
-import { BracketUpdatedEvent } from '../../rest/event/bracket-updated.event';
-import { TeamMemberEntity } from '../../db/entity/team-member.entity';
+import { BracketUpdatedEvent } from '../event/bracket-updated.event';
+import { TeamMemberEntity } from '../db/entity/team-member.entity';
 import { TeamService } from './team.service';
-import { shuffle } from '../../util/shuffle';
-import { Dota2Version } from '../../gateway/shared-types/dota2version';
+import { shuffle } from '../util/shuffle';
+import { Dota2Version } from '../gateway/shared-types/dota2version';
 
 export type EntryIdType = string;
 
@@ -157,21 +157,20 @@ export class BracketService {
   public async createTournament(
     name: string,
     type: BracketEntryType,
-    startDate: number,
+    startDate: Date,
     imageUrl: string,
-    version: string,
+    version: Dota2Version,
     strategy: BracketType,
     bestOfStrategy: BestOfStrategy = { round: 1, final: 1, grandFinal: 1 },
   ) {
     const t = new TournamentEntity();
     t.name = name;
     t.entryType = type;
-    t.startDate = new Date(startDate);
+    t.startDate = startDate;
     t.imageUrl = imageUrl;
-    t.version = version as Dota2Version;
+    t.version = version;
     t.strategy = strategy;
     t.bestOfConfig = bestOfStrategy;
-    console.log(t);
     return await this.tournamentEntityRepository.save(t);
   }
 

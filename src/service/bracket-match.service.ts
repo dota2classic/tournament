@@ -1,23 +1,25 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
+import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { TournamentEntity } from '../../db/entity/tournament.entity';
-import { BracketEntryType, TournamentStatus } from '../../gateway/shared-types/tournament';
-import { RoundEntity } from '../../db/entity/round.entity';
+import { TournamentEntity } from '../db/entity/tournament.entity';
+import {
+  BracketEntryType,
+  TournamentStatus,
+} from '../gateway/shared-types/tournament';
+import { RoundEntity } from '../db/entity/round.entity';
 import { EventBus } from '@nestjs/cqrs';
-import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
+import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
 import { Status } from 'brackets-model';
 import { UtilQuery } from './util-query';
-import { StageEntity } from '../../db/entity/stage.entity';
-import { MatchGameEntity } from '../../db/entity/match-game.entity';
-import { GroupEntity } from '../../db/entity/group.entity';
+import { StageEntity } from '../db/entity/stage.entity';
+import { MatchGameEntity } from '../db/entity/match-game.entity';
+import { GroupEntity } from '../db/entity/group.entity';
 import { GameScheduleService } from './game-schedule.service';
 
 @Injectable()
 export class BracketMatchService {
-
   private readonly logger = new Logger(BracketMatchService.name);
 
   private static keyForJob = (
@@ -104,7 +106,7 @@ export class BracketMatchService {
       .andWhere('bm.status not in (:...statuses)', {
         statuses: [Status.Completed, Status.Archived],
       })
-      .getMany()
+      .getMany();
 
     // todo promise.all
 
@@ -114,7 +116,7 @@ export class BracketMatchService {
       await this.scheduleBracketMatch(t, match.id);
     }
 
-    this.logger.log(`Scheduled ${pendingMatches.length} matches`)
+    this.logger.log(`Scheduled ${pendingMatches.length} matches`);
   }
 
   /**

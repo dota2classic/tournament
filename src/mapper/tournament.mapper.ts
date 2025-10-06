@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { BracketCrud, TournamentBracketInfo } from '../tournament/bracket.crud';
-import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
-import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
-import { TournamentEntity } from '../../db/entity/tournament.entity';
+import { BracketCrud, TournamentBracketInfo } from '../service/bracket.crud';
+import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
+import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
+import { TournamentEntity } from '../db/entity/tournament.entity';
 import {
   BracketDto,
   BracketRoundDto,
@@ -11,19 +11,19 @@ import {
   SeedItemDto,
   TournamentDto,
   TournamentMatchDto,
-} from '../dto/tournament.dto';
+} from '../model/tournament.dto';
 import {
   BracketEntryType,
   BracketType,
-} from '../../gateway/shared-types/tournament';
-import { TeamEntity } from '../../db/entity/team.entity';
+} from '../gateway/shared-types/tournament';
+import { TeamEntity } from '../db/entity/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TeamMapper } from './team.mapper';
-import { splitBy } from '../../util/splitBy';
-import { RoundEntity } from '../../db/entity/round.entity';
+import { splitBy } from '../util/splitBy';
+import { RoundEntity } from '../db/entity/round.entity';
 import { ParticipantResult, Status } from 'brackets-model';
-import { MatchGameEntity } from '../../db/entity/match-game.entity';
+import { MatchGameEntity } from '../db/entity/match-game.entity';
 
 @Injectable()
 export class TournamentMapper {

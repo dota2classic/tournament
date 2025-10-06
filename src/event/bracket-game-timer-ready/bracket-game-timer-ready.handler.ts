@@ -1,20 +1,20 @@
 import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { BracketGameTimerReadyEvent } from './bracket-game-timer-ready.event';
-import { isDev } from '../../../config/env';
-import { BracketEntryType } from '../../../gateway/shared-types/tournament';
-import { PlayerId } from '../../../gateway/shared-types/player-id';
-import { TournamentGameReadyEvent } from '../../../gateway/events/tournament/tournament-game-ready.event';
-import { MatchmakingMode } from '../../../gateway/shared-types/matchmaking-mode';
-import { TournamentEntity } from '../../../db/entity/tournament.entity';
+import { isDev } from '../../config/env';
+import { BracketEntryType } from '../../gateway/shared-types/tournament';
+import { PlayerId } from '../../gateway/shared-types/player-id';
+import { TournamentGameReadyEvent } from '../../gateway/events/tournament/tournament-game-ready.event';
+import { MatchmakingMode } from '../../gateway/shared-types/matchmaking-mode';
+import { TournamentEntity } from '../../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BracketMatchEntity } from '../../../db/entity/bracket-match.entity';
-import { MatchGameEntity } from '../../../db/entity/match-game.entity';
+import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
+import { MatchGameEntity } from '../../db/entity/match-game.entity';
 import { Logger } from '@nestjs/common';
-import { BracketParticipantEntity } from '../../../db/entity/bracket-participant.entity';
-import { TeamEntity } from '../../../db/entity/team.entity';
+import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
+import { TeamEntity } from '../../db/entity/team.entity';
 import { GameScheduleService } from '../../service/game-schedule.service';
-import { Dota2Version } from '../../../gateway/shared-types/dota2version';
+import { Dota2Version } from '../../gateway/shared-types/dota2version';
 
 @EventsHandler(BracketGameTimerReadyEvent)
 export class BracketGameTimerReadyHandler
@@ -44,7 +44,6 @@ export class BracketGameTimerReadyHandler
     this.logger.log(`Ok here we need to start tournament match`);
     await this.initMatch(event.tournamentId, event.matchId, event.gameId);
   }
-
 
   private async isPreviousGameFinished(game: MatchGameEntity) {
     const allGames = await this.matchGameEntityRepository.findBy({

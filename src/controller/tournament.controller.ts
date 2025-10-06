@@ -1,30 +1,32 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { BracketCrud } from './tournament/bracket.crud';
-import { TournamentMapper } from './mapper/tournament.mapper';
+import { BracketCrud } from '../service/bracket.crud';
+import { TournamentMapper } from '../mapper/tournament.mapper';
 import { ApiTags } from '@nestjs/swagger';
 import {
   CreateTournamentDto,
-  ForfeitDto,
   FullTournamentDto,
   ScheduleTournamentMatchDto,
   SetMatchResultDto,
   TournamentDto,
-} from './dto/tournament.dto';
+} from '../model/tournament.dto';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BracketService } from '../tournament/service/bracket.service';
-import { CompactTeamDto } from './dto/team.dto';
-import { TeamMapper } from './mapper/team.mapper';
+import { BracketService } from '../service/bracket.service';
+import { CompactTeamDto } from '../model/team.dto';
+import { TeamMapper } from '../mapper/team.mapper';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
-import { BracketMatchService } from '../tournament/service/bracket-match.service';
-import { UtilQuery } from '../tournament/service/util-query';
-import { BracketMatchDto, TournamentBracketInfoDto } from './dto/bracket.dto';
-import { BracketMapper } from './mapper/bracket.mapper';
+import { BracketMatchService } from '../service/bracket-match.service';
+import { UtilQuery } from '../service/util-query';
+import {
+  BracketMatchDto,
+  TournamentBracketInfoDto,
+} from '../model/bracket.dto';
+import { BracketMapper } from '../mapper/bracket.mapper';
 import { MatchGameEntity } from '../db/entity/match-game.entity';
 import { EventBus } from '@nestjs/cqrs';
-import { GameScheduleService } from '../tournament/service/game-schedule.service';
-import { MatchGameService } from '../tournament/service/match-game.service';
+import { GameScheduleService } from '../service/game-schedule.service';
+import { MatchGameService } from '../service/match-game.service';
 
 @Controller('tournament')
 @ApiTags('tournament')
@@ -93,7 +95,7 @@ export class TournamentController {
       .createTournament(
         dto.name,
         dto.entryType,
-        dto.startDate,
+        new Date(dto.startDate),
         dto.imageUrl,
         dto.version,
         dto.strategy,
@@ -170,7 +172,6 @@ export class TournamentController {
     const t = await this.bracketService.findTournamentByMatchId(id);
     return this.bracketMapper.mapMatch(t.entryType, m);
   }
-
 
   @Post(`/tournament_match/:id/winner`)
   public async setMatchWinner(

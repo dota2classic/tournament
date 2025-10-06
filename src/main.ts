@@ -1,13 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { BracketService } from './tournament/service/bracket.service';
-import { REDIS_PASSWORD, REDIS_URL } from './config/env';
 import { Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { BracketMatchService } from './tournament/service/bracket-match.service';
-import { BracketEntryType, BracketType } from './gateway/shared-types/tournament';
-import { MatchGameService } from './tournament/service/match-game.service';
-import { TeamService } from './tournament/service/team.service';
 import { WinstonWrapper } from '@dota2classic/nest_logger';
 import configuration from './config/configuration';
 import { ConfigService } from '@nestjs/config';
@@ -94,15 +88,14 @@ async function bootstrap() {
     ),
   });
 
-
   app.connectMicroservice({
     transport: Transport.REDIS,
     options: {
-      url: `redis://${config.get("redis.host")}:6379`,
-      host: config.get("redis.host"),
+      url: `redis://${config.get('redis.host')}:6379`,
+      host: config.get('redis.host'),
       retryAttempts: Infinity,
       retryDelay: 5000,
-      password: config.get("redis.password"),
+      password: config.get('redis.password'),
     },
   });
   //

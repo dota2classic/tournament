@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { StageEntity } from '../../db/entity/stage.entity';
-import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
+import { StageEntity } from '../db/entity/stage.entity';
+import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 

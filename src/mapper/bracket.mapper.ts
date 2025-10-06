@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { BracketCrud, TournamentBracketInfo } from '../tournament/bracket.crud';
+import { BracketCrud, TournamentBracketInfo } from '../service/bracket.crud';
 import {
   BracketMatchDto,
   BracketMatchGameDto,
   BracketParticipantDto,
   ParticipantResultDto,
   TournamentBracketInfoDto,
-} from '../dto/bracket.dto';
-import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
-import { TournamentEntity } from '../../db/entity/tournament.entity';
+} from '../model/bracket.dto';
+import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
+import { TournamentEntity } from '../db/entity/tournament.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BracketEntryType } from '../../gateway/shared-types/tournament';
+import { BracketEntryType } from '../gateway/shared-types/tournament';
 import { TeamMapper } from './team.mapper';
-import { TeamEntity } from '../../db/entity/team.entity';
-import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
-import { MatchGameEntity } from '../../db/entity/match-game.entity';
+import { TeamEntity } from '../db/entity/team.entity';
+import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
+import { MatchGameEntity } from '../db/entity/match-game.entity';
 import { ParticipantResult, Status } from 'brackets-model';
 
 @Injectable()

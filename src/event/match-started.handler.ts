@@ -1,10 +1,9 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { MatchStartedEvent } from '../../gateway/events/match-started.event';
-import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
+import { MatchStartedEvent } from '../gateway/events/match-started.event';
+import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MatchGameEntity } from '../../db/entity/match-game.entity';
-import { inspect } from 'util';
+import { MatchGameEntity } from '../db/entity/match-game.entity';
 
 @EventsHandler(MatchStartedEvent)
 export class MatchStartedHandler implements IEventHandler<MatchStartedEvent> {

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { TeamEntity } from '../../db/entity/team.entity';
-import { CompactTeamDto, TeamDto, TeamInvitationDto } from '../dto/team.dto';
-import { TeamInvitationEntity } from '../../db/entity/team-invitation.entity';
+import { TeamEntity } from '../db/entity/team.entity';
+import { CompactTeamDto, TeamDto, TeamInvitationDto } from '../model/team.dto';
+import { TeamInvitationEntity } from '../db/entity/team-invitation.entity';
 
 @Injectable()
 export class TeamMapper {
@@ -14,9 +14,8 @@ export class TeamMapper {
     members: team.members.map(t => ({
       steam_id: t.steam_id,
     })),
-    locked: team.locked
+    locked: team.locked,
   });
-
 
   public mapTeamCompact = (team: TeamEntity): CompactTeamDto => ({
     name: team.name,
@@ -24,13 +23,11 @@ export class TeamMapper {
     id: team.id,
     imageUrl: team.imageUrl,
     creator: team.creator,
-    locked: team.locked
+    locked: team.locked,
   });
-
-
 
   public mapTeamInvite = (invite: TeamInvitationEntity): TeamInvitationDto => ({
     team: this.mapTeamCompact(invite.team),
-    inviteId: invite.id
-  })
+    inviteId: invite.id,
+  });
 }

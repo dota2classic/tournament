@@ -9,17 +9,17 @@ import {
   SubmitInvitationDto,
   TeamDto,
   TeamInvitationDto,
-} from './dto/team.dto';
-import { TeamService } from '../tournament/service/team.service';
-import { TeamMapper } from './mapper/team.mapper';
-import { TeamEntity } from '../db/entity/team.entity';
+} from 'model/team.dto';
+import { TeamService } from 'service/team.service';
+import { TeamMapper } from 'mapper/team.mapper';
+import { TeamEntity } from 'db/entity/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TournamentDto } from './dto/tournament.dto';
-import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
-import { TournamentMapper } from './mapper/tournament.mapper';
-import { TeamMemberEntity } from '../db/entity/team-member.entity';
-import { TeamInvitationEntity } from '../db/entity/team-invitation.entity';
+import { TournamentDto } from 'model/tournament.dto';
+import { BracketParticipantEntity } from 'db/entity/bracket-participant.entity';
+import { TournamentMapper } from 'mapper/tournament.mapper';
+import { TeamMemberEntity } from 'db/entity/team-member.entity';
+import { TeamInvitationEntity } from 'db/entity/team-invitation.entity';
 
 @Controller('team')
 @ApiTags('team')

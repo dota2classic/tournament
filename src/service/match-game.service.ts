@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { MatchGameEntity } from '../../db/entity/match-game.entity';
+import { MatchGameEntity } from 'db/entity/match-game.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventBus } from '@nestjs/cqrs';
-import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
-import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
 import { BracketsManager } from 'brackets-manager';
 import { UtilQuery } from './util-query';
 import { BracketGameResultEvent } from '../event/bracket-game-result/bracket-game-result.event';
+import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
+import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
 
 @Injectable()
 export class MatchGameService {

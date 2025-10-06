@@ -22,16 +22,22 @@ import {
 } from '@testcontainers/rabbitmq';
 import { WinstonWrapper } from '@dota2classic/nest_logger';
 import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
-import { TeamController } from '../rest/team.controller';
-import { TournamentController } from '../rest/tournament.controller';
-import { BracketService } from '../tournament/service/bracket.service';
-import { BracketMatchService } from '../tournament/service/bracket-match.service';
-import { GameScheduleService } from '../tournament/service/game-schedule.service';
-import { MatchGameService } from '../tournament/service/match-game.service';
-import { TeamService } from '../tournament/service/team.service';
-import { UtilQuery } from '../tournament/service/util-query';
+import { TeamController } from 'controller/team.controller';
+import { TournamentController } from 'controller/tournament.controller';
+import { BracketService } from 'service/bracket.service';
+import { BracketMatchService } from 'service/bracket-match.service';
+import { GameScheduleService } from 'service/game-schedule.service';
+import { MatchGameService } from 'service/match-game.service';
+import { TeamService } from 'service/team.service';
+import { UtilQuery } from 'service/util-query';
+import { Entities } from 'config/entities';
+import { TeamMapper } from 'mapper/team.mapper';
+import { BracketMapper } from 'mapper/bracket.mapper';
+import { TournamentMapper } from 'mapper/tournament.mapper';
+import { BracketCrud } from 'service/bracket.crud';
+import { BracketsManager } from 'brackets-manager';
+import { ScheduleModule } from '@nestjs/schedule';
 import SpyInstance = jest.SpyInstance;
-import { Entities } from '../config/entities';
 
 export interface TestEnvironment {
   module: TestingModule;
@@ -70,26 +76,12 @@ export function useFullModule(): TestEnvironment {
   });
 
   beforeAll(async () => {
-    te.containers.pg = await new PostgreSqlContainer('postgresql')
+    te.containers.pg = await new PostgreSqlContainer('postgres:16.4-bookworm')
       .withUsername('username')
       .withPassword('password')
       .start();
 
-    //     const client = new pg.Client(te.containers.pg.getConnectionUri());
-    //     await client.connect();
-    //     await client.query(`
-    //         create or replace
-    //         function fantasy_score(pim player_in_match) returns numeric
-    // language plpgsql
-    // as
-    // $$
-    // begin
-    // return pim.kills * 0.3 + pim.deaths * -0.3 + pim.assists * 0.2 + pim.last_hits * 0.003 + pim.denies * 0.005 + pim.gpm * 0.002 + pim.xpm * 0.002 + pim.hero_healing * 0.01 + pim.hero_damage * 0.003 + pim.tower_damage * 0.01;
-    // end;
-    // $$;`);
-    //     await client.end()
-
-    te.containers.redis = await new RedisContainer('bitnami:redis')
+    te.containers.redis = await new RedisContainer('redis:7.4.0-alpine')
       .withPassword('redispass')
       .start();
 
@@ -104,6 +96,7 @@ export function useFullModule(): TestEnvironment {
 
     te.module = await Test.createTestingModule({
       imports: [
+        ScheduleModule.forRoot(),
         await ConfigModule.forRoot({
           isGlobal: true,
         }),
@@ -211,11 +204,22 @@ export function useFullModule(): TestEnvironment {
       ],
       providers: [
         BracketService,
+        {
+          provide: BracketsManager,
+          useFactory: (crud: BracketCrud) => {
+            return new BracketsManager(crud);
+          },
+          inject: [BracketCrud],
+        },
         BracketMatchService,
         GameScheduleService,
         MatchGameService,
         TeamService,
         UtilQuery,
+        TeamMapper,
+        BracketMapper,
+        TournamentMapper,
+        BracketCrud,
       ],
       controllers: [TeamController, TournamentController],
     }).compile();

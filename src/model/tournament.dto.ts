@@ -1,6 +1,6 @@
-import { BracketEntryType, BracketType, TournamentStatus } from '../../gateway/shared-types/tournament';
+import { BracketEntryType, BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
 import { TeamDto } from './team.dto';
-import { Dota2Version } from '../../gateway/shared-types/dota2version';
+import { Dota2Version } from '../gateway/shared-types/dota2version';
 
 export class CreateTournamentDto {
   name: string;
@@ -8,7 +8,7 @@ export class CreateTournamentDto {
   startDate: number;
   imageUrl: string;
   strategy: BracketType;
-  version: string;
+  version: Dota2Version;
   roundBestOf: number;
   finalBestOf: number;
   grandFinalBestOf: number;

@@ -33,7 +33,9 @@ export class TournamentEntity {
   @CreateDateColumn()
   created_at: Date;
 
-  @Column()
+  @Column({
+    name: "start_date"
+  })
   startDate: Date;
 
   @Column({

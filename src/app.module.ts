@@ -3,28 +3,27 @@ import { RedisController } from './redis.controller';
 import { ClientsModule, RedisOptions, Transport } from '@nestjs/microservices';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
-import { BracketService } from './tournament/service/bracket.service';
-import { BracketCrud } from './rest/tournament/bracket.crud';
-import { TournamentController } from './rest/tournament.controller';
-import { TournamentMapper } from './rest/mapper/tournament.mapper';
-import { UserRepository } from './rest/caches/user.repository';
-import { TeamController } from './rest/team.controller';
-import { TeamService } from './tournament/service/team.service';
-import { TeamMapper } from './rest/mapper/team.mapper';
+import { BracketService } from 'service/bracket.service';
+import { BracketCrud } from 'service/bracket.crud';
+import { TournamentController } from 'controller/tournament.controller';
+import { TournamentMapper } from 'mapper/tournament.mapper';
+import { TeamController } from 'controller/team.controller';
+import { TeamService } from 'service/team.service';
+import { TeamMapper } from 'mapper/team.mapper';
 import { ScheduleModule } from '@nestjs/schedule';
-import { BracketMatchService } from './tournament/service/bracket-match.service';
+import { BracketMatchService } from 'service/bracket-match.service';
 import { AppService } from './app.service';
-import { MatchStartedHandler } from './tournament/event/match-started.handler';
-import { GameResultsHandler } from './tournament/event/game-results.handler';
-import { UtilQuery } from './tournament/service/util-query';
-import { BracketMapper } from './rest/mapper/bracket.mapper';
-import { BracketUpdatedHandler } from './tournament/event/bracket-updated.handler';
-import { MatchCancelledHandler } from './tournament/event/match-cancelled.handler';
-import { MatchGameService } from './tournament/service/match-game.service';
+import { MatchStartedHandler } from 'event/match-started.handler';
+import { GameResultsHandler } from 'event/game-results.handler';
+import { UtilQuery } from 'service/util-query';
+import { BracketMapper } from 'mapper/bracket.mapper';
+import { BracketUpdatedHandler } from 'event/bracket-updated.handler';
+import { MatchCancelledHandler } from 'event/match-cancelled.handler';
+import { MatchGameService } from 'service/match-game.service';
 import { BracketsManager } from 'brackets-manager';
-import { BracketGameResultHandler } from './tournament/event/bracket-game-result/bracket-game-result.handler';
-import { BracketGameTimerReadyHandler } from './tournament/event/bracket-game-timer-ready/bracket-game-timer-ready.handler';
-import { GameScheduleService } from './tournament/service/game-schedule.service';
+import { BracketGameResultHandler } from 'event/bracket-game-result/bracket-game-result.handler';
+import { BracketGameTimerReadyHandler } from 'event/bracket-game-timer-ready/bracket-game-timer-ready.handler';
+import { GameScheduleService } from 'service/game-schedule.service';
 import configuration from './config/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Entities } from './config/entities';
@@ -81,7 +80,6 @@ import { getTypeormConfig } from './config/typeorm.config';
     BracketMapper,
     TeamMapper,
     BracketService,
-    UserRepository,
     TournamentMapper,
     BracketMatchService,
     BracketCrud,
