@@ -1,10 +1,57 @@
-import { BracketEntryType, BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
+import {
+  BracketType,
+  TournamentStatus,
+} from '../gateway/shared-types/tournament';
 import { TeamDto } from './team.dto';
 import { Dota2Version } from '../gateway/shared-types/dota2version';
 
+export enum TournamentState {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  REGISTRATION = 'REGISTRATION',
+  READY_CHECK = 'READY_CHECK',
+  IN_PROGRESS = 'IN_PROGRESS',
+  FINISHED = 'FINISHED',
+}
+
+/**
+ * Состояние регистрации на турнир.
+ *
+ * Отражает этап жизненного цикла заявки — от создания до подтверждения или отклонения.
+ */
+export enum TournamentRegistrationState {
+  /**
+   * Регистрация создана, но ещё не начала процесс подтверждения.
+   * Например, игрок или команда только подали заявку.
+   */
+  CREATED = 'CREATED',
+
+  /**
+   * Регистрация ожидается подтверждения.
+   * Это значит, что каждому игроку в регистрации нужно подтвердить участие
+   */
+  PENDING_CONFIRMATION = 'PENDING_CONFIRMATION',
+
+  /**
+   * Регистрация подтверждена — игрок или команда официально допущены к участию.
+   */
+  CONFIRMED = 'CONFIRMED',
+
+  /**
+   * Подтверждение отклонено игроком
+   */
+  DECLINED = 'DECLINED',
+
+  /**
+   * Регистрация автоматически отклонена из-за превышения времени ожидания.
+   * Используется, если заявка не была подтверждена в установленный срок.
+   */
+  TIMED_OUT = 'TIMED_OUT',
+}
+
+
 export class CreateTournamentDto {
   name: string;
-  entryType: BracketEntryType;
   startDate: number;
   imageUrl: string;
   strategy: BracketType;
@@ -15,7 +62,7 @@ export class CreateTournamentDto {
 }
 
 export class TournamentParticipantDto {
-  public readonly steam_id?: string;
+  public readonly players: string[]
   public readonly team?: TeamDto;
 }
 
@@ -39,7 +86,6 @@ export class TournamentStandingDto {
 export class FullTournamentDto {
   id: number;
   name: string;
-  entryType: BracketEntryType;
   status: TournamentStatus;
   version: Dota2Version;
   startDate: number;

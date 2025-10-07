@@ -10,9 +10,8 @@ import { TeamEntity } from './team.entity';
 
 @Entity('bracket_participant')
 export class BracketParticipantEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   id: number;
-
 
   /**
    * This is external id, be it teamID or playerID

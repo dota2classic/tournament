@@ -1,10 +1,12 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
 import { TeamMemberEntity } from './team-member.entity';
+import { TournamentRegistrationEntity } from './tournament-registration.entity';
+import { UUID } from '../../types';
 
 @Entity('team')
 export class TeamEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: UUID;
 
   @Column()
   creator: string;
@@ -31,4 +33,11 @@ export class TeamEntity {
     t => t.team,
   )
   members: TeamMemberEntity[];
+
+
+  @OneToMany(
+    () => TournamentRegistrationEntity,
+    t => t.team,
+  )
+  participations: Relation<TournamentRegistrationEntity>[];
 }

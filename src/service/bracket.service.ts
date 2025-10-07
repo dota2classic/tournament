@@ -17,7 +17,7 @@ import {
   BracketType,
   TournamentStatus,
 } from '../gateway/shared-types/tournament';
-import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { BracketMatchService } from './bracket-match.service';
 import { StageEntity } from '../db/entity/stage.entity';
 import {
@@ -54,9 +54,9 @@ export class BracketService {
     @InjectRepository(StageEntity)
     private readonly stageEntityRepository: Repository<StageEntity>,
 
-    @InjectRepository(TournamentParticipantEntity)
+    @InjectRepository(TournamentRegistrationEntity)
     private readonly tournamentParticipantEntityRepository: Repository<
-      TournamentParticipantEntity
+      TournamentRegistrationEntity
     >,
     private readonly bmService: BracketMatchService,
     @InjectRepository(BracketMatchEntity)
@@ -239,7 +239,7 @@ export class BracketService {
 
     if (existingParticipation) return;
 
-    const b = new TournamentParticipantEntity();
+    const b = new TournamentRegistrationEntity();
     b.tournament_id = t.id;
     b.name = team.id;
     await this.tournamentParticipantEntityRepository.save(b);
@@ -267,7 +267,7 @@ export class BracketService {
     // already in
     if (participation) return;
 
-    const b = new TournamentParticipantEntity();
+    const b = new TournamentRegistrationEntity();
     b.tournament_id = t.id;
     b.name = steam_id;
     await this.tournamentParticipantEntityRepository.save(b);
@@ -344,37 +344,17 @@ export class BracketService {
 
     // ok here we need to compute standings
 
-    if (t.entryType === BracketEntryType.PLAYER) {
-      // players
-
-      return {
-        ...t,
-        startDate: t.startDate.getTime(),
-        participants: t.preParticipants.map(t => ({
-          steam_id: t.name,
-        })),
-        standings:
-          (t.status === TournamentStatus.FINISHED &&
-            (await this.getStandings2(t.id))) ||
-          undefined,
-      };
-    } else {
-      const teams = await this.teamEntityRepository.find({
-        where: { id: In(t.preParticipants.map(t => t.name)) },
-        relations: ['members'],
-      });
-      return {
-        ...t,
-        startDate: t.startDate.getTime(),
-        participants: teams.map(t => ({
-          team: this.mapper.mapTeam(t),
-        })),
-        standings:
-          (t.status === TournamentStatus.FINISHED &&
-            (await this.getStandings2(t.id))) ||
-          undefined,
-      };
-    }
+    return {
+      ...t,
+      startDate: t.startDate.getTime(),
+      participants: t.preParticipants.map(t => ({
+        steam_id: t.name,
+      })),
+      standings:
+        (t.status === TournamentStatus.FINISHED &&
+          (await this.getStandings2(t.id))) ||
+        undefined,
+    };
   }
 
   public async cancelTournament(tId: number) {
@@ -403,11 +383,11 @@ export class BracketService {
   /**
    * Technical lose for given id
    * @param gameId - gameId
-   * @param mId - matchID
-   * @param forfeitId - teamID or steamID
+   * @param tournamentMatchId - matchID
+   * @param forfeitId - participantId
    */
-  public async forfeit(gameId: number, mId: number, forfeitId: string) {
-    const m = await this.bracketMatchEntityRepository.findOneById(mId);
+  public async forfeit(gameId: number, tournamentMatchId: number, forfeitId: string) {
+    const m = await this.bracketMatchEntityRepository.findOneById(tournamentMatchId);
     const game = await this.matchGameEntityRepository.findOneById(gameId);
 
     const opp1 = await this.bracketParticipantEntityRepository.findOneById(
@@ -509,19 +489,20 @@ export class BracketService {
   }
 
   private async unlockTeams(tournamentId: number) {
-    const t = await this.tournamentEntityRepository.findOneById(tournamentId);
-    if (!t) return;
-    if (t.entryType === BracketEntryType.PLAYER) return;
+    throw 'TODO: implement team unlocking';
 
-    const parts = await this.tournamentParticipantEntityRepository.findBy({
-      tournament_id: tournamentId,
-    });
-    const unlocker = parts.map(async part => {
-      const team = await this.teamEntityRepository.findOneById(part.name);
-      team.locked = false;
-      await this.teamEntityRepository.save(team);
-    });
-    await Promise.all(unlocker);
+    // const t = await this.tournamentEntityRepository.findOneById(tournamentId);
+    // if (!t) return;
+    //
+    // const parts = await this.tournamentParticipantEntityRepository.findBy({
+    //   tournament_id: tournamentId,
+    // });
+    // const unlocker = parts.map(async part => {
+    //   const team = await this.teamEntityRepository.findOneById(part.name);
+    //   team.locked = false;
+    //   await this.teamEntityRepository.save(team);
+    // });
+    // await Promise.all(unlocker);
   }
 
   public async checkMatchResults(mId: number) {
@@ -623,58 +604,15 @@ export class BracketService {
     });
   }
 
-  public async getStandings3(tId: number): Promise<TournamentStandingDto[]> {
-    const stage = await this.stageEntityRepository.findOneBy({
-      tournament_id: tId,
-    });
-    const entry = await this.tournamentEntityRepository
-      .findOneById(tId)
-      .then(t => t.entryType);
-
-    const standings = await this.manager.get.finalStandings(stage.id);
-
-    switch (entry) {
-      case BracketEntryType.PLAYER:
-        return Promise.all(
-          standings.map(async a => {
-            const part = await this.bracketParticipantEntityRepository.findOneById(
-              a.id,
-            );
-            return {
-              steam_id: part.name,
-              position: a.rank.toString(),
-            };
-          }),
-        );
-      case BracketEntryType.TEAM:
-        return Promise.all(
-          standings.map(async a => {
-            const part = await this.bracketParticipantEntityRepository.findOneById(
-              a.id,
-            );
-            const team = await this.teamEntityRepository.findOne({
-              where: { id: part.name },
-              relations: ['members'],
-            });
-            return {
-              team: await this.mapper.mapTeam(team),
-              position: a.rank.toString(),
-            };
-          }),
-        );
-    }
-  }
-
-  public async getStandings2(tId: number): Promise<TournamentStandingDto[]> {
-    const entry = await this.tournamentEntityRepository
-      .findOneById(tId)
-      .then(t => t.entryType);
+  public async getStandings2(
+    tournamentId: number,
+  ): Promise<TournamentStandingDto[]> {
     const [rounds, count] = await this.bracketMatchEntityRepository
       .createQueryBuilder('bm')
       .innerJoin(StageEntity, 'stage', 'bm.stage_id = stage.id')
       .innerJoinAndSelect('bm.group', 'group', 'bm.group_id = group.id')
       .innerJoinAndSelect('bm.round', 'round', 'bm.round_id = round.id')
-      .where('stage.tournament_id = :tId', { tId })
+      .where('stage.tournament_id = :tId', { tId: tournamentId })
       .orderBy('round.number', 'DESC')
       .getManyAndCount();
 
@@ -736,35 +674,20 @@ export class BracketService {
       });
     });
 
-    switch (entry) {
-      case BracketEntryType.PLAYER:
-        return Promise.all(
-          standings.map(async a => {
-            const part = await this.bracketParticipantEntityRepository.findOneBy(
-              a.id,
-            );
-            return {
-              steam_id: part.name,
-              position: a.place,
-            };
-          }),
+    return Promise.all(
+      standings.map(async a => {
+        const part = await this.bracketParticipantEntityRepository.findOneBy(
+          a.id,
         );
-      case BracketEntryType.TEAM:
-        return Promise.all(
-          standings.map(async a => {
-            const part = await this.bracketParticipantEntityRepository.findOneBy(
-              a.id,
-            );
-            const team = await this.teamEntityRepository.findOne({
-              where: { id: part.name },
-              relations: ['members'],
-            });
-            return {
-              team: await this.mapper.mapTeam(team),
-              position: a.place,
-            };
-          }),
-        );
-    }
+        const team = await this.teamEntityRepository.findOne({
+          where: { id: part.name },
+          relations: ['members'],
+        });
+        return {
+          team: await this.mapper.mapTeam(team),
+          position: a.place,
+        };
+      }),
+    );
   }
 }
