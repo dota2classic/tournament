@@ -82,7 +82,7 @@ export class BracketCrud implements CrudInterface {
   public async getBracket(tid: number): Promise<TournamentBracketInfo> {
     const participant = await this.select<BracketParticipantEntity>(
       'participant',
-      { tournament_id: tid },
+      { tournamentId: tid },
     );
     const stage = await this.select<StageEntity>('stage', {
       tournament_id: tid,

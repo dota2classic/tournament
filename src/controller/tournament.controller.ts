@@ -94,7 +94,6 @@ export class TournamentController {
     return await this.bracketService
       .createTournament(
         dto.name,
-        dto.entryType,
         new Date(dto.startDate),
         dto.imageUrl,
         dto.version,
@@ -170,7 +169,7 @@ export class TournamentController {
   ): Promise<BracketMatchDto> {
     const m = await this.bracketMatchEntityRepository.findOneById(id);
     const t = await this.bracketService.findTournamentByMatchId(id);
-    return this.bracketMapper.mapMatch(t.entryType, m);
+    return this.bracketMapper.mapMatch(m);
   }
 
   @Post(`/tournament_match/:id/winner`)

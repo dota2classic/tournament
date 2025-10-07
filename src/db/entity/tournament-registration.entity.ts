@@ -99,7 +99,7 @@ export class TournamentRegistrationEntity {
     nullable: true,
     type: 'uuid',
   })
-  teamId: UUID;
+  teamId?: UUID;
 
   /**
    * Турнир, на который подана регистрация.
@@ -129,4 +129,9 @@ export class TournamentRegistrationEntity {
     enumName: 'tournament_registration_state',
   })
   state: TournamentRegistrationState;
+
+  constructor(tournamentId: number, teamId?: UUID) {
+    this.teamId = teamId;
+    this.tournamentId = tournamentId;
+  }
 }

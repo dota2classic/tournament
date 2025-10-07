@@ -3,7 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   OneToMany,
-  PrimaryGeneratedColumn, UpdateDateColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import {
   BracketType,
@@ -12,21 +12,11 @@ import {
 import { BracketParticipantEntity } from './bracket-participant.entity';
 import { TournamentRegistrationEntity } from './tournament-registration.entity';
 import { Dota2Version } from '../../gateway/shared-types/dota2version';
-import { TournamentState } from '../../model/tournament.dto';
 
 @Entity('tournament')
 export class TournamentEntity {
   @PrimaryGeneratedColumn()
   id: number;
-
-
-  @Column({
-    name: 'state',
-    default: TournamentState.DRAFT,
-    enum: true,
-    enumName: 'tournament_state',
-  })
-  state: TournamentState;
 
   @Column({
     name: 'team_size',
@@ -40,8 +30,12 @@ export class TournamentEntity {
   @Column({ default: Dota2Version.Dota_684 })
   version: Dota2Version;
 
-  @Column({ default: TournamentStatus.NEW })
-  status: TournamentStatus;
+  @Column({
+    default: TournamentStatus.DRAFT,
+    enum: true,
+    enumName: 'tournament_state',
+  })
+  state: TournamentStatus;
 
   @Column()
   strategy: BracketType;
@@ -78,7 +72,27 @@ export class TournamentEntity {
     e => e.tournament,
     { eager: false },
   )
-  preParticipants: TournamentRegistrationEntity[];
+  registrations: TournamentRegistrationEntity[];
+
+  constructor(
+    teamSize: number,
+    name: string,
+    version: Dota2Version,
+    strategy: BracketType,
+    description: string,
+    imageUrl: string,
+    startDate: Date,
+    bestOfConfig: BestOfStrategy,
+  ) {
+    this.teamSize = teamSize;
+    this.name = name;
+    this.version = version;
+    this.strategy = strategy;
+    this.description = description;
+    this.imageUrl = imageUrl;
+    this.startDate = startDate;
+    this.bestOfConfig = bestOfConfig;
+  }
 }
 
 export interface BestOfStrategy {

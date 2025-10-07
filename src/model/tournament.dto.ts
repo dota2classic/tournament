@@ -5,15 +5,6 @@ import {
 import { TeamDto } from './team.dto';
 import { Dota2Version } from '../gateway/shared-types/dota2version';
 
-export enum TournamentState {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  REGISTRATION = 'REGISTRATION',
-  READY_CHECK = 'READY_CHECK',
-  IN_PROGRESS = 'IN_PROGRESS',
-  FINISHED = 'FINISHED',
-}
-
 /**
  * Состояние регистрации на турнир.
  *
@@ -49,7 +40,6 @@ export enum TournamentRegistrationState {
   TIMED_OUT = 'TIMED_OUT',
 }
 
-
 export class CreateTournamentDto {
   name: string;
   startDate: number;
@@ -62,14 +52,13 @@ export class CreateTournamentDto {
 }
 
 export class TournamentParticipantDto {
-  public readonly players: string[]
+  public readonly players: string[];
   public readonly team?: TeamDto;
 }
 
 export class TournamentDto {
   id: number;
   name: string;
-  entryType: BracketEntryType;
   status: TournamentStatus;
   version: Dota2Version;
   startDate: number;

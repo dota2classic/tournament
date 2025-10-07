@@ -4,10 +4,7 @@ import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TournamentEntity } from '../db/entity/tournament.entity';
-import {
-  BracketEntryType,
-  TournamentStatus,
-} from '../gateway/shared-types/tournament';
+import { TournamentStatus } from '../gateway/shared-types/tournament';
 import { RoundEntity } from '../db/entity/round.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
@@ -101,7 +98,7 @@ export class BracketMatchService {
         'tournament.id = stage.tournament_id',
       )
       .where('tournament.status = :status', {
-        status: TournamentStatus.ONGOING,
+        status: TournamentStatus.IN_PROGRESS,
       })
       .andWhere('bm.status not in (:...statuses)', {
         statuses: [Status.Completed, Status.Archived],
@@ -125,78 +122,79 @@ export class BracketMatchService {
    * @param bid - bracket match ID
    */
   public async generateGames(tid: number, bid: number) {
-    const tour = await this.tournamentEntityRepository.findOneById(tid);
-    if (!tour) return;
-
-    const bm = await this.bracketMatchEntityRepository.findOneById(bid);
-    if (!bm) return;
-
-    const group = await this.groupEntityRepository.findOneBy({
-      id: bm.group_id,
-    });
-
-    // BYE case
-    if (bm.opponent1 === null || bm.opponent2 === null) {
-      return;
-    }
-
-    const round = await this.roundEntityRepository.findOneById(bm.round_id);
-    const totalRounds = await this.roundEntityRepository.findBy({
-      group_id: bm.group_id,
-    });
-
-    let roundOffset = 0;
-    if (group.number === 1) {
-      // WB bracket/standart bracket
-      roundOffset = 0;
-    } else if (group.number === 2) {
-      // LB
-      // we need to add 1, because lower bracket only starts after first round of WB
-      roundOffset = 1;
-    } else if (group.number === 3) {
-      // GrandFinal
-      // we need to find LB and count rounds + offset
-      const roundsInLB = await this.roundEntityRepository
-        .createQueryBuilder('r')
-        .innerJoin(
-          GroupEntity,
-          'group',
-          'group.stage_id = r.stage_id and group.number = 2',
-        )
-        .getCount();
-
-      roundOffset = 1 + roundsInLB;
-    }
-
-    const roundNumber = round.number;
-
-    const maxRounds = totalRounds.sort((a, b) => b.number - a.number)[0].number;
-
-    const calcOffset = (i: number): number => {
-      // in minutes
-      const perGame =
-        tour.entryType === BracketEntryType.PLAYER
-          ? BracketMatchService.DEFAULT_OFFSET_FOR_SOLOMID
-          : BracketMatchService.DEFAULT_OFFSET_FOR_CAPTAINS_MODE;
-
-      return (roundOffset + roundNumber + i) * perGame * 1000 * 60; // mins => millis
-    };
-
-    let bestOf: number;
-    if (group.number === 3) {
-      bestOf = tour.bestOfConfig.grandFinal;
-    } else if (round.number === maxRounds) {
-      bestOf = tour.bestOfConfig.final;
-    } else {
-      bestOf = tour.bestOfConfig.round;
-    }
-
-    for (let i = 1; i <= bestOf; i++) {
-      const mg = new MatchGameEntity();
-      mg.bm_id = bm.id;
-      mg.number = i;
-      mg.scheduledDate = new Date(new Date().getTime() + calcOffset(i));
-      await this.matchGameEntityRepository.save(mg);
-    }
+    throw 'TODO IMPLEMENT';
+    // const tour = await this.tournamentEntityRepository.findOneById(tid);
+    // if (!tour) return;
+    //
+    // const bm = await this.bracketMatchEntityRepository.findOneById(bid);
+    // if (!bm) return;
+    //
+    // const group = await this.groupEntityRepository.findOneBy({
+    //   id: bm.group_id,
+    // });
+    //
+    // // BYE case
+    // if (bm.opponent1 === null || bm.opponent2 === null) {
+    //   return;
+    // }
+    //
+    // const round = await this.roundEntityRepository.findOneById(bm.round_id);
+    // const totalRounds = await this.roundEntityRepository.findBy({
+    //   group_id: bm.group_id,
+    // });
+    //
+    // let roundOffset = 0;
+    // if (group.number === 1) {
+    //   // WB bracket/standart bracket
+    //   roundOffset = 0;
+    // } else if (group.number === 2) {
+    //   // LB
+    //   // we need to add 1, because lower bracket only starts after first round of WB
+    //   roundOffset = 1;
+    // } else if (group.number === 3) {
+    //   // GrandFinal
+    //   // we need to find LB and count rounds + offset
+    //   const roundsInLB = await this.roundEntityRepository
+    //     .createQueryBuilder('r')
+    //     .innerJoin(
+    //       GroupEntity,
+    //       'group',
+    //       'group.stage_id = r.stage_id and group.number = 2',
+    //     )
+    //     .getCount();
+    //
+    //   roundOffset = 1 + roundsInLB;
+    // }
+    //
+    // const roundNumber = round.number;
+    //
+    // const maxRounds = totalRounds.sort((a, b) => b.number - a.number)[0].number;
+    //
+    // const calcOffset = (i: number): number => {
+    //   // in minutes
+    //   const perGame =
+    //     tour.entryType === BracketEntryType.PLAYER
+    //       ? BracketMatchService.DEFAULT_OFFSET_FOR_SOLOMID
+    //       : BracketMatchService.DEFAULT_OFFSET_FOR_CAPTAINS_MODE;
+    //
+    //   return (roundOffset + roundNumber + i) * perGame * 1000 * 60; // mins => millis
+    // };
+    //
+    // let bestOf: number;
+    // if (group.number === 3) {
+    //   bestOf = tour.bestOfConfig.grandFinal;
+    // } else if (round.number === maxRounds) {
+    //   bestOf = tour.bestOfConfig.final;
+    // } else {
+    //   bestOf = tour.bestOfConfig.round;
+    // }
+    //
+    // for (let i = 1; i <= bestOf; i++) {
+    //   const mg = new MatchGameEntity();
+    //   mg.bm_id = bm.id;
+    //   mg.number = i;
+    //   mg.scheduledDate = new Date(new Date().getTime() + calcOffset(i));
+    //   await this.matchGameEntityRepository.save(mg);
+    // }
   }
 }

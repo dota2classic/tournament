@@ -33,28 +33,29 @@ export class MatchGameService {
    * @param winnerId - either STEAM_ID or TEAM_ID
    */
   public async setWinner(gameId: number, winnerId: string) {
-    const g = await this.matchGameEntityRepository.findOneBy({ id: gameId });
-    const m = await this.bracketMatchEntityRepository.findOneBy({
-      id: g.bm_id,
-    });
-    const opp1 = await this.bracketParticipantEntityRepository.findOneBy({
-      id: Number(m.opponent1?.id),
-    });
-    const opp2 = await this.bracketParticipantEntityRepository.findOneBy({
-      id: Number(m.opponent2?.id),
-    });
-
-    g.winner = winnerId === opp1.name ? opp1.id : opp2.id;
-    g.finished = true;
-    await this.matchGameEntityRepository.save(g);
-
-    this.ebus.publish(
-      new BracketGameResultEvent(
-        gameId,
-        winnerId === opp1.name ? 'opponent1' : 'opponent2',
-      ),
-    );
-
-    return this.bracketMatchEntityRepository.findOneBy({ id: m.id });
+    throw "TODO IMPLEMENT"
+    // const g = await this.matchGameEntityRepository.findOneBy({ id: gameId });
+    // const m = await this.bracketMatchEntityRepository.findOneBy({
+    //   id: g.bm_id,
+    // });
+    // const opp1 = await this.bracketParticipantEntityRepository.findOneBy({
+    //   id: Number(m.opponent1?.id),
+    // });
+    // const opp2 = await this.bracketParticipantEntityRepository.findOneBy({
+    //   id: Number(m.opponent2?.id),
+    // });
+    //
+    // g.winner = winnerId === opp1.name ? opp1.id : opp2.id;
+    // g.finished = true;
+    // await this.matchGameEntityRepository.save(g);
+    //
+    // this.ebus.publish(
+    //   new BracketGameResultEvent(
+    //     gameId,
+    //     winnerId === opp1.name ? 'opponent1' : 'opponent2',
+    //   ),
+    // );
+    //
+    // return this.bracketMatchEntityRepository.findOneBy({ id: m.id });
   }
 }

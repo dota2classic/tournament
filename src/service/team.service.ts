@@ -10,10 +10,7 @@ import { TeamMemberEntity } from '../db/entity/team-member.entity';
 import { TeamInvitationEntity } from '../db/entity/team-invitation.entity';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
-import {
-  BracketEntryType,
-  TournamentStatus,
-} from '../gateway/shared-types/tournament';
+import { TournamentStatus } from '../gateway/shared-types/tournament';
 import { EditTeamDto } from '../model/team.dto';
 
 @Injectable()
@@ -150,11 +147,12 @@ export class TeamService {
         'tour',
         'p.tournament_id = tour.id',
       )
-      .where('tour.entryType = :type', { type: BracketEntryType.TEAM })
       .andWhere('tour.status in (:...statuses)', {
         statuses: [
-          TournamentStatus.NEW,
-          TournamentStatus.ONGOING,
+          TournamentStatus.PUBLISHED,
+          TournamentStatus.REGISTRATION,
+          TournamentStatus.READY_CHECK,
+          TournamentStatus.IN_PROGRESS,
           TournamentStatus.FINISHED,
         ],
       })
