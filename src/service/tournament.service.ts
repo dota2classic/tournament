@@ -19,6 +19,10 @@ export class TournamentService {
     private readonly tournamentEntityRepository: Repository<TournamentEntity>,
   ) {}
 
+  /**
+   * Завершает регистрацию турнира и выставляет актуальные статусы для зарегистрированных
+   * @param tournamentId
+   */
   public async finishRegistration(tournamentId: number) {
     const tournament = await this.tournamentEntityRepository.findOne({
       where: {
@@ -35,9 +39,6 @@ export class TournamentService {
         `Tournament must be in "registration" state!`,
       );
     }
-    const test = await this.ds.query(
-      'select * from tournament_registration_player',
-    );
 
     // For
     const updatedRegistrations = tournament.registrations.map(registration => {
@@ -63,6 +64,15 @@ export class TournamentService {
     });
 
     await this.ds.transaction(async tx => {
+      // Update tournament status
+      await tx.update<TournamentEntity>(
+        TournamentEntity,
+        {
+          id: tournamentId,
+        },
+        { state: TournamentStatus.READY_CHECK },
+      );
+
       const players: TournamentRegistrationPlayerEntity[] = updatedRegistrations.flatMap(
         t => t.players,
       );
@@ -72,7 +82,6 @@ export class TournamentService {
         plr.tournamentRegistrationId,
         plr.state,
       ]);
-
       let [parameters, placeholder] = typeormBulkUpdate(batches);
 
       // Bulk update players

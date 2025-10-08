@@ -10,17 +10,13 @@ import {
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { TournamentService } from './tournament.service';
 import { TournamentRegistrationState } from '../model/tournament.dto';
+import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 
 describe('TournamentService', () => {
   const te = useFullModule();
   let service: TournamentService;
 
-  beforeEach(() => {
-    service = te.service(TournamentService);
-  });
-
-  it('should set timed_out state to not confirmed', async () => {
-    // Given
+  const createRegistration = async (playerCount = 2) => {
     const tournament = await createTournament(
       te,
       2,
@@ -28,22 +24,94 @@ describe('TournamentService', () => {
       TournamentStatus.REGISTRATION,
     );
     // Create registration
-    let rg = await createTournamentRegistration(te, tournament.id, [
-      testUser(),
-      testUser(),
-    ]);
+    return await createTournamentRegistration(
+      te,
+      tournament.id,
+      Array.from({ length: playerCount }).map(testUser),
+    );
+  };
 
-    // When
-    await service.finishRegistration(tournament.id);
+  beforeEach(() => {
+    service = te.service(TournamentService);
+  });
 
-    // Then
-    rg = await te
-      .repo(TournamentRegistrationEntity)
-      .findOne({ where: { id: rg.id }, relations: ['players'] });
-    expect(rg.state).toEqual(TournamentRegistrationState.DECLINED);
-    expect(rg.players.map(t => t.state)).toEqual([
-      TournamentRegistrationState.TIMED_OUT,
-      TournamentRegistrationState.TIMED_OUT,
-    ]);
+  describe('finishRegistration', () => {
+    it('should throw if wrong status for finishing', async () => {
+      // Given
+      const tournament = await createTournament(
+        te,
+        2,
+        BracketType.SINGLE_ELIMINATION,
+        TournamentStatus.DRAFT,
+      );
+      // When
+      await expect(() =>
+        service.finishRegistration(tournament.id),
+      ).rejects.toThrow();
+    });
+
+    it('should set timed_out state to not confirmed', async () => {
+      // Given
+      let rg = await createRegistration();
+
+      // When
+      await service.finishRegistration(rg.tournamentId);
+
+      // Then
+      rg = await te
+        .repo(TournamentRegistrationEntity)
+        .findOne({ where: { id: rg.id }, relations: ['players'] });
+      expect(rg.state).toEqual(TournamentRegistrationState.DECLINED);
+      expect(rg.players.map(t => t.state)).toEqual([
+        TournamentRegistrationState.TIMED_OUT,
+        TournamentRegistrationState.TIMED_OUT,
+      ]);
+    });
+
+    it('should handle all-confirms', async () => {
+      // Given
+      let rg = await createRegistration();
+
+      rg.players.forEach(
+        plr => (plr.state = TournamentRegistrationState.CONFIRMED),
+      );
+      await te.repo(TournamentRegistrationPlayerEntity).save(rg.players);
+
+      // When
+      await service.finishRegistration(rg.tournamentId);
+
+      // Then
+      rg = await te
+        .repo(TournamentRegistrationEntity)
+        .findOne({ where: { id: rg.id }, relations: ['players'] });
+      expect(rg.state).toEqual(TournamentRegistrationState.CONFIRMED);
+      expect(rg.players.map(t => t.state)).toEqual([
+        TournamentRegistrationState.CONFIRMED,
+        TournamentRegistrationState.CONFIRMED,
+      ]);
+    });
+
+    // Если кто-то из группы не принял, то вся группа считается "непринявшей"
+    it('should handle semi-confirms', async () => {
+      // Given
+      let rg = await createRegistration();
+
+      rg.players[0].state = TournamentRegistrationState.CONFIRMED;
+      rg.players[1].state = TournamentRegistrationState.PENDING_CONFIRMATION;
+      await te.repo(TournamentRegistrationPlayerEntity).save(rg.players);
+
+      // When
+      await service.finishRegistration(rg.tournamentId);
+
+      // Then
+      rg = await te
+        .repo(TournamentRegistrationEntity)
+        .findOne({ where: { id: rg.id }, relations: ['players'] });
+      expect(rg.state).toEqual(TournamentRegistrationState.DECLINED);
+      expect(rg.players.map(t => t.state)).toEqual([
+        TournamentRegistrationState.CONFIRMED,
+        TournamentRegistrationState.TIMED_OUT,
+      ]);
+    });
   });
 });
