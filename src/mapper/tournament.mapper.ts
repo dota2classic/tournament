@@ -34,7 +34,6 @@ export class TournamentMapper {
       id: t.id,
       name: t.name,
       status: t.state,
-      version: t.version,
       imageUrl: t.imageUrl,
       description: t.description,
       startDate: t.startDate.getTime(),

@@ -11,7 +11,6 @@ import {
 } from '../../gateway/shared-types/tournament';
 import { BracketParticipantEntity } from './bracket-participant.entity';
 import { TournamentRegistrationEntity } from './tournament-registration.entity';
-import { Dota2Version } from '../../gateway/shared-types/dota2version';
 
 @Entity('tournament')
 export class TournamentEntity {
@@ -27,12 +26,9 @@ export class TournamentEntity {
   @Column()
   name: string;
 
-  @Column({ default: Dota2Version.Dota_684 })
-  version: Dota2Version;
-
   @Column({
     default: TournamentStatus.DRAFT,
-    type: "enum",
+    type: 'enum',
     enum: TournamentStatus,
     enumName: 'tournament_state',
   })
@@ -78,7 +74,6 @@ export class TournamentEntity {
   constructor(
     teamSize: number,
     name: string,
-    version: Dota2Version,
     strategy: BracketType,
     description: string,
     imageUrl: string,
@@ -87,7 +82,6 @@ export class TournamentEntity {
   ) {
     this.teamSize = teamSize;
     this.name = name;
-    this.version = version;
     this.strategy = strategy;
     this.description = description;
     this.imageUrl = imageUrl;

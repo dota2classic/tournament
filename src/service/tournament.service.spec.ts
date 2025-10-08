@@ -1,5 +1,6 @@
 import { testUser, useFullModule } from '../@test/useFullModule';
 import {
+  BestOfOne,
   createTournament,
   createTournamentRegistration,
 } from '../@test/test-util';
@@ -11,6 +12,7 @@ import { TournamentRegistrationEntity } from '../db/entity/tournament-registrati
 import { TournamentService } from './tournament.service';
 import { TournamentRegistrationState } from '../model/tournament.dto';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
+import { TournamentEntity } from '../db/entity/tournament.entity';
 
 describe('TournamentService', () => {
   const te = useFullModule();
@@ -35,6 +37,48 @@ describe('TournamentService', () => {
     service = te.service(TournamentService);
   });
 
+  describe('createTournament', () => {
+    it('should create a tournament', async () => {
+      await expect(
+        service.createTournament(
+          2,
+          '',
+          BracketType.SINGLE_ELIMINATION,
+          '',
+          '',
+          new Date(),
+          BestOfOne,
+        ),
+      ).toBeDefined();
+    });
+
+    it('should validate team size', async () => {
+      await expect(
+        service.createTournament(
+          -1,
+          '',
+          BracketType.SINGLE_ELIMINATION,
+          '',
+          '',
+          new Date(),
+          BestOfOne,
+        ),
+      ).rejects.toThrow();
+
+      await expect(
+        service.createTournament(
+          6,
+          '',
+          BracketType.SINGLE_ELIMINATION,
+          '',
+          '',
+          new Date(),
+          BestOfOne,
+        ),
+      ).rejects.toThrow();
+    });
+  });
+
   describe('finishRegistration', () => {
     it('should throw if wrong status for finishing', async () => {
       // Given
@@ -48,6 +92,20 @@ describe('TournamentService', () => {
       await expect(() =>
         service.finishRegistration(tournament.id),
       ).rejects.toThrow();
+    });
+
+    it('should change tournament state', async () => {
+      // Given
+      let rg = await createRegistration(0);
+
+      // When
+      await service.finishRegistration(rg.tournamentId);
+
+      // Then
+      const tournament = await te
+        .repo(TournamentEntity)
+        .findOne({ where: { id: rg.tournamentId } });
+      expect(tournament.state).toEqual(TournamentStatus.READY_CHECK);
     });
 
     it('should set timed_out state to not confirmed', async () => {

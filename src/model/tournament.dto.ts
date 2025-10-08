@@ -60,7 +60,6 @@ export class TournamentDto {
   id: number;
   name: string;
   status: TournamentStatus;
-  version: Dota2Version;
   startDate: number;
   imageUrl: string;
   description: string;
@@ -76,7 +75,6 @@ export class FullTournamentDto {
   id: number;
   name: string;
   status: TournamentStatus;
-  version: Dota2Version;
   startDate: number;
   imageUrl: string;
   participants: TournamentParticipantDto[];

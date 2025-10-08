@@ -1,12 +1,20 @@
 import { TestEnvironment, testUser } from './useFullModule';
-import { TournamentEntity } from '../db/entity/tournament.entity';
-import { Dota2Version } from '../gateway/shared-types/dota2version';
+import {
+  BestOfStrategy,
+  TournamentEntity,
+} from '../db/entity/tournament.entity';
 import {
   BracketType,
   TournamentStatus,
 } from '../gateway/shared-types/tournament';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
+
+export const BestOfOne: BestOfStrategy = {
+  round: 1,
+  final: 1,
+  grandFinal: 1,
+};
 
 export const createTournament = (
   te: TestEnvironment,
@@ -17,7 +25,6 @@ export const createTournament = (
   const tour = new TournamentEntity(
     teamSize,
     `tournament ${Math.random()}`,
-    Dota2Version.Dota_684,
     bracket,
     'Description',
     'imageurl',
