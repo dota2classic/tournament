@@ -86,7 +86,7 @@ export class TournamentRegistrationEntity {
     t => t.participations,
     { nullable: true },
   )
-  @JoinColumn({ name: 'teamId' })
+  @JoinColumn({ name: 'team_id' })
   team?: Relation<TeamEntity>;
 
   /**
@@ -108,13 +108,13 @@ export class TournamentRegistrationEntity {
     () => TournamentEntity,
     t => t.participants,
   )
-  @JoinColumn({ name: 'tournamentId' })
+  @JoinColumn({ name: 'tournament_id' })
   tournament?: Relation<TournamentEntity>;
 
   /**
    * Идентификатор турнира, к которому относится данная регистрация.
    */
-  @Column({ name: 'tournamentId' })
+  @Column({ name: 'tournament_id' })
   tournamentId: number;
 
   /**
@@ -125,7 +125,8 @@ export class TournamentRegistrationEntity {
   @Column({
     name: 'state',
     default: TournamentRegistrationState.CREATED,
-    enum: true,
+    enum: TournamentRegistrationState,
+    type: "enum",
     enumName: 'tournament_registration_state',
   })
   state: TournamentRegistrationState;

@@ -41,7 +41,7 @@ export class TournamentRegistrationPlayerEntity {
     () => TournamentRegistrationEntity,
     t => t.players,
   )
-  @JoinColumn({ name: 'tournamentRegistrationId' })
+  @JoinColumn({ name: 'tournament_registration_id' })
   registration?: TournamentRegistrationEntity;
 
   /**
@@ -52,7 +52,8 @@ export class TournamentRegistrationPlayerEntity {
   @Column({
     name: 'state',
     default: TournamentRegistrationState.CREATED,
-    enum: true,
+    type: "enum",
+    enum: TournamentRegistrationState,
     enumName: 'tournament_registration_state',
   })
   state: TournamentRegistrationState;

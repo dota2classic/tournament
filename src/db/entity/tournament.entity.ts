@@ -32,7 +32,8 @@ export class TournamentEntity {
 
   @Column({
     default: TournamentStatus.DRAFT,
-    enum: true,
+    type: "enum",
+    enum: TournamentStatus,
     enumName: 'tournament_state',
   })
   state: TournamentStatus;

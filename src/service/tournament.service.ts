@@ -35,6 +35,9 @@ export class TournamentService {
         `Tournament must be in "registration" state!`,
       );
     }
+    const test = await this.ds.query(
+      'select * from tournament_registration_player',
+    );
 
     // For
     const updatedRegistrations = tournament.registrations.map(registration => {
@@ -45,7 +48,10 @@ export class TournamentService {
         }
 
         isReady = false;
-        if (player.state === TournamentRegistrationState.PENDING_CONFIRMATION) {
+        if (
+          player.state === TournamentRegistrationState.PENDING_CONFIRMATION ||
+          player.state === TournamentRegistrationState.CREATED
+        ) {
           player.state = TournamentRegistrationState.TIMED_OUT;
         }
       }
@@ -61,40 +67,40 @@ export class TournamentService {
         t => t.players,
       );
 
-      let parameters: unknown[] = players.flatMap(plr => [
+      let batches: unknown[][] = players.map(plr => [
         plr.steamId,
         plr.tournamentRegistrationId,
         plr.state,
       ]);
 
-      let placeholder = typeormBulkUpdate(parameters);
+      let [parameters, placeholder] = typeormBulkUpdate(batches);
 
       // Bulk update players
       await tx.query(
         `
         UPDATE tournament_registration_player AS trp
-SET state = c.state
+SET state = c.state::tournament_registration_state
 FROM (VALUES
     ${placeholder}
 ) AS c(steam_id, tournament_registration_id, state)
 WHERE c.steam_id = trp.steam_id
-  AND c.tournament_registration_id = trp.tournament_registration_id;
+  AND trp.tournament_registration_id = c.tournament_registration_id::int;
       `,
         parameters,
       );
 
-      parameters = updatedRegistrations.map(reg => [reg.id, reg.state]);
-      placeholder = typeormBulkUpdate(parameters);
+      batches = updatedRegistrations.map(reg => [reg.id, reg.state]);
+      [parameters, placeholder] = typeormBulkUpdate(batches);
 
-      // Bulk update players
+      // Bulk update registrations
       await tx.query(
         `
         UPDATE tournament_registration AS tr
-SET state = c.state
+SET state = c.state::tournament_registration_state
 FROM (VALUES
     ${placeholder}
 ) AS c(id, state)
-WHERE c.id = tr.id;
+WHERE tr.id = c.id::int;
       `,
         parameters,
       );

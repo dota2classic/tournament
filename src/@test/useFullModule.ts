@@ -38,6 +38,7 @@ import { BracketCrud } from 'service/bracket.crud';
 import { BracketsManager } from 'brackets-manager';
 import { ScheduleModule } from '@nestjs/schedule';
 import SpyInstance = jest.SpyInstance;
+import { TournamentService } from '../service/tournament.service';
 
 export interface TestEnvironment {
   module: TestingModule;
@@ -53,7 +54,7 @@ export interface TestEnvironment {
 
   service<R>(c: Constructor<R>): R;
 
-  repo<R extends ObjectLiteral>(c: EntityClassOrSchema): Repository<R>;
+  repo<R extends ObjectLiteral>(c: Constructor<R>): Repository<R>;
 }
 
 export function useFullModule(): TestEnvironment {
@@ -107,7 +108,7 @@ export function useFullModule(): TestEnvironment {
 
           type: 'postgres',
           database: 'postgres',
-          // logging: true,
+          logging: true,
 
           username: te.containers.pg.getUsername(),
           password: te.containers.pg.getPassword(),
@@ -220,6 +221,7 @@ export function useFullModule(): TestEnvironment {
         BracketMapper,
         TournamentMapper,
         BracketCrud,
+        TournamentService,
       ],
       controllers: [TeamController, TournamentController],
     }).compile();

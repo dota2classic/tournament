@@ -39,7 +39,7 @@ export class BracketParticipantPlayerEntity {
     () => BracketParticipantEntity,
     t => t.players,
   )
-  @JoinColumn({ name: 'bracketParticipantId' })
+  @JoinColumn({ name: 'bracket_participant_id' })
   bracketParticipation?: BracketParticipantEntity;
 
   constructor(bracketParticipantId: number, steamId: string) {

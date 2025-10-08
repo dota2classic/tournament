@@ -28,7 +28,7 @@ export class BracketParticipantEntity {
     t => t.participations,
     { nullable: true },
   )
-  @JoinColumn({ name: 'teamId' })
+  @JoinColumn({ name: 'team_id' })
   team?: Relation<TeamEntity>;
 
   /**
@@ -50,13 +50,13 @@ export class BracketParticipantEntity {
     () => TournamentEntity,
     t => t.participants,
   )
-  @JoinColumn({ name: 'tournamentId' })
+  @JoinColumn({ name: 'tournament_id' })
   tournament: Relation<TournamentEntity>;
 
   /**
    * Идентификатор турнира
    */
-  @Column({ name: 'tournamentId' })
+  @Column({ name: 'tournament_id' })
   tournamentId: number;
 
   /**

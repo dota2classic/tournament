@@ -1,10 +1,12 @@
-import { TestEnvironment } from './useFullModule';
+import { TestEnvironment, testUser } from './useFullModule';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { Dota2Version } from '../gateway/shared-types/dota2version';
 import {
   BracketType,
   TournamentStatus,
 } from '../gateway/shared-types/tournament';
+import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
+import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 
 export const createTournament = (
   te: TestEnvironment,
@@ -28,4 +30,20 @@ export const createTournament = (
   );
   tour.state = state;
   return te.repo(TournamentEntity).save(tour);
+};
+
+export const createTournamentRegistration = async (
+  te: TestEnvironment,
+  tournamentId: number,
+  players: string[] = [testUser()],
+) => {
+  const reg = await te
+    .repo(TournamentRegistrationEntity)
+    .save(new TournamentRegistrationEntity(tournamentId));
+  reg.players = await te
+    .repo(TournamentRegistrationPlayerEntity)
+    .save(
+      players.map(plr => new TournamentRegistrationPlayerEntity(plr, reg.id)),
+    );
+  return reg;
 };
