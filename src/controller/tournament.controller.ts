@@ -23,7 +23,7 @@ import {
   TournamentBracketInfoDto,
 } from '../model/bracket.dto';
 import { BracketMapper } from '../mapper/bracket.mapper';
-import { MatchGameEntity } from '../db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { GameScheduleService } from '../service/game-schedule.service';
 import { MatchGameService } from '../service/match-game.service';
@@ -43,8 +43,8 @@ export class TournamentController {
     private readonly bracketMatchEntityRepository: Repository<
       BracketMatchEntity
     >,
-    @InjectRepository(MatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
+    @InjectRepository(BracketMatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
     private readonly utilQuery: UtilQuery,
     private readonly bracketMapper: BracketMapper,
     private readonly ebus: EventBus,

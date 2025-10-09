@@ -16,7 +16,7 @@ import { Repository } from 'typeorm';
 import { TeamMapper } from './team.mapper';
 import { RoundEntity } from '../db/entity/round.entity';
 import { ParticipantResult } from 'brackets-model';
-import { MatchGameEntity } from '../db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 
 @Injectable()
 export class TournamentMapper {
@@ -25,8 +25,8 @@ export class TournamentMapper {
     @InjectRepository(TeamEntity)
     private readonly teamEntityRepository: Repository<TeamEntity>,
     private readonly teamMapper: TeamMapper,
-    @InjectRepository(MatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
+    @InjectRepository(BracketMatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
   ) {}
 
   public mapTournament = (t: TournamentEntity): TournamentDto => {
@@ -183,7 +183,7 @@ export class TournamentMapper {
     // }
   };
 
-  private mapTournamentMatchGame = (game: MatchGameEntity): MatchGameDto => {
+  private mapTournamentMatchGame = (game: BracketMatchGameEntity): MatchGameDto => {
     return {
       gameId: game.id,
       bracketMatchId: game.bm_id,

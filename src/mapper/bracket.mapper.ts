@@ -14,7 +14,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TeamMapper } from './team.mapper';
 import { TeamEntity } from '../db/entity/team.entity';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
-import { MatchGameEntity } from '../db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { ParticipantResult, Status } from 'brackets-model';
 
 @Injectable()
@@ -24,8 +24,8 @@ export class BracketMapper {
     private readonly tournamentEntityRepository: Repository<TournamentEntity>,
     @InjectRepository(TeamEntity)
     private readonly teamEntityRepository: Repository<TeamEntity>,
-    @InjectRepository(MatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
+    @InjectRepository(BracketMatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
     private readonly teamMapper: TeamMapper,
     private readonly crud: BracketCrud,
   ) {}
@@ -116,7 +116,7 @@ export class BracketMapper {
     // };
   };
 
-  private mapMatchGame = (mg: MatchGameEntity): BracketMatchGameDto => {
+  private mapMatchGame = (mg: BracketMatchGameEntity): BracketMatchGameDto => {
     return {
       id: mg.id,
       bm_id: mg.bm_id,

@@ -4,7 +4,7 @@ import { createTournamentWithParticipants } from '../@test/test-util';
 import { BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
 import { RoundEntity } from '../db/entity/round.entity';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
-import { MatchGameEntity } from '../db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 
 describe('BracketService', () => {
   const te = useFullModule();
@@ -36,7 +36,7 @@ describe('BracketService', () => {
     ).resolves.toHaveLength(3); // 2 x Semifinals + finals
 
     await expect(
-      te.repo(MatchGameEntity)
+      te.repo(BracketMatchGameEntity)
         .createQueryBuilder('mge')
         .innerJoin('mge.match', 'm')
         .where('m.stage_id = :stageId', { stageId: stage.id })

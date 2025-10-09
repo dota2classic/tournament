@@ -1,6 +1,6 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { MatchCancelledEvent } from '../gateway/events/match-cancelled.event';
-import { MatchGameEntity } from '../db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -8,8 +8,8 @@ import { Repository } from 'typeorm';
 export class MatchCancelledHandler
   implements IEventHandler<MatchCancelledEvent> {
   constructor(
-    @InjectRepository(MatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
+    @InjectRepository(BracketMatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
   ) {}
 
   async handle(event: MatchCancelledEvent) {

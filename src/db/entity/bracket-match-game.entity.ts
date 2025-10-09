@@ -8,8 +8,8 @@ import {
 } from 'typeorm';
 import { BracketMatchEntity } from './bracket-match.entity';
 
-@Entity('tournament_match_game')
-export class MatchGameEntity {
+@Entity('tournament_bracket_match_game')
+export class BracketMatchGameEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

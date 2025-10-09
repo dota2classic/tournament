@@ -1,4 +1,4 @@
-import { MatchGameEntity } from 'db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { TeamInvitationEntity } from 'db/entity/team-invitation.entity';
 import { TeamMemberEntity } from 'db/entity/team-member.entity';
@@ -25,5 +25,5 @@ export const Entities = [
   TeamInvitationEntity,
   TournamentRegistrationEntity,
   TournamentRegistrationPlayerEntity,
-  MatchGameEntity,
+  BracketMatchGameEntity,
 ];

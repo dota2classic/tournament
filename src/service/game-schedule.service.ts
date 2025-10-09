@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { MatchGameEntity } from '../db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CronJob } from 'cron';
@@ -19,8 +19,8 @@ export class GameScheduleService {
 
   constructor(
     private readonly schedulerRegistry: SchedulerRegistry,
-    @InjectRepository(MatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
+    @InjectRepository(BracketMatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
     private readonly ebus: EventBus,
   ) {}
 

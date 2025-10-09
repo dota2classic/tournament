@@ -3,7 +3,7 @@ import { MatchStartedEvent } from '../gateway/events/match-started.event';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MatchGameEntity } from '../db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 
 @EventsHandler(MatchStartedEvent)
 export class MatchStartedHandler implements IEventHandler<MatchStartedEvent> {
@@ -12,8 +12,8 @@ export class MatchStartedHandler implements IEventHandler<MatchStartedEvent> {
     private readonly bracketMatchEntityRepository: Repository<
       BracketMatchEntity
     >,
-    @InjectRepository(MatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
+    @InjectRepository(BracketMatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
   ) {}
 
   async handle(event: MatchStartedEvent) {

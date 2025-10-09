@@ -11,10 +11,10 @@ import { Match, ParticipantResult, Status } from 'brackets-model';
 import { StageEntity } from './stage.entity';
 import { GroupEntity } from './group.entity';
 import { RoundEntity } from './round.entity';
-import { MatchGameEntity } from './match-game.entity';
+import { BracketMatchGameEntity } from './bracket-match-game.entity';
 
 // Managed by brackets-manager
-@Entity('bracket_match')
+@Entity('tournament_bracket_match')
 export class BracketMatchEntity implements Match {
   @PrimaryGeneratedColumn()
   id: number;
@@ -57,8 +57,8 @@ export class BracketMatchEntity implements Match {
   round?: RoundEntity;
 
   @OneToMany(
-    () => MatchGameEntity,
+    () => BracketMatchGameEntity,
     t => t.match,
   )
-  games: Relation<MatchGameEntity>[];
+  games: Relation<BracketMatchGameEntity>[];
 }

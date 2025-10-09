@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MatchGameEntity } from 'db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventBus } from '@nestjs/cqrs';
@@ -12,8 +12,8 @@ import { TournamentParticipantEntity } from '../db/entity/tournament-participant
 @Injectable()
 export class MatchGameService {
   constructor(
-    @InjectRepository(MatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
+    @InjectRepository(BracketMatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
     @InjectRepository(BracketMatchEntity)
     private readonly bracketMatchEntityRepository: Repository<
       BracketMatchEntity

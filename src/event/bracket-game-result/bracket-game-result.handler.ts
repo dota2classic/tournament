@@ -1,6 +1,6 @@
 import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { BracketGameResultEvent } from './bracket-game-result.event';
-import { MatchGameEntity } from 'db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../../db/entity/bracket-match-game.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BracketsManager } from 'brackets-manager';
@@ -12,8 +12,8 @@ import { UtilQuery } from '../../service/util-query';
 export class BracketGameResultHandler
   implements IEventHandler<BracketGameResultEvent> {
   constructor(
-    @InjectRepository(MatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
+    @InjectRepository(BracketMatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
     private readonly manager: BracketsManager,
     @InjectRepository(BracketMatchEntity)
     private readonly bracketMatchEntityRepository: Repository<

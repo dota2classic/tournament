@@ -11,7 +11,7 @@ import { TournamentParticipantEntity } from '../db/entity/tournament-participant
 import { Status } from 'brackets-model';
 import { UtilQuery } from './util-query';
 import { StageEntity } from '../db/entity/stage.entity';
-import { MatchGameEntity } from '../db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { GroupEntity } from '../db/entity/group.entity';
 import { GameScheduleService } from './game-schedule.service';
 
@@ -49,8 +49,8 @@ export class BracketMatchService {
     @InjectRepository(StageEntity)
     private readonly stageEntityRepository: Repository<StageEntity>,
     private readonly utilQuery: UtilQuery,
-    @InjectRepository(MatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
+    @InjectRepository(BracketMatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
     private readonly scheduler: GameScheduleService,
   ) {}
 
@@ -156,7 +156,7 @@ export class BracketMatchService {
     }
 
     for (let i = 1; i <= bestOf; i++) {
-      await tx.save(MatchGameEntity, new MatchGameEntity(bracketMatch.id, i));
+      await tx.save(BracketMatchGameEntity, new BracketMatchGameEntity(bracketMatch.id, i));
     }
   }
 }

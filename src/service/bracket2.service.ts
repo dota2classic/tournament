@@ -24,7 +24,7 @@ import {
 import { TeamMapper } from '../mapper/team.mapper';
 import { UtilQuery } from './util-query';
 import { RoundEntity } from '../db/entity/round.entity';
-import { MatchGameEntity } from '../db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { TeamService } from './team.service';
 import { Dota2Version } from '../gateway/shared-types/dota2version';
@@ -59,8 +59,8 @@ export class Bracket2Service {
     private readonly utilQuery: UtilQuery,
     @InjectRepository(RoundEntity)
     private readonly roundEntityRepository: Repository<RoundEntity>,
-    @InjectRepository(MatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
+    @InjectRepository(BracketMatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
     private readonly ebus: EventBus,
     private readonly manager: BracketsManager,
     private readonly teamService: TeamService,

@@ -7,7 +7,7 @@ import { TournamentEntity } from '../../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
-import { MatchGameEntity } from '../../db/entity/match-game.entity';
+import { BracketMatchGameEntity } from '../../db/entity/bracket-match-game.entity';
 import { Logger } from '@nestjs/common';
 import { TournamentParticipantEntity } from '../../db/entity/tournament-participant.entity';
 import { TeamEntity } from '../../db/entity/team.entity';
@@ -27,8 +27,8 @@ export class BracketGameTimerReadyHandler
     private readonly bracketMatchEntityRepository: Repository<
       BracketMatchEntity
     >,
-    @InjectRepository(MatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
+    @InjectRepository(BracketMatchGameEntity)
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
     @InjectRepository(TournamentParticipantEntity)
     private readonly bracketParticipantEntityRepository: Repository<
       TournamentParticipantEntity
@@ -43,7 +43,7 @@ export class BracketGameTimerReadyHandler
     await this.initMatch(event.tournamentId, event.matchId, event.gameId);
   }
 
-  private async isPreviousGameFinished(game: MatchGameEntity) {
+  private async isPreviousGameFinished(game: BracketMatchGameEntity) {
     const allGames = await this.matchGameEntityRepository.findBy({
       bm_id: game.bm_id,
     });
