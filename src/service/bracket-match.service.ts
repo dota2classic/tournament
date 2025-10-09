@@ -7,7 +7,7 @@ import { TournamentEntity } from '../db/entity/tournament.entity';
 import { TournamentStatus } from '../gateway/shared-types/tournament';
 import { RoundEntity } from '../db/entity/round.entity';
 import { EventBus } from '@nestjs/cqrs';
-import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
+import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 import { Status } from 'brackets-model';
 import { UtilQuery } from './util-query';
 import { StageEntity } from '../db/entity/stage.entity';
@@ -39,9 +39,9 @@ export class BracketMatchService {
     @InjectRepository(RoundEntity)
     private readonly roundEntityRepository: Repository<RoundEntity>,
     private readonly ebus: EventBus,
-    @InjectRepository(BracketParticipantEntity)
+    @InjectRepository(TournamentParticipantEntity)
     private readonly bracketParticipantEntityRepository: Repository<
-      BracketParticipantEntity
+      TournamentParticipantEntity
     >,
     @InjectRepository(GroupEntity)
     private readonly groupEntityRepository: Repository<GroupEntity>,

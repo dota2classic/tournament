@@ -9,7 +9,7 @@ import {
   BracketType,
   TournamentStatus,
 } from '../../gateway/shared-types/tournament';
-import { BracketParticipantEntity } from './bracket-participant.entity';
+import { TournamentParticipantEntity } from './tournament-participant.entity';
 import { TournamentRegistrationEntity } from './tournament-registration.entity';
 
 @Entity('tournament')
@@ -58,11 +58,11 @@ export class TournamentEntity {
   bestOfConfig: BestOfStrategy;
 
   @OneToMany(
-    e => BracketParticipantEntity,
+    e => TournamentParticipantEntity,
     e => e.tournament,
     { eager: false },
   )
-  participants: BracketParticipantEntity[];
+  participants: TournamentParticipantEntity[];
 
   @OneToMany(
     e => TournamentRegistrationEntity,

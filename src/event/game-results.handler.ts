@@ -5,7 +5,7 @@ import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { Repository } from 'typeorm';
 import { BracketService } from '../service/bracket.service';
 import { MatchGameEntity } from '../db/entity/match-game.entity';
-import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
+import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 import { MatchGameService } from '../service/match-game.service';
 
 @EventsHandler(GameResultsEvent)
@@ -18,9 +18,9 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
     @InjectRepository(MatchGameEntity)
     private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
     private readonly bService: BracketService,
-    @InjectRepository(BracketParticipantEntity)
+    @InjectRepository(TournamentParticipantEntity)
     private readonly bracketParticipantEntityRepository: Repository<
-      BracketParticipantEntity
+      TournamentParticipantEntity
     >,
     private readonly matchGameService: MatchGameService,
   ) {}

@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import { BracketMatchEntity } from '../../db/entity/bracket-match.entity';
 import { MatchGameEntity } from '../../db/entity/match-game.entity';
 import { Logger } from '@nestjs/common';
-import { BracketParticipantEntity } from '../../db/entity/bracket-participant.entity';
+import { TournamentParticipantEntity } from '../../db/entity/tournament-participant.entity';
 import { TeamEntity } from '../../db/entity/team.entity';
 import { GameScheduleService } from '../../service/game-schedule.service';
 import { Dota2Version } from '../../gateway/shared-types/dota2version';
@@ -29,9 +29,9 @@ export class BracketGameTimerReadyHandler
     >,
     @InjectRepository(MatchGameEntity)
     private readonly matchGameEntityRepository: Repository<MatchGameEntity>,
-    @InjectRepository(BracketParticipantEntity)
+    @InjectRepository(TournamentParticipantEntity)
     private readonly bracketParticipantEntityRepository: Repository<
-      BracketParticipantEntity
+      TournamentParticipantEntity
     >,
     @InjectRepository(TeamEntity)
     private readonly teamEntityRepository: Repository<TeamEntity>,

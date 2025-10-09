@@ -8,7 +8,7 @@ import {
   TournamentEntity,
 } from '../db/entity/tournament.entity';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
-import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
+import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 import { TeamEntity } from '../db/entity/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BracketType } from '../gateway/shared-types/tournament';
@@ -39,9 +39,9 @@ export class BracketService {
     private readonly connection: Connection,
     @InjectRepository(TeamEntity)
     private readonly teamEntityRepository: Repository<TeamEntity>,
-    @InjectRepository(BracketParticipantEntity)
+    @InjectRepository(TournamentParticipantEntity)
     private readonly bracketParticipantEntityRepository: Repository<
-      BracketParticipantEntity
+      TournamentParticipantEntity
     >,
     @InjectRepository(StageEntity)
     private readonly stageEntityRepository: Repository<StageEntity>,

@@ -12,7 +12,7 @@ import { TournamentRegistrationEntity } from '../db/entity/tournament-registrati
 import { TournamentService } from './tournament.service';
 import { TournamentRegistrationState } from '../model/tournament.dto';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
-import { TournamentEntity } from '../db/entity/tournament.entity';
+import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 
 describe('TournamentService', () => {
   const te = useFullModule();
@@ -23,7 +23,7 @@ describe('TournamentService', () => {
       te,
       2,
       BracketType.SINGLE_ELIMINATION,
-      TournamentStatus.REGISTRATION,
+      TournamentStatus.READY_CHECK,
     );
     // Create registration
     return await createTournamentRegistration(
@@ -79,7 +79,7 @@ describe('TournamentService', () => {
     });
   });
 
-  describe('finishRegistration', () => {
+  describe('finishReadyCheck', () => {
     it('should throw if wrong status for finishing', async () => {
       // Given
       const tournament = await createTournament(
@@ -90,22 +90,8 @@ describe('TournamentService', () => {
       );
       // When
       await expect(() =>
-        service.finishRegistration(tournament.id),
+        service.finishReadyCheck(tournament.id),
       ).rejects.toThrow();
-    });
-
-    it('should change tournament state', async () => {
-      // Given
-      let rg = await createRegistration(0);
-
-      // When
-      await service.finishRegistration(rg.tournamentId);
-
-      // Then
-      const tournament = await te
-        .repo(TournamentEntity)
-        .findOne({ where: { id: rg.tournamentId } });
-      expect(tournament.state).toEqual(TournamentStatus.READY_CHECK);
     });
 
     it('should set timed_out state to not confirmed', async () => {
@@ -113,7 +99,7 @@ describe('TournamentService', () => {
       let rg = await createRegistration();
 
       // When
-      await service.finishRegistration(rg.tournamentId);
+      await service.finishReadyCheck(rg.tournamentId);
 
       // Then
       rg = await te
@@ -136,7 +122,7 @@ describe('TournamentService', () => {
       await te.repo(TournamentRegistrationPlayerEntity).save(rg.players);
 
       // When
-      await service.finishRegistration(rg.tournamentId);
+      await service.finishReadyCheck(rg.tournamentId);
 
       // Then
       rg = await te
@@ -159,7 +145,7 @@ describe('TournamentService', () => {
       await te.repo(TournamentRegistrationPlayerEntity).save(rg.players);
 
       // When
-      await service.finishRegistration(rg.tournamentId);
+      await service.finishReadyCheck(rg.tournamentId);
 
       // Then
       rg = await te
@@ -171,5 +157,109 @@ describe('TournamentService', () => {
         TournamentRegistrationState.TIMED_OUT,
       ]);
     });
+  });
+
+  describe('startTournament', () => {
+    it('should convert participants into players', async () => {
+      // Given
+      const tournament = await createTournament(
+        te,
+        1,
+        BracketType.SINGLE_ELIMINATION,
+        TournamentStatus.READY_CHECK,
+      );
+
+      const registrations: TournamentRegistrationEntity[] = [];
+      for (let i = 0; i < 4; i++) {
+        // Create registration
+        registrations.push(
+          await createTournamentRegistration(
+            te,
+            tournament.id,
+            [testUser()],
+            TournamentRegistrationState.CONFIRMED,
+          ),
+        );
+      }
+
+      // When
+      await service.startTournament(tournament.id);
+
+      // Then
+      const participants = await te.repo(TournamentParticipantEntity).find({
+        where: {
+          tournamentId: tournament.id,
+        },
+        relations: ['players'],
+      });
+
+      expect(participants).toHaveLength(4);
+
+      expect(
+        participants
+          .flatMap(t => t.players.map(player => player.steamId))
+          .sort(),
+      ).toEqual(
+        registrations
+          .flatMap(t => t.players.map(player => player.steamId))
+          .sort(),
+      );
+    });
+
+    it('should ignore not-confirmed participants', async () => {
+      // Given
+      const tournament = await createTournament(
+        te,
+        1,
+        BracketType.SINGLE_ELIMINATION,
+        TournamentStatus.READY_CHECK,
+      );
+
+      const registrations: TournamentRegistrationEntity[] = [];
+      for (let i = 0; i < 4; i++) {
+        // Create registration
+        registrations.push(
+          await createTournamentRegistration(
+            te,
+            tournament.id,
+            [testUser()],
+            TournamentRegistrationState.CONFIRMED,
+          ),
+        );
+      }
+
+      // Bad one
+      registrations.push(
+        await createTournamentRegistration(
+          te,
+          tournament.id,
+          [testUser()],
+          TournamentRegistrationState.TIMED_OUT,
+        ),
+      )
+
+      // When
+      await service.startTournament(tournament.id);
+
+      // Then
+      const participants = await te.repo(TournamentParticipantEntity).find({
+        where: {
+          tournamentId: tournament.id,
+        },
+        relations: ['players'],
+      });
+
+      expect(participants).toHaveLength(4);
+
+      expect(
+        participants
+          .flatMap(t => t.players.map(player => player.steamId))
+          .sort(),
+      ).toEqual(
+        registrations.slice(0, 4)
+          .flatMap(t => t.players.map(player => player.steamId))
+          .sort(),
+      );
+    })
   });
 });

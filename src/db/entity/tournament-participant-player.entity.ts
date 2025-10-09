@@ -1,5 +1,5 @@
 import { Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
-import { BracketParticipantEntity } from './bracket-participant.entity';
+import { TournamentParticipantEntity } from './tournament-participant.entity';
 
 /**
  * @entity BracketParticipantPlayerEntity
@@ -8,8 +8,8 @@ import { BracketParticipantEntity } from './bracket-participant.entity';
  *
  * Один игрок (по Steam ID) связан с конкретным участием
  */
-@Entity('bracket_participant_player')
-export class BracketParticipantPlayerEntity {
+@Entity('tournament_participant_player')
+export class TournamentParticipantPlayerEntity {
   /**
    * Уникальный идентификатор игрока в Steam.
    *
@@ -26,24 +26,24 @@ export class BracketParticipantPlayerEntity {
    * Также часть составного первичного ключа.
    */
   @PrimaryColumn({
-    name: 'bracket_participant_id',
+    name: 'tournament_participant_id',
   })
-  bracketParticipantId: number;
+  tournamentParticipantId: number;
 
   /**
    * Регистрация, к которой привязан игрок.
    *
-   * Связь «многие к одному» с {@link BracketParticipantEntity}.
+   * Связь «многие к одному» с {@link TournamentParticipantEntity}.
    */
   @ManyToOne(
-    () => BracketParticipantEntity,
+    () => TournamentParticipantEntity,
     t => t.players,
   )
-  @JoinColumn({ name: 'bracket_participant_id' })
-  bracketParticipation?: BracketParticipantEntity;
+  @JoinColumn({ name: 'tournament_participant_id' })
+  tournamentParticipant?: TournamentParticipantEntity;
 
-  constructor(bracketParticipantId: number, steamId: string) {
+  constructor(tournamentParticipantId: number, steamId: string) {
     this.steamId = steamId;
-    this.bracketParticipantId = bracketParticipantId;
+    this.tournamentParticipantId = tournamentParticipantId;
   }
 }

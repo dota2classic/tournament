@@ -7,7 +7,7 @@ import { BracketsManager } from 'brackets-manager';
 import { UtilQuery } from './util-query';
 import { BracketGameResultEvent } from '../event/bracket-game-result/bracket-game-result.event';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
-import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
+import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 
 @Injectable()
 export class MatchGameService {
@@ -18,9 +18,9 @@ export class MatchGameService {
     private readonly bracketMatchEntityRepository: Repository<
       BracketMatchEntity
     >,
-    @InjectRepository(BracketParticipantEntity)
+    @InjectRepository(TournamentParticipantEntity)
     private readonly bracketParticipantEntityRepository: Repository<
-      BracketParticipantEntity
+      TournamentParticipantEntity
     >,
     private readonly manager: BracketsManager,
     private readonly utilQuery: UtilQuery,

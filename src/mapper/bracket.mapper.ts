@@ -7,7 +7,7 @@ import {
   ParticipantResultDto,
   TournamentBracketInfoDto,
 } from '../model/bracket.dto';
-import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
+import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -31,7 +31,7 @@ export class BracketMapper {
   ) {}
 
   private mapParticipant = async (
-    b: BracketParticipantEntity,
+    b: TournamentParticipantEntity,
   ): Promise<BracketParticipantDto | undefined> => {
     throw 'TODO IMPLEMENT';
     // if (b.name === undefined) return undefined;

@@ -10,10 +10,10 @@ import { TournamentEntity } from './tournament.entity';
 import { TeamEntity } from './team.entity';
 import { UUID } from '../../types';
 import { TournamentRegistrationPlayerEntity } from './tournament-registration-player.entity';
-import { BracketParticipantPlayerEntity } from './bracket-participant-player.entity';
+import { TournamentParticipantPlayerEntity } from './tournament-participant-player.entity';
 
-@Entity('bracket_participant')
-export class BracketParticipantEntity {
+@Entity('tournament_participant')
+export class TournamentParticipantEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
@@ -69,10 +69,15 @@ export class BracketParticipantEntity {
    * автоматически при запросе регистрации.
    */
   @OneToMany(
-    () => BracketParticipantPlayerEntity,
-    t => t.bracketParticipation,
+    () => TournamentParticipantPlayerEntity,
+    t => t.tournamentParticipant,
     { eager: true },
   )
-  players: Relation<BracketParticipantPlayerEntity>[];
+  players: Relation<TournamentParticipantPlayerEntity>[];
 
+
+  constructor(tournamentId: number, teamId?: UUID) {
+    this.teamId = teamId;
+    this.tournamentId = tournamentId;
+  }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CrudInterface, OmitId, Table } from 'brackets-manager/dist/types';
-import { BracketParticipantEntity } from '../db/entity/bracket-participant.entity';
+import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 import { Connection, In, Repository } from 'typeorm';
 import { StageEntity } from '../db/entity/stage.entity';
 import { GroupEntity } from '../db/entity/group.entity';
@@ -10,7 +10,7 @@ import { TournamentEntity } from '../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
 const mapTable = {
-  participant: BracketParticipantEntity,
+  participant: TournamentParticipantEntity,
   stage: StageEntity,
   group: GroupEntity,
   round: RoundEntity,
@@ -18,7 +18,7 @@ const mapTable = {
 };
 
 export interface TournamentBracketInfo {
-  participant: BracketParticipantEntity[];
+  participant: TournamentParticipantEntity[];
   stage: StageEntity[];
   group: GroupEntity[];
   round: RoundEntity[];
@@ -80,7 +80,7 @@ export class BracketCrud implements CrudInterface {
   }
 
   public async getBracket(tid: number): Promise<TournamentBracketInfo> {
-    const participant = await this.select<BracketParticipantEntity>(
+    const participant = await this.select<TournamentParticipantEntity>(
       'participant',
       { tournamentId: tid },
     );

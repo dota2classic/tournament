@@ -16,7 +16,7 @@ import { TeamEntity } from 'db/entity/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TournamentDto } from 'model/tournament.dto';
-import { BracketParticipantEntity } from 'db/entity/bracket-participant.entity';
+import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 import { TournamentMapper } from 'mapper/tournament.mapper';
 import { TeamMemberEntity } from 'db/entity/team-member.entity';
 import { TeamInvitationEntity } from 'db/entity/team-invitation.entity';
@@ -30,9 +30,9 @@ export class TeamController {
     private readonly tourMapper: TournamentMapper,
     @InjectRepository(TeamEntity)
     private readonly teamEntityRepository: Repository<TeamEntity>,
-    @InjectRepository(BracketParticipantEntity)
+    @InjectRepository(TournamentParticipantEntity)
     private readonly bracketParticipantEntityRepository: Repository<
-      BracketParticipantEntity
+      TournamentParticipantEntity
     >,
     @InjectRepository(TeamMemberEntity)
     private readonly teamMemberEntityRepository: Repository<TeamMemberEntity>,

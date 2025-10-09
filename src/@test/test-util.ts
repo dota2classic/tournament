@@ -9,6 +9,7 @@ import {
 } from '../gateway/shared-types/tournament';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
+import { TournamentRegistrationState } from '../model/tournament.dto';
 
 export const BestOfOne: BestOfStrategy = {
   round: 1,
@@ -43,10 +44,11 @@ export const createTournamentRegistration = async (
   te: TestEnvironment,
   tournamentId: number,
   players: string[] = [testUser()],
+  state = TournamentRegistrationState.CREATED
 ) => {
   const reg = await te
     .repo(TournamentRegistrationEntity)
-    .save(new TournamentRegistrationEntity(tournamentId));
+    .save(new TournamentRegistrationEntity(tournamentId, undefined, state));
   reg.players = await te
     .repo(TournamentRegistrationPlayerEntity)
     .save(

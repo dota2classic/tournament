@@ -131,8 +131,9 @@ export class TournamentRegistrationEntity {
   })
   state: TournamentRegistrationState;
 
-  constructor(tournamentId: number, teamId?: UUID) {
+  constructor(tournamentId: number, teamId?: UUID, state?: TournamentRegistrationState) {
     this.teamId = teamId;
     this.tournamentId = tournamentId;
+    this.state = state;
   }
 }
