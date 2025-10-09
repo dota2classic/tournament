@@ -1,8 +1,8 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { StageSettings, StageType } from 'brackets-model';
+import { StageSettings, StageType, Stage } from 'brackets-model';
 
 @Entity('tournament_stage')
-export class StageEntity {
+export class StageEntity implements Stage{
   @PrimaryGeneratedColumn()
   id: number;
 

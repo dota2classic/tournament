@@ -10,6 +10,8 @@ import {
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { TournamentRegistrationState } from '../model/tournament.dto';
+import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-participant-player.entity';
 
 export const BestOfOne: BestOfStrategy = {
   round: 1,
@@ -44,7 +46,7 @@ export const createTournamentRegistration = async (
   te: TestEnvironment,
   tournamentId: number,
   players: string[] = [testUser()],
-  state = TournamentRegistrationState.CREATED
+  state = TournamentRegistrationState.CREATED,
 ) => {
   const reg = await te
     .repo(TournamentRegistrationEntity)
@@ -55,4 +57,28 @@ export const createTournamentRegistration = async (
       players.map(plr => new TournamentRegistrationPlayerEntity(plr, reg.id)),
     );
   return reg;
+};
+
+export const createTournamentWithParticipants = async (
+  te: TestEnvironment,
+  state: TournamentStatus,
+  participantCount: number,
+  teamSize: number = 1,
+  bracketType = BracketType.SINGLE_ELIMINATION,
+) => {
+  const tour = await createTournament(te, teamSize, bracketType, state);
+  tour.participants = [];
+  for (let i = 0; i < participantCount; i++) {
+    const p = await te
+      .repo(TournamentParticipantEntity)
+      .save(new TournamentParticipantEntity(tour.id));
+    p.players = [
+      await te
+        .repo(TournamentParticipantPlayerEntity)
+        .save(new TournamentParticipantPlayerEntity(p.id, testUser())),
+    ];
+    tour.participants.push(p);
+  }
+
+  return tour;
 };

@@ -1,30 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  PostgreSqlContainer,
-  StartedPostgreSqlContainer,
-} from '@testcontainers/postgresql';
+import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { INestApplication } from '@nestjs/common';
 import { Constructor, CqrsModule, EventBus } from '@nestjs/cqrs';
 import { ObjectLiteral, Repository } from 'typeorm';
-import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
-import {
-  ClientsModule,
-  RedisOptions,
-  RmqOptions,
-  Transport,
-} from '@nestjs/microservices';
+import { ClientsModule, RedisOptions, RmqOptions, Transport } from '@nestjs/microservices';
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
 import { ConfigModule } from '@nestjs/config';
-import {
-  RabbitMQContainer,
-  StartedRabbitMQContainer,
-} from '@testcontainers/rabbitmq';
+import { RabbitMQContainer, StartedRabbitMQContainer } from '@testcontainers/rabbitmq';
 import { WinstonWrapper } from '@dota2classic/nest_logger';
 import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { TeamController } from 'controller/team.controller';
 import { TournamentController } from 'controller/tournament.controller';
-import { BracketService } from 'service/bracket.service';
+import { Bracket2Service } from '../service/bracket2.service';
 import { BracketMatchService } from 'service/bracket-match.service';
 import { GameScheduleService } from 'service/game-schedule.service';
 import { MatchGameService } from 'service/match-game.service';
@@ -37,8 +25,9 @@ import { TournamentMapper } from 'mapper/tournament.mapper';
 import { BracketCrud } from 'service/bracket.crud';
 import { BracketsManager } from 'brackets-manager';
 import { ScheduleModule } from '@nestjs/schedule';
-import SpyInstance = jest.SpyInstance;
 import { TournamentService } from '../service/tournament.service';
+import { BracketService } from '../service/bracket.service';
+import SpyInstance = jest.SpyInstance;
 
 export interface TestEnvironment {
   module: TestingModule;
@@ -204,6 +193,7 @@ export function useFullModule(): TestEnvironment {
         ]),
       ],
       providers: [
+        Bracket2Service,
         BracketService,
         {
           provide: BracketsManager,

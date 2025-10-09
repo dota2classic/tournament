@@ -42,6 +42,10 @@ export class BracketCrud implements CrudInterface {
   insert<T>(table: Table, values: OmitId<T>[]): Promise<boolean>;
   async insert(table: Table, value): Promise<number | boolean> {
     const rep = this.connection.getRepository(mapTable[table]);
+    console.log(
+      `Insert table ${table} with data`,
+      value
+    )
 
     if (Array.isArray(value)) {
       await rep.save(value);
@@ -61,7 +65,7 @@ export class BracketCrud implements CrudInterface {
       // its a filter
       return rep.find(id);
     } else if (typeof id === 'number') {
-      return rep.findOneById(id);
+      return rep.findOneBy({ id });
     }
   }
 
@@ -72,6 +76,10 @@ export class BracketCrud implements CrudInterface {
     value: Partial<T>,
   ): Promise<boolean>;
   async update(table: Table, id, value): Promise<boolean> {
+    console.log(
+      `Update table ${table}#${id} with data`,
+      value
+    )
     const rep = this.connection.getRepository(mapTable[table]);
     if (typeof id === 'object') throw 'not implemented';
 

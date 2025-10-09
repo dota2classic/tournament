@@ -1,6 +1,6 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { BracketUpdatedEvent } from './bracket-updated.event';
-import { BracketService } from '../service/bracket.service';
+import { Bracket2Service } from '../service/bracket2.service';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,7 +10,7 @@ import { BracketMatchService } from '../service/bracket-match.service';
 export class BracketUpdatedHandler
   implements IEventHandler<BracketUpdatedEvent> {
   constructor(
-    private readonly bracketService: BracketService,
+    private readonly bracketService: Bracket2Service,
     @InjectRepository(BracketMatchEntity)
     private readonly bracketMatchEntityRepository: Repository<
       BracketMatchEntity

@@ -12,7 +12,7 @@ import {
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BracketService } from '../service/bracket.service';
+import { Bracket2Service } from '../service/bracket2.service';
 import { CompactTeamDto } from '../model/team.dto';
 import { TeamMapper } from '../mapper/team.mapper';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
@@ -37,7 +37,7 @@ export class TournamentController {
     private readonly teamMapper: TeamMapper,
     @InjectRepository(TournamentEntity)
     private readonly tournamentEntityRepository: Repository<TournamentEntity>,
-    private readonly bracketService: BracketService,
+    private readonly bracketService: Bracket2Service,
     private readonly bmService: BracketMatchService,
     @InjectRepository(BracketMatchEntity)
     private readonly bracketMatchEntityRepository: Repository<
