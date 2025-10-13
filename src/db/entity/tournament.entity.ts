@@ -4,6 +4,7 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
 import {
   BracketType,
@@ -11,6 +12,7 @@ import {
 } from '../../gateway/shared-types/tournament';
 import { TournamentParticipantEntity } from './tournament-participant.entity';
 import { TournamentRegistrationEntity } from './tournament-registration.entity';
+import { StageEntity } from './stage.entity';
 
 @Entity('tournament')
 export class TournamentEntity {
@@ -62,14 +64,21 @@ export class TournamentEntity {
     e => e.tournament,
     { eager: false },
   )
-  participants: TournamentParticipantEntity[];
+  participants: Relation<TournamentParticipantEntity>[];
 
   @OneToMany(
     e => TournamentRegistrationEntity,
     e => e.tournament,
     { eager: false },
   )
-  registrations: TournamentRegistrationEntity[];
+  registrations: Relation<TournamentRegistrationEntity>[];
+
+  @OneToMany(
+    e => StageEntity,
+    e => e.tournament,
+    { eager: false },
+  )
+  stages: Relation<StageEntity>[];
 
   constructor(
     teamSize: number,

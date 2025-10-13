@@ -22,12 +22,12 @@ import {
 } from '../model/tournament.dto';
 
 import { TeamMapper } from '../mapper/team.mapper';
-import { UtilQuery } from './util-query';
 import { RoundEntity } from '../db/entity/round.entity';
 import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { TeamService } from './team.service';
 import { Dota2Version } from '../gateway/shared-types/dota2version';
+import { TournamentRepository } from '../repository/tournament.repository';
 
 export type EntryIdType = string;
 
@@ -56,7 +56,7 @@ export class Bracket2Service {
       BracketMatchEntity
     >,
     private readonly mapper: TeamMapper,
-    private readonly utilQuery: UtilQuery,
+    private readonly utilQuery: TournamentRepository,
     @InjectRepository(RoundEntity)
     private readonly roundEntityRepository: Repository<RoundEntity>,
     @InjectRepository(BracketMatchGameEntity)
@@ -68,83 +68,6 @@ export class Bracket2Service {
     this.tournamentEntityRepository = connection.getRepository(
       TournamentEntity,
     );
-  }
-
-  /**
-   * Calling this will lock tournament
-   * @param tId
-   * @param type
-   */
-  public async generateTournament(tId: number) {
-    // const tournament = await this.tournamentEntityRepository.findOneById(tId);
-    // if (!tournament || tournament.state !== TournamentStatus.NEW) return;
-    //
-    // const entries = (
-    //   await this.tournamentParticipantEntityRepository.findBy({
-    //     tournament_id: tId,
-    //   })
-    // ).map(z => z.name);
-    //
-    // // it's just stupid to do this right
-    // if (entries.length < Math.pow(2, 2)) return;
-    //
-    // const stageSetup: InputStage = {
-    //   name: 'Example',
-    //   tournamentId: tId,
-    //   type:
-    //     tournament.strategy === BracketType.DOUBLE_ELIMINATION
-    //       ? 'double_elimination'
-    //       : 'single_elimination',
-    //   seeding: shuffle(BracketService.formatToPower(entries)),
-    //   settings: {
-    //     // seedOrdering: ['natural', 'natural', 'natural'],
-    //     grandFinal: 'simple',
-    //   },
-    // };
-    //
-    // await this.manager.create(stageSetup);
-    //
-    // tournament.state = TournamentStatus.ONGOING;
-    // // just to sync things up.
-    // tournament.startDate = new Date();
-    //
-    // await this.tournamentEntityRepository.save(tournament);
-    //
-    // // ok here we need to find all
-    //
-    // const allMatches = await this.bracketMatchEntityRepository
-    //   .createQueryBuilder('bm')
-    //   .leftJoin(StageEntity, 'stage', 'stage.id = bm.stage_id')
-    //   .where('stage.tournament_id = :tId', { tId })
-    //   .orderBy('bm.id', 'ASC')
-    //   .getMany();
-    //
-    // await Promise.all(
-    //   allMatches.map(async m => this.bmService.generateGames(tId, m.id)),
-    // );
-    //
-    // await Promise.all(
-    //   allMatches.map(async m => this.bmService.scheduleBracketMatch(tId, m.id)),
-    // );
-  }
-
-  public async createTournament(
-    name: string,
-    startDate: Date,
-    imageUrl: string,
-    version: Dota2Version,
-    strategy: BracketType,
-    bestOfStrategy: BestOfStrategy = { round: 1, final: 1, grandFinal: 1 },
-  ): Promise<TournamentEntity> {
-    throw 'TODO IMPLEMENT';
-    // const t = new TournamentEntity();
-    // t.name = name;
-    // t.startDate = startDate;
-    // t.imageUrl = imageUrl;
-    // t.version = version;
-    // t.strategy = strategy;
-    // t.bestOfConfig = bestOfStrategy;
-    // return await this.tournamentEntityRepository.save(t);
   }
 
   // public async matchResults(matchId: number, winnerOpponentId: number) {
@@ -491,104 +414,104 @@ export class Bracket2Service {
     // await Promise.all(unlocker);
   }
 
-  public async checkMatchResults(mId: number) {
-    const matchGames = await this.matchGameEntityRepository.findBy({
-      bm_id: mId,
-    });
-
-    // ok it's done
-
-    const scores: {
-      [key: string]: number;
-    } = {};
-
-    for (const mg of matchGames) {
-      scores[mg.winner] = (scores[mg.winner] || 0) + 1;
-    }
-
-    const m = await this.bracketMatchEntityRepository.findOneById(mId);
-
-    const opp1 = await this.bracketParticipantEntityRepository.findOneById(
-      m.opponent1?.id,
-    );
-    const opp2 = await this.bracketParticipantEntityRepository.findOneById(
-      m.opponent2?.id,
-    );
-
-    scores[opp1.id] = scores[opp1.id] || 0;
-    scores[opp2.id] = scores[opp2.id] || 0;
-
-    // more than half
-    const scoreToWin = Math.ceil(matchGames.length / 2);
-
-    const unfinishedGames = matchGames.filter(t => !t.winner);
-    if (unfinishedGames.length > 0) {
-      const t = await this.utilQuery.matchTournamentId(m.id);
-      // find case where 2 - 0 in bo3 for e.g.
-
-      if (scores[opp1.id] >= scoreToWin) {
-        await this.manager.update.match({
-          id: m.id,
-          opponent1: {
-            id: opp1.id,
-            score: scores[opp1.id],
-            result: 'win',
-          },
-          opponent2: {
-            id: opp2.id,
-            score: scores[opp2.id] || 0,
-            result: 'loss',
-          },
-        });
-        // we need to unschedule all unfinished games - we already have result for match
-        await Promise.all(
-          unfinishedGames.map(async game => {
-            game.finished = true;
-            await this.matchGameEntityRepository.save(game);
-            await this.bmService.cancelMatchSchedule(t, m.id, game.id);
-          }),
-        );
-      } else if (scores[opp2.id] >= scoreToWin) {
-        await this.manager.update.match({
-          id: m.id,
-          opponent1: {
-            id: opp1.id,
-            score: scores[opp1.id],
-            result: 'loss',
-          },
-          opponent2: {
-            id: opp2.id,
-            score: scores[opp2.id] || 0,
-            result: 'win',
-          },
-        });
-        // we need to unschedule all unfinished games - we already have result for match
-        await Promise.all(
-          unfinishedGames.map(async game => {
-            game.finished = true;
-            await this.matchGameEntityRepository.save(game);
-            await this.bmService.cancelMatchSchedule(t, m.id, game.id);
-          }),
-        );
-      }
-
-      return;
-    }
-
-    await this.manager.update.match({
-      id: m.id,
-      opponent1: {
-        id: opp1.id,
-        score: scores[opp1.id],
-        result: scores[opp1.id] > scores[opp2.id] ? 'win' : 'loss',
-      },
-      opponent2: {
-        id: opp2.id,
-        score: scores[opp2.id] || 0,
-        result: scores[opp1.id] > scores[opp2.id] ? 'loss' : 'win',
-      },
-    });
-  }
+  // public async checkMatchResults(mId: number) {
+  //   const matchGames = await this.matchGameEntityRepository.findBy({
+  //     bm_id: mId,
+  //   });
+  //
+  //   // ok it's done
+  //
+  //   const scores: {
+  //     [key: string]: number;
+  //   } = {};
+  //
+  //   for (const mg of matchGames) {
+  //     scores[mg.winner] = (scores[mg.winner] || 0) + 1;
+  //   }
+  //
+  //   const m = await this.bracketMatchEntityRepository.findOneById(mId);
+  //
+  //   const opp1 = await this.bracketParticipantEntityRepository.findOneById(
+  //     m.opponent1?.id,
+  //   );
+  //   const opp2 = await this.bracketParticipantEntityRepository.findOneById(
+  //     m.opponent2?.id,
+  //   );
+  //
+  //   scores[opp1.id] = scores[opp1.id] || 0;
+  //   scores[opp2.id] = scores[opp2.id] || 0;
+  //
+  //   // more than half
+  //   const scoreToWin = Math.ceil(matchGames.length / 2);
+  //
+  //   const unfinishedGames = matchGames.filter(t => !t.winner);
+  //   if (unfinishedGames.length > 0) {
+  //     const t = await this.utilQuery.matchTournamentId(m.id);
+  //     // find case where 2 - 0 in bo3 for e.g.
+  //
+  //     if (scores[opp1.id] >= scoreToWin) {
+  //       await this.manager.update.match({
+  //         id: m.id,
+  //         opponent1: {
+  //           id: opp1.id,
+  //           score: scores[opp1.id],
+  //           result: 'win',
+  //         },
+  //         opponent2: {
+  //           id: opp2.id,
+  //           score: scores[opp2.id] || 0,
+  //           result: 'loss',
+  //         },
+  //       });
+  //       // we need to unschedule all unfinished games - we already have result for match
+  //       await Promise.all(
+  //         unfinishedGames.map(async game => {
+  //           game.finished = true;
+  //           await this.matchGameEntityRepository.save(game);
+  //           await this.bmService.cancelMatchSchedule(t, m.id, game.id);
+  //         }),
+  //       );
+  //     } else if (scores[opp2.id] >= scoreToWin) {
+  //       await this.manager.update.match({
+  //         id: m.id,
+  //         opponent1: {
+  //           id: opp1.id,
+  //           score: scores[opp1.id],
+  //           result: 'loss',
+  //         },
+  //         opponent2: {
+  //           id: opp2.id,
+  //           score: scores[opp2.id] || 0,
+  //           result: 'win',
+  //         },
+  //       });
+  //       // we need to unschedule all unfinished games - we already have result for match
+  //       await Promise.all(
+  //         unfinishedGames.map(async game => {
+  //           game.finished = true;
+  //           await this.matchGameEntityRepository.save(game);
+  //           await this.bmService.cancelMatchSchedule(t, m.id, game.id);
+  //         }),
+  //       );
+  //     }
+  //
+  //     return;
+  //   }
+  //
+  //   await this.manager.update.match({
+  //     id: m.id,
+  //     opponent1: {
+  //       id: opp1.id,
+  //       score: scores[opp1.id],
+  //       result: scores[opp1.id] > scores[opp2.id] ? 'win' : 'loss',
+  //     },
+  //     opponent2: {
+  //       id: opp2.id,
+  //       score: scores[opp2.id] || 0,
+  //       result: scores[opp1.id] > scores[opp2.id] ? 'loss' : 'win',
+  //     },
+  //   });
+  // }
 
   public async getStandings2(
     tournamentId: number,

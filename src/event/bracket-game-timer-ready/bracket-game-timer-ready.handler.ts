@@ -45,7 +45,7 @@ export class BracketGameTimerReadyHandler
 
   private async isPreviousGameFinished(game: BracketMatchGameEntity) {
     const allGames = await this.matchGameEntityRepository.findBy({
-      bm_id: game.bm_id,
+      parent_id: game.parent_id,
     });
     return (
       game.number === 1 ||

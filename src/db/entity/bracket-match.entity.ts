@@ -34,7 +34,13 @@ export class BracketMatchEntity implements Match {
   @Column()
   number: number;
 
-  @Column()
+  @Column({
+    name: 'status',
+    default: Status.Locked,
+    type: "enum",
+    enum: Status,
+    enumName: 'tournament_match_status',
+  })
   status: Status;
 
   @Column({ nullable: true, type: 'timestamptz' })
@@ -46,6 +52,8 @@ export class BracketMatchEntity implements Match {
   @Column({ type: 'simple-json', nullable: true })
   opponent2: ParticipantResult | null;
 
+  @ManyToOne(() => StageEntity, t => t.matches)
+  @JoinColumn({ name: 'stage_id', referencedColumnName: 'id' })
   stage?: StageEntity;
 
   @ManyToOne(() => GroupEntity)

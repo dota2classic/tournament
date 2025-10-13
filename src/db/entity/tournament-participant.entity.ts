@@ -2,18 +2,19 @@ import {
   Column,
   Entity,
   JoinColumn,
-  ManyToOne, OneToMany,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   Relation,
 } from 'typeorm';
 import { TournamentEntity } from './tournament.entity';
 import { TeamEntity } from './team.entity';
 import { UUID } from '../../types';
-import { TournamentRegistrationPlayerEntity } from './tournament-registration-player.entity';
 import { TournamentParticipantPlayerEntity } from './tournament-participant-player.entity';
+import { Participant } from 'brackets-model';
 
 @Entity('tournament_participant')
-export class TournamentParticipantEntity {
+export class TournamentParticipantEntity implements Omit<Participant, "name"> {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
@@ -57,7 +58,7 @@ export class TournamentParticipantEntity {
    * Идентификатор турнира
    */
   @Column({ name: 'tournament_id' })
-  tournamentId: number;
+  tournament_id: number;
 
   /**
    * Список игроков участвующих.
@@ -75,9 +76,8 @@ export class TournamentParticipantEntity {
   )
   players: Relation<TournamentParticipantPlayerEntity>[];
 
-
   constructor(tournamentId: number, teamId?: UUID) {
     this.teamId = teamId;
-    this.tournamentId = tournamentId;
+    this.tournament_id = tournamentId;
   }
 }

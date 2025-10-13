@@ -186,7 +186,7 @@ export class TournamentMapper {
   private mapTournamentMatchGame = (game: BracketMatchGameEntity): MatchGameDto => {
     return {
       gameId: game.id,
-      bracketMatchId: game.bm_id,
+      bracketMatchId: game.parent_id,
       externalMatchId: game.externalMatchId,
       scheduledDate: game.scheduledDate?.getTime(),
       teamOffset: game.teamOffset,

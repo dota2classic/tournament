@@ -119,7 +119,7 @@ export class BracketMapper {
   private mapMatchGame = (mg: BracketMatchGameEntity): BracketMatchGameDto => {
     return {
       id: mg.id,
-      bm_id: mg.bm_id,
+      bm_id: mg.parent_id,
       externalMatchId: mg.externalMatchId,
       scheduledDate: mg.scheduledDate.getTime(),
       teamOffset: mg.teamOffset,

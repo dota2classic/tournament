@@ -188,7 +188,7 @@ describe('TournamentService', () => {
       // Then
       const participants = await te.repo(TournamentParticipantEntity).find({
         where: {
-          tournamentId: tournament.id,
+          tournament_id: tournament.id,
         },
         relations: ['players'],
       });
@@ -244,7 +244,7 @@ describe('TournamentService', () => {
       // Then
       const participants = await te.repo(TournamentParticipantEntity).find({
         where: {
-          tournamentId: tournament.id,
+          tournament_id: tournament.id,
         },
         relations: ['players'],
       });

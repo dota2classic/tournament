@@ -3,13 +3,16 @@ import { TournamentEntity } from '../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
-import { InputStage, Stage } from 'brackets-model';
+import { InputStage, ParticipantResult, Stage } from 'brackets-model';
 import { shuffle } from '../util/shuffle';
 import { BracketType } from '../gateway/shared-types/tournament';
 import { padArrayToClosestPower } from '../util/arrays';
 import { BracketsManager } from 'brackets-manager';
 import { BracketMatchService } from './bracket-match.service';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
+import { EventBus } from '@nestjs/cqrs';
+import { BracketUpdatedEvent } from '../event/bracket-updated.event';
+import { TournamentRepository } from '../repository/tournament.repository';
 
 @Injectable()
 export class BracketService {
@@ -27,8 +30,14 @@ export class BracketService {
     private readonly manager: BracketsManager,
     private readonly bracketMatchService: BracketMatchService,
     private readonly ds: DataSource,
+    private readonly ebus: EventBus,
+    private readonly utilQuery: TournamentRepository
   ) {}
 
+  /**
+   * Generates bracket for a tournament
+   * @param tournamentId
+   */
   public async generateBracket(tournamentId: number): Promise<Stage> {
     const tournament = await this.tournamentEntityRepository.findOne({
       where: {
@@ -85,4 +94,45 @@ export class BracketService {
     // );
     return stage;
   }
+
+  /**
+   *
+   * @param matchId - bracket match id
+   * @param winnerOpponentId - bracket participant id
+   */
+  public async setMatchResults(matchId: number, winnerOpponentId: number) {
+    const m: BracketMatchEntity = await this.bracketMatchEntityRepository.findOne(
+      {
+        where: {
+          id: matchId,
+        },
+      },
+    );
+    if (m.opponent1?.id === winnerOpponentId) {
+      m.opponent1.result = 'win';
+    } else if (m.opponent2?.id === winnerOpponentId) {
+      m.opponent2.result = 'win';
+    } else {
+      throw new Error(`No such opponent in match ${matchId}`);
+    }
+
+    await this.manager.update.match({
+      id: m.id,
+      opponent1: m.opponent1,
+      opponent2: m.opponent2,
+    });
+
+    this.ebus.publish(
+      new BracketUpdatedEvent(
+        await this.utilQuery.matchTournamentId(matchId),
+        matchId,
+        -1
+      ),
+    );
+
+  }
+
+
+  public async setMatchGameResults(){}
+
 }

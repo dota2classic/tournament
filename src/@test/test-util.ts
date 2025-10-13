@@ -12,6 +12,9 @@ import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-regi
 import { TournamentRegistrationState } from '../model/tournament.dto';
 import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-participant-player.entity';
+import { BracketsManager } from 'brackets-manager';
+import { shuffle } from '../util/shuffle';
+import { padArrayToClosestPower } from '../util/arrays';
 
 export const BestOfOne: BestOfStrategy = {
   round: 1,
@@ -81,4 +84,28 @@ export const createTournamentWithParticipants = async (
   }
 
   return tour;
+};
+
+export const createBracket = async (te: TestEnvironment) => {
+  const tournament = await createTournamentWithParticipants(
+    te,
+    TournamentStatus.IN_PROGRESS,
+    4,
+    1,
+  );
+  return te.service(BracketsManager).create({
+    name: 'Example',
+    tournamentId: tournament.id,
+    type:
+      tournament.strategy === BracketType.DOUBLE_ELIMINATION
+        ? 'double_elimination'
+        : 'single_elimination',
+    seeding: shuffle(
+      padArrayToClosestPower(tournament.participants.map(t => t.id)),
+    ),
+    settings: {
+      grandFinal: 'simple',
+      matchesChildCount: 1
+    },
+  });
 };

@@ -8,6 +8,7 @@ import { RoundEntity } from '../db/entity/round.entity';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 
 const mapTable = {
   participant: TournamentParticipantEntity,
@@ -15,6 +16,7 @@ const mapTable = {
   group: GroupEntity,
   round: RoundEntity,
   match: BracketMatchEntity,
+  match_game: BracketMatchGameEntity,
 };
 
 export interface TournamentBracketInfo {
@@ -35,17 +37,15 @@ export class BracketCrud implements CrudInterface {
   ) {}
 
   delete<T>(table: Table, filter?: Partial<T>): Promise<boolean> {
+    console.log(`delete table ${table} with filter`, filter);
     throw 'not implemented';
   }
 
   insert<T>(table: Table, value: OmitId<T>): Promise<number>;
   insert<T>(table: Table, values: OmitId<T>[]): Promise<boolean>;
   async insert(table: Table, value): Promise<number | boolean> {
+    console.log(`Insert table ${table} with data`, value);
     const rep = this.connection.getRepository(mapTable[table]);
-    console.log(
-      `Insert table ${table} with data`,
-      value
-    )
 
     if (Array.isArray(value)) {
       await rep.save(value);
@@ -60,10 +60,13 @@ export class BracketCrud implements CrudInterface {
   select<T>(table: Table, id: number | string): Promise<T | null>;
   select<T>(table: Table, filter: Partial<T>): Promise<T[] | null>;
   select(table: Table, id?): any {
+    console.log(`Select table ${table} by `, id)
     const rep = this.connection.getRepository(mapTable[table]);
     if (typeof id === 'object') {
       // its a filter
-      return rep.find(id);
+      return rep.find({
+        where: id
+      });
     } else if (typeof id === 'number') {
       return rep.findOneBy({ id });
     }
@@ -76,13 +79,9 @@ export class BracketCrud implements CrudInterface {
     value: Partial<T>,
   ): Promise<boolean>;
   async update(table: Table, id, value): Promise<boolean> {
-    console.log(
-      `Update table ${table}#${id} with data`,
-      value
-    )
+    console.log(`Update table ${table}`, id, ` with data`, value);
     const rep = this.connection.getRepository(mapTable[table]);
-    if (typeof id === 'object') throw 'not implemented';
-
+    // id is either id or criteria
     await rep.update(id, value);
     return true;
   }
@@ -90,7 +89,7 @@ export class BracketCrud implements CrudInterface {
   public async getBracket(tid: number): Promise<TournamentBracketInfo> {
     const participant = await this.select<TournamentParticipantEntity>(
       'participant',
-      { tournamentId: tid },
+      { tournament_id: tid },
     );
     const stage = await this.select<StageEntity>('stage', {
       tournament_id: tid,

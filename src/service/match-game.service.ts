@@ -4,16 +4,17 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventBus } from '@nestjs/cqrs';
 import { BracketsManager } from 'brackets-manager';
-import { UtilQuery } from './util-query';
-import { BracketGameResultEvent } from '../event/bracket-game-result/bracket-game-result.event';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { TournamentRepository } from '../repository/tournament.repository';
 
 @Injectable()
 export class MatchGameService {
   constructor(
     @InjectRepository(BracketMatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
+    private readonly matchGameEntityRepository: Repository<
+      BracketMatchGameEntity
+    >,
     @InjectRepository(BracketMatchEntity)
     private readonly bracketMatchEntityRepository: Repository<
       BracketMatchEntity
@@ -23,7 +24,7 @@ export class MatchGameService {
       TournamentParticipantEntity
     >,
     private readonly manager: BracketsManager,
-    private readonly utilQuery: UtilQuery,
+    private readonly tournamentRepository: TournamentRepository,
     private readonly ebus: EventBus,
   ) {}
 
@@ -33,7 +34,7 @@ export class MatchGameService {
    * @param winnerId - either STEAM_ID or TEAM_ID
    */
   public async setWinner(gameId: number, winnerId: string) {
-    throw "TODO IMPLEMENT"
+    throw 'TODO IMPLEMENT';
     // const g = await this.matchGameEntityRepository.findOneBy({ id: gameId });
     // const m = await this.bracketMatchEntityRepository.findOneBy({
     //   id: g.bm_id,

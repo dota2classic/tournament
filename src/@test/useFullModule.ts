@@ -17,7 +17,6 @@ import { BracketMatchService } from 'service/bracket-match.service';
 import { GameScheduleService } from 'service/game-schedule.service';
 import { MatchGameService } from 'service/match-game.service';
 import { TeamService } from 'service/team.service';
-import { UtilQuery } from 'service/util-query';
 import { Entities } from 'config/entities';
 import { TeamMapper } from 'mapper/team.mapper';
 import { BracketMapper } from 'mapper/bracket.mapper';
@@ -28,6 +27,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TournamentService } from '../service/tournament.service';
 import { BracketService } from '../service/bracket.service';
 import SpyInstance = jest.SpyInstance;
+import { TournamentRepository } from '../repository/tournament.repository';
 
 export interface TestEnvironment {
   module: TestingModule;
@@ -206,7 +206,7 @@ export function useFullModule(): TestEnvironment {
         GameScheduleService,
         MatchGameService,
         TeamService,
-        UtilQuery,
+        TournamentRepository,
         TeamMapper,
         BracketMapper,
         TournamentMapper,

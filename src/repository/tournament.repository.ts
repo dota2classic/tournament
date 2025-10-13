@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
-export class UtilQuery {
+export class TournamentRepository {
   constructor(
     @InjectRepository(BracketMatchEntity)
     private readonly bracketMatchEntityRepository: Repository<

@@ -1,10 +1,25 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { StageSettings, StageType, Stage } from 'brackets-model';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne, OneToMany,
+  PrimaryGeneratedColumn, Relation,
+} from 'typeorm';
+import { Stage, StageSettings, StageType } from 'brackets-model';
+import { TournamentEntity } from './tournament.entity';
+import { BracketMatchEntity } from './bracket-match.entity';
 
 @Entity('tournament_stage')
-export class StageEntity implements Stage{
+export class StageEntity implements Stage {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @ManyToOne(
+    () => TournamentEntity,
+    t => t.stages,
+  )
+  @JoinColumn({ name: 'tournament_id' })
+  tournament: TournamentEntity;
 
   @Column()
   tournament_id: number;
@@ -16,9 +31,15 @@ export class StageEntity implements Stage{
   type: StageType;
 
   @Column()
-  number: number
+  number: number;
 
+  @Column({ type: 'simple-json' })
+  settings: StageSettings;
 
-  @Column({ type: 'simple-json'})
-  settings: StageSettings
+  @OneToMany(
+    e => BracketMatchEntity,
+    e => e.stage,
+    { eager: false },
+  )
+  matches: Relation<BracketMatchEntity>[];
 }

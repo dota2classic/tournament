@@ -15,7 +15,6 @@ import { BracketMatchService } from 'service/bracket-match.service';
 import { AppService } from './app.service';
 import { MatchStartedHandler } from 'event/match-started.handler';
 import { GameResultsHandler } from 'event/game-results.handler';
-import { UtilQuery } from 'service/util-query';
 import { BracketMapper } from 'mapper/bracket.mapper';
 import { BracketUpdatedHandler } from 'event/bracket-updated.handler';
 import { MatchCancelledHandler } from 'event/match-cancelled.handler';
@@ -29,6 +28,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Entities } from './config/entities';
 import { getTypeormConfig } from './config/typeorm.config';
 import { BracketService } from './service/bracket.service';
+import { TournamentRepository } from './repository/tournament.repository';
 
 @Module({
   imports: [
@@ -84,7 +84,7 @@ import { BracketService } from './service/bracket.service';
     TournamentMapper,
     BracketMatchService,
     BracketCrud,
-    UtilQuery,
+    TournamentRepository,
     GameScheduleService,
     MatchCancelledHandler,
     BracketService,

@@ -50,7 +50,7 @@ export class GameScheduleService {
   ) {
     const game = await this.matchGameEntityRepository.findOneBy({ id: gameId });
     // clear previous schedule if there is
-    await this.clearJob(tournamentId, game.bm_id, gameId);
+    await this.clearJob(tournamentId, game.parent_id, gameId);
 
     // update schedule date
     game.scheduledDate = new Date(newDate);

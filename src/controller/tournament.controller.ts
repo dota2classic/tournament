@@ -17,7 +17,6 @@ import { CompactTeamDto } from '../model/team.dto';
 import { TeamMapper } from '../mapper/team.mapper';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { BracketMatchService } from '../service/bracket-match.service';
-import { UtilQuery } from '../service/util-query';
 import {
   BracketMatchDto,
   TournamentBracketInfoDto,
@@ -27,6 +26,7 @@ import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { GameScheduleService } from '../service/game-schedule.service';
 import { MatchGameService } from '../service/match-game.service';
+import { TournamentRepository } from '../repository/tournament.repository';
 
 @Controller('tournament')
 @ApiTags('tournament')
@@ -45,7 +45,7 @@ export class TournamentController {
     >,
     @InjectRepository(BracketMatchGameEntity)
     private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
-    private readonly utilQuery: UtilQuery,
+    private readonly utilQuery: TournamentRepository,
     private readonly bracketMapper: BracketMapper,
     private readonly ebus: EventBus,
     private readonly scheduler: GameScheduleService,
@@ -67,15 +67,15 @@ export class TournamentController {
     // const tournament = await this.tournamentEntityRepository.findOne(id)
     return this.crud.getBracket(id).then(this.bracketMapper.mapBracket);
   }
-  @Post(`/create/:id`)
-  public async startTournament(
-    @Param('id')
-    id: number,
-  ): Promise<FullTournamentDto> {
-    return await this.bracketService
-      .generateTournament(Number(id))
-      .then(it => this.bracketService.fullTournament(id));
-  }
+  // @Post(`/create/:id`)
+  // public async startTournament(
+  //   @Param('id')
+  //   id: number,
+  // ): Promise<FullTournamentDto> {
+    // return await this.bracketService
+    //   .generateTournament(Number(id))
+    //   .then(it => this.bracketService.fullTournament(id));
+  // }
 
   @Post(`/cancel/:id`)
   public async cancelTournament(
@@ -87,25 +87,25 @@ export class TournamentController {
       .then(it => this.bracketService.fullTournament(id));
   }
 
-  @Post(`/create`)
-  public async createTournament(
-    @Body() dto: CreateTournamentDto,
-  ): Promise<FullTournamentDto> {
-    return await this.bracketService
-      .createTournament(
-        dto.name,
-        new Date(dto.startDate),
-        dto.imageUrl,
-        dto.version,
-        dto.strategy,
-        {
-          round: dto.roundBestOf || 1,
-          final: dto.finalBestOf || 1,
-          grandFinal: dto.grandFinalBestOf || 1,
-        },
-      )
-      .then(it => this.bracketService.fullTournament(it.id));
-  }
+  // @Post(`/create`)
+  // public async createTournament(
+  //   @Body() dto: CreateTournamentDto,
+  // ): Promise<FullTournamentDto> {
+  //   return await this.bracketService
+  //     .createTournament(
+  //       dto.name,
+  //       new Date(dto.startDate),
+  //       dto.imageUrl,
+  //       dto.version,
+  //       dto.strategy,
+  //       {
+  //         round: dto.roundBestOf || 1,
+  //         final: dto.finalBestOf || 1,
+  //         grandFinal: dto.grandFinalBestOf || 1,
+  //       },
+  //     )
+  //     .then(it => this.bracketService.fullTournament(it.id));
+  // }
 
   // todo pagination
   @Get(`/list`)
@@ -181,22 +181,22 @@ export class TournamentController {
     return this.getTournamentMatch(id);
   }
 
-  @Post(`/tournament_match/:id/schedule`)
-  public async scheduleTournamentMatch(
-    @Param('id') id: number,
-    @Body() scheduleDto: ScheduleTournamentMatchDto,
-  ): Promise<BracketMatchDto> {
-    const m = await this.bracketMatchEntityRepository.findOneById(id);
-    if (!m) return;
-
-    const tourId = await this.utilQuery.matchTournamentId(m.id);
-    await this.scheduler.scheduleGame(
-      tourId,
-      m.id,
-      scheduleDto.gameId,
-      scheduleDto.scheduledDate,
-    );
-
-    return this.getTournamentMatch(m.id);
-  }
+  // @Post(`/tournament_match/:id/schedule`)
+  // public async scheduleTournamentMatch(
+  //   @Param('id') id: number,
+  //   @Body() scheduleDto: ScheduleTournamentMatchDto,
+  // ): Promise<BracketMatchDto> {
+  //   const m = await this.bracketMatchEntityRepository.findOneById(id);
+  //   if (!m) return;
+  //
+  //   const tourId = await this.utilQuery.matchTournamentId(m.id);
+  //   await this.scheduler.scheduleGame(
+  //     tourId,
+  //     m.id,
+  //     scheduleDto.gameId,
+  //     scheduleDto.scheduledDate,
+  //   );
+  //
+  //   return this.getTournamentMatch(m.id);
+  // }
 }

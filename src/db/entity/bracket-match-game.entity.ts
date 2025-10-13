@@ -4,27 +4,14 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-  Relation,
 } from 'typeorm';
 import { BracketMatchEntity } from './bracket-match.entity';
+import { MatchGame, ParticipantResult, Status } from 'brackets-model';
 
 @Entity('tournament_bracket_match_game')
-export class BracketMatchGameEntity {
+export class BracketMatchGameEntity implements MatchGame {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @ManyToOne(
-    () => BracketMatchEntity,
-    t => t.games,
-  )
-  @JoinColumn({ name: 'bm_id' })
-  match: Relation<BracketMatchEntity>;
-
-  /**
-   * Bracket match
-   */
-  @Column()
-  bm_id: number;
 
   /**
    * Number of the match
@@ -41,8 +28,7 @@ export class BracketMatchGameEntity {
   externalMatchId?: number;
 
   /**
-   * It is random offset(1/0) which is used to determine teams of opponents
-   * This also guarantees we know which opponent is radiant/dire
+   * It is random offset(1/0) which is used to determine radiant/dire
    */
   @Column({ default: 0 })
   teamOffset: number;
@@ -52,20 +38,45 @@ export class BracketMatchGameEntity {
 
   @Column({ nullable: true })
   scheduledDate: Date;
-  /**
-   * Participant id of the winner
-   */
-  @Column({ nullable: true })
-  winner?: number;
 
-  /**
-   * Participant id of the loser
-   */
-  @Column({ nullable: true })
-  loser?: number;
+  @Column({
+    nullable: true,
+    type: 'jsonb',
+    default: null,
+  })
+  opponent1: ParticipantResult | null;
 
-  constructor(bm_id: number, number: number) {
-    this.bm_id = bm_id;
+  @Column({
+    nullable: true,
+    type: 'jsonb',
+    default: null,
+  })
+  opponent2: ParticipantResult | null;
+
+  @ManyToOne(
+    () => BracketMatchEntity,
+    t => t.games,
+  )
+  @JoinColumn({ name: 'parent_id' })
+  match: BracketMatchEntity;
+
+  @Column()
+  parent_id: number;
+
+  @Column()
+  stage_id: number;
+
+  @Column({
+    name: 'status',
+    default: Status.Locked,
+    type: 'enum',
+    enum: Status,
+    enumName: 'tournament_match_status',
+  })
+  status: Status;
+
+  constructor(parentId: number, number: number) {
+    this.parent_id = parentId;
     this.number = number;
   }
 }

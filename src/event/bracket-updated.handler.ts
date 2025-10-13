@@ -19,15 +19,15 @@ export class BracketUpdatedHandler
   ) {}
 
   async handle(event: BracketUpdatedEvent) {
-    await this.bracketService.checkMatchResults(event.matchId);
-
-    // clear schedules
-    await this.bracketMatchService.cancelMatchSchedule(
-      event.tournamentId,
-      event.matchId,
-      event.gameId,
-    );
-
-    await this.bracketService.checkForTournamentFinish(event.tournamentId);
+    // await this.bracketService.checkMatchResults(event.matchId);
+    //
+    // // clear schedules
+    // await this.bracketMatchService.cancelMatchSchedule(
+    //   event.tournamentId,
+    //   event.matchId,
+    //   event.gameId,
+    // );
+    //
+    // await this.bracketService.checkForTournamentFinish(event.tournamentId);
   }
 }
