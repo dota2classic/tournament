@@ -20,11 +20,11 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "docker": "docker build . -t dota2classic/matchmaking:tournament && docker push dota2classic/matchmaking:tournament",
-    "migration:generate": "npx ts-node -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d ./src/config/typeorm.config.ts",
-    "migration:create": "npx ts-node -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:create",
-    "migration:run": "npx ts-node -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d ./src/config/typeorm.config.ts",
-    "migration:run-fake": "npx ts-node -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run --fake -d ./src/config/typeorm.config.ts",
-    "migration:revert": "npx ts-node -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d ./src/config/typeorm.config.ts"
+    "migration:generate": "npx ts-node -r dotenv/config -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d ./src/config/typeorm.config.ts",
+    "migration:create": "npx ts-node -r dotenv/config -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:create",
+    "migration:run": "npx ts-node -r dotenv/config -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d ./src/config/typeorm.config.ts",
+    "migration:run-fake": "npx ts-node -r dotenv/config -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run --fake -d ./src/config/typeorm.config.ts",
+    "migration:revert": "npx ts-node -r dotenv/config -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d ./src/config/typeorm.config.ts"
   },
   "dependencies": {
     "@dota2classic/nest_logger": "^0.0.11",

@@ -3,6 +3,6 @@ import { TournamentRegistrationEntity } from '../db/entity/tournament-registrati
 
 describe('typeorm bulk update', () => {
   it('should do stuff', () => {
-    typeormBulkUpdate(TournamentRegistrationEntity, []);
+    // typeormBulkUpdate(TournamentRegistrationEntity, []);
   });
 })

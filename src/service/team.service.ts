@@ -149,7 +149,6 @@ export class TeamService {
       )
       .andWhere('tour.status in (:...statuses)', {
         statuses: [
-          TournamentStatus.PUBLISHED,
           TournamentStatus.REGISTRATION,
           TournamentStatus.READY_CHECK,
           TournamentStatus.IN_PROGRESS,

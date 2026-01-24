@@ -3,7 +3,7 @@ import { RedisController } from './redis.controller';
 import { ClientsModule, RedisOptions, Transport } from '@nestjs/microservices';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
-import { Bracket2Service } from './service/bracket2.service';
+import { BracketService } from './service/bracket.service';
 import { BracketCrud } from 'service/bracket.crud';
 import { TournamentController } from 'controller/tournament.controller';
 import { TournamentMapper } from 'mapper/tournament.mapper';
@@ -27,8 +27,9 @@ import configuration from './config/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Entities } from './config/entities';
 import { getTypeormConfig } from './config/typeorm.config';
-import { BracketService } from './service/bracket.service';
 import { TournamentRepository } from './repository/tournament.repository';
+import { TournamentService } from './service/tournament.service';
+import { ParticipationService } from './service/participation.service';
 
 @Module({
   imports: [
@@ -80,14 +81,15 @@ import { TournamentRepository } from './repository/tournament.repository';
     TeamService,
     BracketMapper,
     TeamMapper,
-    Bracket2Service,
+    BracketService,
     TournamentMapper,
     BracketMatchService,
     BracketCrud,
     TournamentRepository,
     GameScheduleService,
     MatchCancelledHandler,
-    BracketService,
+    TournamentService,
+    ParticipationService,
 
     MatchGameService,
     BracketGameResultHandler,

@@ -8,7 +8,7 @@ import {
   TournamentEntity,
 } from '../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import {
   BracketType,
   TournamentStatus,
@@ -45,12 +45,38 @@ export class TournamentService {
       );
     }
 
-    await this.tournamentEntityRepository.update(
-      {
-        id: tournamentId,
-      },
-      { state: TournamentStatus.IN_PROGRESS },
-    );
+    await this.ds.transaction(async tx => {
+      // Change tournament state
+      await tx.update(
+        TournamentEntity,
+        {
+          id: tournamentId,
+        },
+        { state: TournamentStatus.READY_CHECK },
+      );
+      // Change registration entries state
+      await tx.update<TournamentRegistrationEntity>(
+        TournamentRegistrationEntity,
+        {
+          tournamentId,
+        },
+        {
+          state: TournamentRegistrationState.PENDING_CONFIRMATION,
+        },
+      );
+      // Change registration player states to pending
+      await tx.update<TournamentRegistrationPlayerEntity>(
+        TournamentRegistrationPlayerEntity,
+        {
+          tournamentRegistrationId: In(tournament.registrations.map(t => t.id)),
+        },
+        {
+          state: TournamentRegistrationState.PENDING_CONFIRMATION,
+        },
+      );
+    });
+
+    return this.getFullTournament(tournamentId);
   }
 
   /**
@@ -76,7 +102,7 @@ export class TournamentService {
       throw new BadRequestException('Team size must be > 0 and <= 5');
     }
 
-    return this.tournamentEntityRepository.save(
+    const t = await this.tournamentEntityRepository.save(
       new TournamentEntity(
         teamSize,
         name,
@@ -87,10 +113,11 @@ export class TournamentService {
         bestOfConfig,
       ),
     );
+    return this.getFullTournament(t.id);
   }
 
   /**
-   * Завершает проверку на готовность и выставляет актуальные статусы для зарегистрированных
+   * Завершает проверку на готовность и выставляет актуальные статусы для зарегистрированных игроков
    * @param tournamentId
    */
   public async finishReadyCheck(tournamentId: number) {
@@ -168,9 +195,39 @@ WHERE tr.id = c.id::int;
           parameters,
         );
       }
+
+      // Change tournament state
+      await tx.update(
+        TournamentEntity,
+        {
+          id: tournamentId,
+        },
+        { state: TournamentStatus.IN_PROGRESS },
+      );
     });
+
+    return this.getFullTournament(tournamentId);
   }
 
+  public async publish(id: number) {
+    const tournament = await this.getFullTournament(id);
+    if (tournament.state !== TournamentStatus.DRAFT) {
+      throw new BadRequestException('Must be draft status to publish');
+    }
+
+    await this.tournamentEntityRepository.update(
+      {
+        id,
+      },
+      { state: TournamentStatus.REGISTRATION },
+    );
+    return this.getFullTournament(id);
+  }
+
+  /**
+   * Формируем участников. READY_CHECK -> IN_PROGRESS
+   * @param tournamentId
+   */
   public async startTournament(tournamentId: number) {
     const tournament = await this.getFullTournament(tournamentId);
 
@@ -213,7 +270,7 @@ WHERE tr.id = c.id::int;
     });
   }
 
-  private async getFullTournament(id: number) {
+  public async getFullTournament(id: number): Promise<TournamentEntity> {
     const tournament = await this.tournamentEntityRepository.findOne({
       where: {
         id,

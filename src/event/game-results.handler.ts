@@ -3,7 +3,7 @@ import { GameResultsEvent } from '../gateway/events/gs/game-results.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { Repository } from 'typeorm';
-import { Bracket2Service } from '../service/bracket2.service';
+import { BracketService } from '../service/bracket.service';
 import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 import { MatchGameService } from '../service/match-game.service';
@@ -17,7 +17,7 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
     >,
     @InjectRepository(BracketMatchGameEntity)
     private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
-    private readonly bService: Bracket2Service,
+    private readonly bService: BracketService,
     @InjectRepository(TournamentParticipantEntity)
     private readonly bracketParticipantEntityRepository: Repository<
       TournamentParticipantEntity

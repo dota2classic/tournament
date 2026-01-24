@@ -12,7 +12,7 @@ import { WinstonWrapper } from '@dota2classic/nest_logger';
 import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { TeamController } from 'controller/team.controller';
 import { TournamentController } from 'controller/tournament.controller';
-import { Bracket2Service } from '../service/bracket2.service';
+import { BracketService } from '../service/bracket.service';
 import { BracketMatchService } from 'service/bracket-match.service';
 import { GameScheduleService } from 'service/game-schedule.service';
 import { MatchGameService } from 'service/match-game.service';
@@ -25,9 +25,9 @@ import { BracketCrud } from 'service/bracket.crud';
 import { BracketsManager } from 'brackets-manager';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TournamentService } from '../service/tournament.service';
-import { BracketService } from '../service/bracket.service';
 import SpyInstance = jest.SpyInstance;
 import { TournamentRepository } from '../repository/tournament.repository';
+import { ParticipationService } from '../service/participation.service';
 
 export interface TestEnvironment {
   module: TestingModule;
@@ -193,7 +193,6 @@ export function useFullModule(): TestEnvironment {
         ]),
       ],
       providers: [
-        Bracket2Service,
         BracketService,
         {
           provide: BracketsManager,
@@ -212,6 +211,7 @@ export function useFullModule(): TestEnvironment {
         TournamentMapper,
         BracketCrud,
         TournamentService,
+        ParticipationService
       ],
       controllers: [TeamController, TournamentController],
     }).compile();

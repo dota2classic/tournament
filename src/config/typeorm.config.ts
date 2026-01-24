@@ -25,7 +25,7 @@ export const getTypeormConfig = (
 };
 
 const AppDataSource = new DataSource(
-  getTypeormConfig(new ConfigService(configuration('config.yaml'))),
+  getTypeormConfig(new ConfigService(configuration())),
 );
 
 export default AppDataSource;

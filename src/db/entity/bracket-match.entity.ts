@@ -20,7 +20,7 @@ export class BracketMatchEntity implements Match {
   id: number;
 
   @Column({ type: 'int' })
-  stage_id: number | string;
+  stage_id: number;
 
   @Column()
   group_id: number;

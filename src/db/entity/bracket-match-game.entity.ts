@@ -75,8 +75,19 @@ export class BracketMatchGameEntity implements MatchGame {
   })
   status: Status;
 
-  constructor(parentId: number, number: number) {
+  constructor(
+    parentId: number,
+    stageId: number,
+    number: number,
+    opponent1: ParticipantResult,
+    opponent2: ParticipantResult,
+    status: Status
+  ) {
     this.parent_id = parentId;
+    this.stage_id = stageId;
     this.number = number;
+    this.opponent1 = opponent1;
+    this.opponent2 = opponent2;
+    this.status = status;
   }
 }

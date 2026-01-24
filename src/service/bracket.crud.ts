@@ -60,12 +60,12 @@ export class BracketCrud implements CrudInterface {
   select<T>(table: Table, id: number | string): Promise<T | null>;
   select<T>(table: Table, filter: Partial<T>): Promise<T[] | null>;
   select(table: Table, id?): any {
-    console.log(`Select table ${table} by `, id)
+    console.log(`Select table ${table} by `, id);
     const rep = this.connection.getRepository(mapTable[table]);
     if (typeof id === 'object') {
       // its a filter
       return rep.find({
-        where: id
+        where: id,
       });
     } else if (typeof id === 'number') {
       return rep.findOneBy({ id });
@@ -97,24 +97,18 @@ export class BracketCrud implements CrudInterface {
 
     // @ts-ignore
     const group: GroupEntity[] = await this.select<GroupEntity>('group', {
-      where: {
-        stage_id: In(stage.map(t => t.id)),
-      },
+      stage_id: In(stage.map(t => t.id)),
     });
 
     // @ts-ignore
     const round: RoundEntity[] = await this.select<RoundEntity>('round', {
-      where: {
-        stage_id: In(stage.map(t => t.id)),
-      },
+      stage_id: In(stage.map(t => t.id)),
     });
 
     // @ts-ignore
     const match: BracketMatchEntity[] = await this.select<BracketMatchEntity>(
       'match',
-      {
-        where: { stage_id: In(stage.map(t => t.id)) },
-      },
+      { stage_id: In(stage.map(t => t.id)) },
     );
 
     const tournament = await this.tournamentEntityRepository.findOneById(tid);

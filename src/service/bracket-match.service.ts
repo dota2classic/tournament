@@ -62,9 +62,9 @@ export class BracketMatchService {
       return;
     }
 
-    const round = await this.roundEntityRepository.findOneById(
-      bracketMatch.round_id,
-    );
+    const round = await this.roundEntityRepository.findOneBy({
+      id: bracketMatch.round_id,
+    });
     const totalRounds = await this.roundEntityRepository.findBy({
       group_id: bracketMatch.group_id,
     });
@@ -83,7 +83,14 @@ export class BracketMatchService {
     for (let i = 1; i <= bestOf; i++) {
       await tx.save(
         BracketMatchGameEntity,
-        new BracketMatchGameEntity(bracketMatch.id, i),
+        new BracketMatchGameEntity(
+          bracketMatch.id,
+          bracketMatch.stage_id,
+          i,
+          bracketMatch.opponent1,
+          bracketMatch.opponent2,
+          bracketMatch.status,
+        ),
       );
     }
   }
@@ -114,6 +121,10 @@ export class BracketMatchService {
     ) {
       throw new Error('No such opponent');
     }
+
+    console.log(winnerOpponentId);
+    console.log(game);
+    console.log(game.opponent1, game.opponent2);
 
     const [winner, loser] =
       game.opponent1?.id === winnerOpponentId

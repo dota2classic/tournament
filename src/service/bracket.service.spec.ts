@@ -1,10 +1,10 @@
 import { useFullModule } from '../@test/useFullModule';
-import { BracketService } from './bracket.service';
 import { createTournamentWithParticipants } from '../@test/test-util';
-import { BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
+import { TournamentStatus } from '../gateway/shared-types/tournament';
 import { RoundEntity } from '../db/entity/round.entity';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
+import { BracketService } from './bracket.service';
 
 describe('BracketService', () => {
   const te = useFullModule();
@@ -20,7 +20,7 @@ describe('BracketService', () => {
     const tour = await createTournamentWithParticipants(
       te,
       TournamentStatus.IN_PROGRESS,
-      4
+      4,
     );
 
     // When
@@ -36,11 +36,12 @@ describe('BracketService', () => {
     ).resolves.toHaveLength(3); // 2 x Semifinals + finals
 
     await expect(
-      te.repo(BracketMatchGameEntity)
+      te
+        .repo(BracketMatchGameEntity)
         .createQueryBuilder('mge')
         .innerJoin('mge.match', 'm')
         .where('m.stage_id = :stageId', { stageId: stage.id })
-        .getMany()
+        .getMany(),
     ).resolves.toHaveLength(3); // 2 x Semifinals + finals
   });
 });
