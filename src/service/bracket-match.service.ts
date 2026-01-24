@@ -80,6 +80,15 @@ export class BracketMatchService {
       bestOf = tour.bestOfConfig.round;
     }
 
+    await tx.update(
+      BracketMatchEntity,
+      {
+        id: bracketMatch.id,
+      },
+      {
+        child_count: bestOf,
+      },
+    );
     for (let i = 1; i <= bestOf; i++) {
       await tx.save(
         BracketMatchGameEntity,
@@ -115,16 +124,17 @@ export class BracketMatchService {
     const game = await this.manager.storage.selectFirst('match_game', {
       id: gameId,
     });
-    if (
-      game.opponent1?.id !== winnerOpponentId &&
-      game.opponent2?.id === winnerOpponentId
-    ) {
-      throw new Error('No such opponent');
-    }
 
     console.log(winnerOpponentId);
     console.log(game);
     console.log(game.opponent1, game.opponent2);
+
+    if (
+      game.opponent1?.id !== winnerOpponentId &&
+      game.opponent2?.id !== winnerOpponentId
+    ) {
+      throw new Error('No such opponent');
+    }
 
     const [winner, loser] =
       game.opponent1?.id === winnerOpponentId

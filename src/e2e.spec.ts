@@ -1,7 +1,7 @@
 import { testUser, useFullModule } from './@test/useFullModule';
 import { TournamentService } from './service/tournament.service';
 import * as request from 'supertest';
-import { BracketDto } from './model/tournament.dto';
+import { BracketDto, SeedDto } from './model/tournament.dto';
 import { BracketMatchService } from './service/bracket-match.service';
 import { Status } from 'brackets-model';
 
@@ -123,6 +123,21 @@ describe('TournamentService', () => {
     return res.body;
   };
 
+  const assertMatchStatus = (seed: SeedDto, status: Status) => {
+    expect(seed.status).toEqual(status);
+    expect(seed.games[0].status).toEqual(status);
+  };
+
+  const assertMatchComplete = (seed: SeedDto, winnerIdx: 1 | 0) => {
+    const loserIdx = 1 - winnerIdx;
+    expect(seed.teams[winnerIdx].result).toEqual('win');
+    expect(seed.teams[winnerIdx].score).toEqual(1);
+    expect(seed.teams[loserIdx].result).toEqual('loss');
+    expect(seed.teams[loserIdx].score).toEqual(0);
+
+    assertMatchStatus(seed, Status.Completed);
+  };
+
   it('should complete tournament flow', async () => {
     const tournamentId = await createTournament();
     // Publish tournament
@@ -162,13 +177,6 @@ describe('TournamentService', () => {
     expect(bracket.winning[1].seeds[0].teams[1].tbd).toEqual(true);
 
     // Set a winner for a first game(emulate rabbitmq queue for simplicity)
-    // await service.setGameWinner(
-    //   Number(bracket.tournament_id),
-    //   firstMatch.parent_id,
-    //   firstMatch.id,
-    //   firstMatch.opponent1.id,
-    // );
-    //
     await te
       .service(BracketMatchService)
       .setGameWinner(
@@ -182,17 +190,31 @@ describe('TournamentService', () => {
 
     bracket = await getBracket(tournamentId);
     bracket.winning[0].seeds.sort((a, b) => a.id - b.id);
+    assertMatchComplete(bracket.winning[0].seeds[0], 0);
+
     console.log(JSON.stringify(bracket));
-    expect(bracket.winning[0].seeds[0].teams[0].result).toEqual('win');
-    expect(bracket.winning[0].seeds[0].teams[0].score).toEqual(1);
-    expect(bracket.winning[0].seeds[0].teams[1].result).toEqual('loss');
-    expect(bracket.winning[0].seeds[0].teams[1].score).toEqual(0);
-    expect(bracket.winning[0].seeds[0].status).toEqual(Status.Completed);
-    expect(bracket.winning[0].seeds[0].games[0].status).toEqual(
-      Status.Completed,
-    );
-    expect(bracket.winning[0].seeds[0].games[0].status).toEqual(
-      Status.Completed,
-    );
+    // Check that finals are now waiting for second opponent
+    assertMatchStatus(bracket.winning[1].seeds[0], Status.Waiting);
+
+    // Set a winner for a second game(emulate rabbitmq queue for simplicity)
+    await te
+      .service(BracketMatchService)
+      .setGameWinner(
+        tournamentId,
+        bracket.winning[0].seeds[1].id,
+        bracket.winning[0].seeds[1].games[0].gameId,
+        bracket.winning[0].seeds[1].teams[1].id,
+        123,
+        false,
+      );
+
+    bracket = await getBracket(tournamentId);
+    bracket.winning[0].seeds.sort((a, b) => a.id - b.id);
+    assertMatchComplete(bracket.winning[0].seeds[1], 1);
+
+    // Check that finals are now ready to be played
+    assertMatchStatus(bracket.winning[1].seeds[0], Status.Ready);
+
+    console.log(JSON.stringify(bracket));
   });
 });

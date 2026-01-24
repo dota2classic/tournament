@@ -89,6 +89,8 @@ export class BracketService {
       },
     });
 
+
+
     // Create game/games for each match
     await this.ds.transaction(async tx => {
       return await Promise.all(

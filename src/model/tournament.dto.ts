@@ -135,6 +135,7 @@ export class SeedDto {
   games: MatchGameDto[];
   status: MatchStatus
   id: number;
+  ch: number;
 }
 
 export class BracketRoundDto {

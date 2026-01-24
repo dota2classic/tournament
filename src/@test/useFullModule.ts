@@ -97,7 +97,7 @@ export function useFullModule(): TestEnvironment {
 
           type: 'postgres',
           database: 'postgres',
-          logging: true,
+          // logging: true,
 
           username: te.containers.pg.getUsername(),
           password: te.containers.pg.getPassword(),
