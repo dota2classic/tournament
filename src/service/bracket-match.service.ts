@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,8 +14,18 @@ import { StageEntity } from '../db/entity/stage.entity';
 import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { GroupEntity } from '../db/entity/group.entity';
 import { TournamentRepository } from '../repository/tournament.repository';
-import { BracketsManager, DeepPartial } from 'brackets-manager';
-import { Id } from 'brackets-model';
+import { BracketsManager } from 'brackets-manager';
+import { Id, Status } from 'brackets-model';
+import { MatchmakingMode } from '../gateway/shared-types/matchmaking-mode';
+import { LobbyReadyEvent } from '../gateway/events/lobby-ready.event';
+import { Dota_Map } from '../gateway/shared-types/dota-map';
+import { Dota_GameMode } from '../gateway/shared-types/dota-game-mode';
+import { MatchPlayer } from '../gateway/events/room-ready.event';
+import { DotaTeam } from '../gateway/shared-types/dota-team';
+import { PlayerId } from '../gateway/shared-types/player-id';
+import { Dota2Version } from '../gateway/shared-types/dota2version';
+import { DotaPatch } from '../gateway/constants/patch';
+import { Region } from '../gateway/shared-types/region';
 
 @Injectable()
 export class BracketMatchService {
@@ -106,7 +120,6 @@ export class BracketMatchService {
 
   /**
    * Sets a winner for given MatchGame.
-   * @param tournamentId - id of a tournament
    * @param matchId - match id within tournament
    * @param gameId - gameid of a match
    * @param winnerOpponentId - id of BracketParticipantEntity
@@ -114,9 +127,8 @@ export class BracketMatchService {
    * @param forfeit - tech lose
    */
   public async setGameWinner(
-    tournamentId: number,
     matchId: number,
-    gameId: number,
+    gameId: string,
     winnerOpponentId: Id,
     d2cMatchId?: number,
     forfeit?: boolean,
@@ -124,10 +136,6 @@ export class BracketMatchService {
     const game = await this.manager.storage.selectFirst('match_game', {
       id: gameId,
     });
-
-    console.log(winnerOpponentId);
-    console.log(game);
-    console.log(game.opponent1, game.opponent2);
 
     if (
       game.opponent1?.id !== winnerOpponentId &&
@@ -143,22 +151,6 @@ export class BracketMatchService {
 
     winner.result = 'win';
 
-    console.log(
-      `Updating match game[${game.id} of match ${game.parent_id}]. Winner is ${winner}, loser is ${loser}`,
-    );
-
-    const upd: DeepPartial<BracketMatchGameEntity> = {
-      parent_id: matchId,
-      number: game.number,
-    };
-
-    // if (winner === game.opponent1) {
-    //   upd.opponent1 = { result: 'win' };
-    // } else {
-    //   upd.opponent2 = { result: 'win' };
-    // }
-    // await this.manager.update.matchGame<BracketMatchGameEntity>(upd);
-
     await this.manager.update.matchGame<BracketMatchGameEntity>({
       id: gameId,
       parent_id: matchId,
@@ -166,12 +158,60 @@ export class BracketMatchService {
       opponent1: game.opponent1,
       opponent2: game.opponent2,
     });
-    // // Unfortunately, also here
-    // await this.matchGameEntityRepository.update({
-    //   id: gameId
-    // }, {
-    //   opponent1: game.opponent1,
-    //   opponent2: game.opponent2,
-    // })
+  }
+
+  public async submitGameToLaunch(gameId: string) {
+    const game = await this.matchGameEntityRepository.findOneBy({ id: gameId });
+    if (!game) {
+      throw new NotFoundException('Game not found');
+    }
+
+    if (game.status !== Status.Ready) {
+      throw new BadRequestException('Game is not ready to be played!');
+    }
+
+    const players: MatchPlayer[] = [];
+
+    const participants = await Promise.all(
+      [game.opponent1, game.opponent2].map(it =>
+        this.bracketParticipantEntityRepository.findOne({
+          where: {
+            id: Number(it.id),
+          },
+          relations: ['players'],
+        }),
+      ),
+    );
+
+    const dotaTeams =
+      game.teamOffset === 0
+        ? [DotaTeam.RADIANT, DotaTeam.DIRE]
+        : [DotaTeam.DIRE, DotaTeam.RADIANT];
+
+    const teams = participants.map((part, idx) => {
+      for (let player of part.players) {
+        players.push({
+          playerId: new PlayerId(player.steamId),
+          team: dotaTeams[idx],
+          partyId: player.steamId,
+        });
+      }
+    });
+
+    // TODO: we need extract those settings into tournament stuff
+    this.ebus.publish(
+      new LobbyReadyEvent(
+        gameId,
+        MatchmakingMode.TOURNAMENT,
+        Dota_Map.DOTA,
+        Dota_GameMode.SOLOMID,
+        players,
+        Dota2Version.Dota_684,
+        false,
+        false,
+        DotaPatch.DOTA_684,
+        Region.RU_MOSCOW,
+      ),
+    );
   }
 }

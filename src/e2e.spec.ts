@@ -219,7 +219,6 @@ describe('TournamentService', () => {
     await te
       .service(BracketMatchService)
       .setGameWinner(
-        tournamentId,
         bracket.winning[0].seeds[0].id,
         bracket.winning[0].seeds[0].games[0].gameId,
         bracket.winning[0].seeds[0].teams[0].id,
@@ -240,7 +239,6 @@ describe('TournamentService', () => {
     await te
       .service(BracketMatchService)
       .setGameWinner(
-        tournamentId,
         bracket.winning[0].seeds[1].id,
         bracket.winning[0].seeds[1].games[0].gameId,
         bracket.winning[0].seeds[1].teams[1].id,
@@ -263,7 +261,6 @@ describe('TournamentService', () => {
     await te
       .service(BracketMatchService)
       .setGameWinner(
-        tournamentId,
         seed.id,
         seed.games[0].gameId,
         seed.teams[0].id,
@@ -275,7 +272,6 @@ describe('TournamentService', () => {
     await te
       .service(BracketMatchService)
       .setGameWinner(
-        tournamentId,
         seed.id,
         seed.games[1].gameId,
         seed.teams[1].id,
@@ -287,7 +283,6 @@ describe('TournamentService', () => {
     await te
       .service(BracketMatchService)
       .setGameWinner(
-        tournamentId,
         seed.id,
         seed.games[2].gameId,
         seed.teams[0].id,

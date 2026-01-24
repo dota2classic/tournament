@@ -1,61 +1,50 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { GameResultsEvent } from '../gateway/events/gs/game-results.event';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { Repository } from 'typeorm';
-import { BracketService } from '../service/bracket.service';
 import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
-import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
-import { MatchGameService } from '../service/match-game.service';
+import { BracketMatchService } from '../service/bracket-match.service';
+import { DotaTeam } from '../gateway/shared-types/dota-team';
+import { Logger } from '@nestjs/common';
 
 @EventsHandler(GameResultsEvent)
 export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
+  private logger = new Logger(GameResultsHandler.name);
   constructor(
-    @InjectRepository(BracketMatchEntity)
-    private readonly bracketMatchEntityRepository: Repository<
-      BracketMatchEntity
-    >,
     @InjectRepository(BracketMatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
-    private readonly bService: BracketService,
-    @InjectRepository(TournamentParticipantEntity)
-    private readonly bracketParticipantEntityRepository: Repository<
-      TournamentParticipantEntity
+    private readonly matchGameEntityRepository: Repository<
+      BracketMatchGameEntity
     >,
-    private readonly matchGameService: MatchGameService,
+    private readonly bracketMatchService: BracketMatchService,
   ) {}
 
   async handle(event: GameResultsEvent) {
-    throw 'TODO IMPLEMENT';
-    // const game = await this.matchGameEntityRepository.findOneBy({
-    //   externalMatchId: event.matchId,
-    // });
-    // if (!game) return;
-    //
-    // const match = await this.bracketMatchEntityRepository.findOneById(
-    //   game.bm_id,
-    // );
-    //
-    // if (!match) return;
-    //
-    // if (!match.opponent1?.id || !match.opponent2?.id) {
-    //   console.error(`WTF?`);
-    //   return;
-    // }
-    //
+    const game = await this.matchGameEntityRepository.findOneBy({
+      externalMatchId: event.matchId,
+    });
+    if (!game) return;
+
+    this.logger.log('Tournament game finished! Updating...');
+
     // // offset = 0 => radiant = opp1, dire = opp2
     // // offset = 1 => radiant = opp2, dire = opp1
-    // const winCondition =
-    //   game.teamOffset === 0
-    //     ? event.winner === DotaTeam.RADIANT
-    //     : event.winner === DotaTeam.DIRE;
-    //
-    // const winnerId = winCondition ? match.opponent1.id : match.opponent2.id;
-    //
-    // const res = await this.bracketParticipantEntityRepository.findOneById(
-    //   winnerId,
-    // );
-    //
-    // await this.matchGameService.setWinner(game.id, res.name);
+    const radiantOpponent =
+      game.teamOffset === 0 ? game.opponent1.id : game.opponent2.id;
+    const direOpponent =
+      game.teamOffset === 0 ? game.opponent2.id : game.opponent1.id;
+
+    let winnerId: string | number;
+    if (event.winner === DotaTeam.RADIANT) {
+      winnerId = radiantOpponent;
+    } else {
+      winnerId = direOpponent;
+    }
+
+    await this.bracketMatchService.setGameWinner(
+      game.parent_id,
+      game.id,
+      winnerId,
+      event.matchId,
+    );
   }
 }

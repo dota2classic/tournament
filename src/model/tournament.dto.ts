@@ -119,7 +119,7 @@ export class SeedItemDto {
 }
 
 export class MatchGameDto {
-  gameId: number;
+  gameId: string;
   bracketMatchId: number;
   externalMatchId?: number;
   scheduledDate?: Date;
@@ -135,6 +135,8 @@ export class SeedDto {
   games: MatchGameDto[];
   status: MatchStatus
   id: number;
+  scheduledDate: Date;
+  number: number;
   ch: number;
 }
 

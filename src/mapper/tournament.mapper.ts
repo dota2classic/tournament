@@ -100,6 +100,8 @@ export class TournamentMapper {
       games: await Promise.all(games.map(this.mapTournamentMatchGame)),
       ch: match.child_count,
       id: match.id,
+      scheduledDate: match.scheduledDate,
+      number: match.number,
       status: match.status
     };
   };

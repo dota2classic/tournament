@@ -27,7 +27,6 @@ describe('BracketMatchService', () => {
 
     // When
     await service.setGameWinner(
-      Number(bracket.tournament_id),
       firstMatch.parent_id,
       firstMatch.id,
       firstMatch.opponent1.id,

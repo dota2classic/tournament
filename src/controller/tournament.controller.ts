@@ -121,7 +121,8 @@ export class TournamentController {
   // Bracket
   @Get('/:id/bracket')
   async getBracket(@Param('id') id: number) {
-    const tournament = await this.tournamentEntityRepository.findOneBy({ id });    return this.crud
+    const tournament = await this.tournamentEntityRepository.findOneBy({ id });
+    return this.crud
       .getBracket(id)
       .then(t => this.mapper.mapBracket(t, tournament));
   }

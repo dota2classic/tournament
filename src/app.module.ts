@@ -18,11 +18,9 @@ import { GameResultsHandler } from 'event/game-results.handler';
 import { BracketMapper } from 'mapper/bracket.mapper';
 import { BracketUpdatedHandler } from 'event/bracket-updated.handler';
 import { MatchCancelledHandler } from 'event/match-cancelled.handler';
-import { MatchGameService } from 'service/match-game.service';
 import { BracketsManager } from 'brackets-manager';
 import { BracketGameResultHandler } from 'event/bracket-game-result/bracket-game-result.handler';
 import { BracketGameTimerReadyHandler } from 'event/bracket-game-timer-ready/bracket-game-timer-ready.handler';
-import { GameScheduleService } from 'service/game-schedule.service';
 import configuration from './config/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Entities } from './config/entities';
@@ -31,6 +29,8 @@ import { TournamentRepository } from './repository/tournament.repository';
 import { TournamentService } from './service/tournament.service';
 import { ParticipationService } from './service/participation.service';
 import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
+import { RmqController } from './rmq.controller';
+import { BracketMatchScheduleService } from './service/bracket-match-schedule.service';
 
 @Module({
   imports: [
@@ -64,7 +64,9 @@ import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
             },
           ],
           enableControllerDiscovery: true,
-          uri: `amqp://${config.get('rabbitmq.user')}:${config.get('rabbitmq.password')}@${config.get('rabbitmq.host')}:${config.get('rabbitmq.port')}`,
+          uri: `amqp://${config.get('rabbitmq.user')}:${config.get(
+            'rabbitmq.password',
+          )}@${config.get('rabbitmq.host')}:${config.get('rabbitmq.port')}`,
         };
       },
       imports: [],
@@ -92,7 +94,12 @@ import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
       },
     ]),
   ],
-  controllers: [RedisController, TeamController, TournamentController],
+  controllers: [
+    RedisController,
+    TeamController,
+    TournamentController,
+    RmqController,
+  ],
   providers: [
     AppService,
     TeamService,
@@ -103,12 +110,11 @@ import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
     BracketMatchService,
     BracketCrud,
     TournamentRepository,
-    GameScheduleService,
     MatchCancelledHandler,
     TournamentService,
     ParticipationService,
+    BracketMatchScheduleService,
 
-    MatchGameService,
     BracketGameResultHandler,
     BracketGameTimerReadyHandler,
 

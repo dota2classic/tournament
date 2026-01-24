@@ -44,7 +44,7 @@ export class ParticipantResultDto {
 }
 
 export class BracketMatchGameDto {
-  id: number;
+  id: string;
   bm_id: number;
   number: number;
   externalMatchId?: number;

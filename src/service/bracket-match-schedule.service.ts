@@ -2,21 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { StageEntity } from '../db/entity/stage.entity';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { TournamentStatus } from '../gateway/shared-types/tournament';
-import { Status } from 'brackets-model';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { Repository } from 'typeorm';
 import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
-import { GameScheduleService } from './game-schedule.service';
-import { TournamentRepository } from '../repository/tournament.repository';
+import { RoundEntity } from '../db/entity/round.entity';
 
+export const ROUND_OFFSET_SECONDS = 60 * 60; // 1 hour between games.
 @Injectable()
 export class BracketMatchScheduleService {
-
-  private static DEFAULT_OFFSET_FOR_SOLOMID = 0.1;
-  private static DEFAULT_OFFSET_FOR_CAPTAINS_MODE = 80;
-
   private readonly logger = new Logger(BracketMatchScheduleService.name);
 
   constructor(
@@ -26,79 +21,73 @@ export class BracketMatchScheduleService {
       BracketMatchEntity
     >,
     @InjectRepository(BracketMatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
-    private readonly scheduler: GameScheduleService,
-    private readonly tournamentRepository: TournamentRepository
-  ) {
-  }
+    private readonly matchGameEntityRepository: Repository<
+      BracketMatchGameEntity
+    >,
+    @InjectRepository(TournamentEntity)
+    private readonly tournamentRepository: Repository<TournamentEntity>,
+    @InjectRepository(RoundEntity)
+    private readonly roundEntityRepository: Repository<RoundEntity>,
+    @InjectRepository(BracketMatchGameEntity)
+    private readonly gameRepository: Repository<BracketMatchGameEntity>,
+  ) {}
 
-  private static keyForJob = (
-    tournamentId: number,
-    bracketMatchId: number,
-    bracketMatchGameId: number,
-  ) => `initMatch:${tournamentId}:${bracketMatchId}:${bracketMatchGameId}`;
-
-  private async clearJob(tid: number, bid: number, gid: number) {
-    try {
-      this.schedulerRegistry.deleteCronJob(
-        BracketMatchScheduleService.keyForJob(tid, bid, gid),
-      );
-    } catch (e) {
-      // if not match scheduled then ok.
-    }
-  }
-
-  public async cancelMatchSchedule(tid: number, bid: number, gid: number) {
-    return this.clearJob(tid, bid, gid);
-  }
-
-  public async scheduleBracketMatch(tournamentId: number, matchId: number) {
-    const games = await this.matchGameEntityRepository
-      .findBy({
-        parent_id: matchId,
-      })
-      .then(t => t.sort((a, b) => a.number - b.number));
-
-    for (let i = 0; i < games.length; i++) {
-      const g = games[i];
-      g.teamOffset = Math.round(Math.random());
-      await this.matchGameEntityRepository.save(g);
-
-      await this.scheduler.scheduleGame(
-        tournamentId,
-        matchId,
-        g.id,
-        g.scheduledDate.getTime(),
-      );
-    }
-  }
-
-  public async scheduleMatches() {
+  public async scheduleMatches(tid: number) {
+    const tournament = await this.tournamentRepository.findOneBy({ id: tid });
     const pendingMatches = await this.bracketMatchEntityRepository
       .createQueryBuilder('bm')
       .innerJoin(StageEntity, 'stage', 'bm.stage_id = stage.id')
+      .innerJoinAndSelect('bm.round', 'round')
+      .innerJoinAndSelect('bm.games', 'games')
       .innerJoin(
         TournamentEntity,
         'tournament',
         'tournament.id = stage.tournament_id',
       )
-      .where('tournament.status = :status', {
-        status: TournamentStatus.IN_PROGRESS,
+      .where('tournament.state = :state', {
+        state: TournamentStatus.IN_PROGRESS,
       })
-      .andWhere('bm.status not in (:...statuses)', {
-        statuses: [Status.Completed, Status.Archived],
+      .andWhere('tournament.id = :tid', {
+        tid,
       })
       .getMany();
 
-    // todo promise.all
+    /**
+     * Rules:
+     * 1) First round matches start when tournament starts.
+     * 2) Dependent matches start at max(previous_match1.end, previous_match2.end) + 15 minutes
+     *
+     *
+     * What to consider:
+     * lower group has offset of1 match. We ignore lower group for now and only think of single elimination.
+     */
+
+    const tournamentStartDate = tournament.startDate;
+
+    // Sort by round order
+    pendingMatches.sort(t => t.round.number);
+
+    const bestOf = tournament.bestOfConfig;
+
+    this.logger.log('Tournament start date is: ', tournament.startDate);
+
+    const perGameOffset = ROUND_OFFSET_SECONDS * 1000;
 
     for (const match of pendingMatches) {
-      const t = await this.tournamentRepository.matchTournamentId(match.id);
+      const roundOffset =
+        (match.round.number - 1) * perGameOffset * bestOf.round;
+      const matchStart = new Date(tournamentStartDate.getTime() + roundOffset);
 
-      await this.scheduleBracketMatch(t, match.id);
+      match.scheduledDate = matchStart;
+      match.games.sort((a, b) => a.number - b.number);
+      for (let i = 0; i < match.games.length; i++) {
+        match.games[i].scheduledDate = new Date(matchStart.getTime() + i * perGameOffset);
+      }
     }
+
+    await this.bracketMatchEntityRepository.save(pendingMatches);
+    await this.gameRepository.save(pendingMatches.flatMap(t => t.games));
 
     this.logger.log(`Scheduled ${pendingMatches.length} matches`);
   }
-
 }

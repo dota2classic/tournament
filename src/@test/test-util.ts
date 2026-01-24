@@ -1,12 +1,6 @@
 import { TestEnvironment, testUser } from './useFullModule';
-import {
-  BestOfStrategy,
-  TournamentEntity,
-} from '../db/entity/tournament.entity';
-import {
-  BracketType,
-  TournamentStatus,
-} from '../gateway/shared-types/tournament';
+import { BestOfStrategy, TournamentEntity } from '../db/entity/tournament.entity';
+import { BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { TournamentRegistrationState } from '../model/tournament.dto';
@@ -27,6 +21,9 @@ export const createTournament = (
   teamSize: number = 2,
   bracket: BracketType = BracketType.SINGLE_ELIMINATION,
   state: TournamentStatus = TournamentStatus.DRAFT,
+  round = 1,
+  final = 1,
+  grandFinal = 1,
 ) => {
   const tour = new TournamentEntity(
     teamSize,
@@ -36,9 +33,9 @@ export const createTournament = (
     'imageurl',
     new Date('2030-01-01'),
     {
-      round: 1,
-      final: 1,
-      grandFinal: 1,
+      round,
+      final,
+      grandFinal,
     },
   );
   tour.state = state;
@@ -68,8 +65,9 @@ export const createTournamentWithParticipants = async (
   participantCount: number,
   teamSize: number = 1,
   bracketType = BracketType.SINGLE_ELIMINATION,
+  bestOf: BestOfStrategy = { round: 1, final: 1, grandFinal: 1 },
 ) => {
-  const tour = await createTournament(te, teamSize, bracketType, state);
+  const tour = await createTournament(te, teamSize, bracketType, state, bestOf.round, bestOf.final, bestOf.grandFinal);
   tour.participants = [];
   for (let i = 0; i < participantCount; i++) {
     const p = await te
@@ -86,12 +84,14 @@ export const createTournamentWithParticipants = async (
   return tour;
 };
 
-export const createBracket = async (te: TestEnvironment) => {
+export const createBracket = async (te: TestEnvironment, bestOf: BestOfStrategy = undefined) => {
   const tournament = await createTournamentWithParticipants(
     te,
     TournamentStatus.IN_PROGRESS,
     4,
     1,
+    BracketType.SINGLE_ELIMINATION,
+    bestOf
   );
   return te.service(BracketsManager).create({
     name: 'Example',
@@ -105,7 +105,7 @@ export const createBracket = async (te: TestEnvironment) => {
     ),
     settings: {
       grandFinal: 'simple',
-      matchesChildCount: 1
+      matchesChildCount: bestOf.round,
     },
   });
 };

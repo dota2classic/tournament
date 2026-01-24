@@ -1,0 +1,31 @@
+import { Controller, Logger } from '@nestjs/common';
+import { CommandBus, Constructor, EventBus } from '@nestjs/cqrs';
+import { ConfigService } from '@nestjs/config';
+import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
+import { GameResultsEvent } from './gateway/events/gs/game-results.event';
+
+@Controller()
+export class RmqController {
+  private readonly logger = new Logger(RmqController.name);
+
+  constructor(
+    private readonly cbus: CommandBus,
+    private readonly config: ConfigService,
+    private readonly ebus: EventBus,
+  ) {}
+
+  @RabbitSubscribe({
+    exchange: 'app.events',
+    routingKey: GameResultsEvent.name,
+    queue: `api-queue.${GameResultsEvent.name}`,
+  })
+  private async handleGameServerPerformance(msg: GameResultsEvent) {
+    this.event(GameResultsEvent, msg);
+  }
+
+  private event<T>(constructor: Constructor<T>, data: any) {
+    const buff = data;
+    buff.__proto__ = constructor.prototype;
+    this.ebus.publish(buff);
+  }
+}

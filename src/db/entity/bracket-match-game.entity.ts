@@ -10,8 +10,8 @@ import { MatchGame, ParticipantResult, Status } from 'brackets-model';
 
 @Entity('tournament_bracket_match_game')
 export class BracketMatchGameEntity implements MatchGame {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   /**
    * Number of the match

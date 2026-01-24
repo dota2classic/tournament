@@ -14,8 +14,6 @@ import { TeamController } from 'controller/team.controller';
 import { TournamentController } from 'controller/tournament.controller';
 import { BracketService } from '../service/bracket.service';
 import { BracketMatchService } from 'service/bracket-match.service';
-import { GameScheduleService } from 'service/game-schedule.service';
-import { MatchGameService } from 'service/match-game.service';
 import { TeamService } from 'service/team.service';
 import { Entities } from 'config/entities';
 import { TeamMapper } from 'mapper/team.mapper';
@@ -28,6 +26,8 @@ import { TournamentService } from '../service/tournament.service';
 import SpyInstance = jest.SpyInstance;
 import { TournamentRepository } from '../repository/tournament.repository';
 import { ParticipationService } from '../service/participation.service';
+import { RmqController } from '../rmq.controller';
+import { BracketMatchScheduleService } from '../service/bracket-match-schedule.service';
 
 export interface TestEnvironment {
   module: TestingModule;
@@ -202,8 +202,6 @@ export function useFullModule(): TestEnvironment {
           inject: [BracketCrud],
         },
         BracketMatchService,
-        GameScheduleService,
-        MatchGameService,
         TeamService,
         TournamentRepository,
         TeamMapper,
@@ -211,9 +209,10 @@ export function useFullModule(): TestEnvironment {
         TournamentMapper,
         BracketCrud,
         TournamentService,
-        ParticipationService
+        ParticipationService,
+        BracketMatchScheduleService
       ],
-      controllers: [TeamController, TournamentController],
+      controllers: [TeamController, TournamentController, RmqController],
     }).compile();
 
     te.app = await te.module.createNestApplication({

@@ -72,7 +72,7 @@ export class BracketCrud implements CrudInterface {
     }
   }
 
-  update<T>(table: Table, id: number, value: T): Promise<boolean>;
+  update<T>(table: Table, id: number | string, value: T): Promise<boolean>;
   update<T>(
     table: Table,
     filter: Partial<T>,
@@ -80,17 +80,19 @@ export class BracketCrud implements CrudInterface {
   ): Promise<boolean>;
   async update(table: Table, id, value): Promise<boolean> {
     console.log(`Update table ${table}`, id, ` with data`, value);
-    const rep = this.connection.getRepository(mapTable[table]);
     // id is either id or criteria
 
     if (table === 'match_game') {
+      const rep: Repository<BracketMatchGameEntity> = this.connection.getRepository(
+        mapTable[table],
+      );
       // HERE WE NEED TO IMPLEMENT A DOGSHIT DEEP MERGE
       const gamesToUpdate: BracketMatchGameEntity[] = [];
-      if(typeof id === 'number'){
-        gamesToUpdate.push(await this.select(table, id))
-      }else{
+      if (typeof id === 'number') {
+        gamesToUpdate.push(await this.select(table, id));
+      } else {
         const entities: BracketMatchGameEntity[] = await this.select(table, id);
-        gamesToUpdate.push(...entities)
+        gamesToUpdate.push(...entities);
       }
       for (let existing of gamesToUpdate) {
         for (const key in value) {
@@ -109,6 +111,7 @@ export class BracketCrud implements CrudInterface {
 
       await rep.save(gamesToUpdate);
     } else {
+      const rep = this.connection.getRepository(mapTable[table]);
       await rep.update(id, value);
     }
     return true;
