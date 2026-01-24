@@ -22,6 +22,7 @@ import { TournamentParticipantEntity } from '../db/entity/tournament-participant
 import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-participant-player.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { TournamentReadyCheckStartedEvent } from '../gateway/events/tournament/tournament-ready-check-started.event';
+import { TournamentReadyCheckDeclinedEvent } from '../gateway/events/tournament/tournament-ready-check-declined.event';
 
 @Injectable()
 export class TournamentService {
@@ -170,6 +171,8 @@ export class TournamentService {
       );
     }
 
+    const timedOut: string[] = [];
+
     // For
     const updatedRegistrations = tournament.registrations.map(registration => {
       let isReady = true;
@@ -184,12 +187,27 @@ export class TournamentService {
           player.state === TournamentRegistrationState.CREATED
         ) {
           player.state = TournamentRegistrationState.TIMED_OUT;
+          timedOut.push(player.steamId);
         }
       }
 
       registration.state = isReady
         ? TournamentRegistrationState.CONFIRMED
         : TournamentRegistrationState.DECLINED;
+
+      if (!isReady) {
+        this.ebus.publishAll(
+          registration.players.map(
+            plr =>
+              new TournamentReadyCheckDeclinedEvent(
+                tournamentId,
+                registration.id,
+                plr.steamId,
+              ),
+          ),
+        );
+      }
+
       return registration;
     });
 

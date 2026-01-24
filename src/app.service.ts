@@ -1,9 +1,15 @@
-import { Inject, Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
 import { EventBus, ofType } from '@nestjs/cqrs';
 import { ClientProxy } from '@nestjs/microservices';
 import { TournamentGameReadyEvent } from './gateway/events/tournament/tournament-game-ready.event';
 import { TournamentReadyCheckStartedEvent } from './gateway/events/tournament/tournament-ready-check-started.event';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+import { TournamentReadyCheckDeclinedEvent } from './gateway/events/tournament/tournament-ready-check-declined.event';
 
 @Injectable()
 export class AppService implements OnApplicationBootstrap {
@@ -27,7 +33,12 @@ export class AppService implements OnApplicationBootstrap {
       .subscribe(t => this.redisEventQueue.emit(t.constructor.name, t));
 
     this.ebus
-      .pipe(ofType<any, any>(TournamentReadyCheckStartedEvent))
+      .pipe(
+        ofType<any, any>(
+          TournamentReadyCheckStartedEvent,
+          TournamentReadyCheckDeclinedEvent,
+        ),
+      )
       .subscribe(msg =>
         this.amqpConnection
           .publish('app.events', msg.constructor.name, msg)
