@@ -152,20 +152,20 @@ export class BracketMatchService {
       number: game.number,
     };
 
-    if (winner === game.opponent1) {
-      upd.opponent1 = { result: 'win' };
-    } else {
-      upd.opponent2 = { result: 'win' };
-    }
-    await this.manager.update.matchGame<BracketMatchGameEntity>(upd);
+    // if (winner === game.opponent1) {
+    //   upd.opponent1 = { result: 'win' };
+    // } else {
+    //   upd.opponent2 = { result: 'win' };
+    // }
+    // await this.manager.update.matchGame<BracketMatchGameEntity>(upd);
 
-    // await this.manager.update.matchGame<BracketMatchGameEntity>({
-    //   id: gameId,
-    //   parent_id: matchId,
-    //   externalMatchId: d2cMatchId,
-    //   opponent1: game.opponent1,
-    //   opponent2: game.opponent2,
-    // });
+    await this.manager.update.matchGame<BracketMatchGameEntity>({
+      id: gameId,
+      parent_id: matchId,
+      externalMatchId: d2cMatchId,
+      opponent1: game.opponent1,
+      opponent2: game.opponent2,
+    });
     // // Unfortunately, also here
     // await this.matchGameEntityRepository.update({
     //   id: gameId

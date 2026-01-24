@@ -4,11 +4,25 @@ import * as request from 'supertest';
 import { BracketDto, SeedDto } from './model/tournament.dto';
 import { BracketMatchService } from './service/bracket-match.service';
 import { Status } from 'brackets-model';
+import { tap } from 'rxjs';
 
 describe('TournamentService', () => {
   jest.setTimeout(60000);
 
   const te = useFullModule();
+
+
+  const collectEvents = () => {
+    const collectedEvents: any[] = [];
+    const obs = te.ebus.pipe(
+      tap((evt) => collectedEvents.push(evt))
+    ).subscribe()
+
+    return () => {
+      obs.unsubscribe()
+      return collectedEvents;
+    }
+  }
 
   const createTournament = async (
     rbo = 1,
@@ -154,7 +168,13 @@ describe('TournamentService', () => {
       participants.push(steamId);
     }
     // Finish registration and start ready check
+    let collectEvents$ = collectEvents();
     await startReadyCheck(tournamentId);
+
+    // At least 4 ready checks should be emitted
+    const readyCheckEvents = collectEvents$()
+    expect(readyCheckEvents.length).toBeGreaterThanOrEqual(4)
+
     // Confirm readiness of 4 players
     for (let i = 0; i < 4; i++) {
       await confirmReadyCheck(tournamentId, participants[i], true);
@@ -188,13 +208,14 @@ describe('TournamentService', () => {
         bracket.winning[0].seeds[0].id,
         bracket.winning[0].seeds[0].games[0].gameId,
         bracket.winning[0].seeds[0].teams[0].id,
-        123,
+        100,
         false,
       );
 
     bracket = await getBracket(tournamentId);
     bracket.winning[0].seeds.sort((a, b) => a.id - b.id);
     assertMatchComplete(bracket.winning[0].seeds[0], 0);
+    expect(bracket.winning[0].seeds[0].games[0].externalMatchId).toEqual(100)
 
     console.log(JSON.stringify(bracket));
     // Check that finals are now waiting for second opponent
@@ -208,13 +229,14 @@ describe('TournamentService', () => {
         bracket.winning[0].seeds[1].id,
         bracket.winning[0].seeds[1].games[0].gameId,
         bracket.winning[0].seeds[1].teams[1].id,
-        123,
+        200,
         false,
       );
 
     bracket = await getBracket(tournamentId);
     bracket.winning[0].seeds.sort((a, b) => a.id - b.id);
     assertMatchComplete(bracket.winning[0].seeds[1], 1);
+    expect(bracket.winning[0].seeds[1].games[0].externalMatchId).toEqual(200)
 
     // Check that finals are now ready to be played
     assertMatchStatus(bracket.winning[1].seeds[0], Status.Ready);
@@ -230,7 +252,7 @@ describe('TournamentService', () => {
         seed.id,
         seed.games[0].gameId,
         seed.teams[0].id,
-        123,
+        300,
         false,
       );
 
@@ -242,7 +264,7 @@ describe('TournamentService', () => {
         seed.id,
         seed.games[1].gameId,
         seed.teams[1].id,
-        123,
+        400,
         false,
       );
 
@@ -254,16 +276,19 @@ describe('TournamentService', () => {
         seed.id,
         seed.games[2].gameId,
         seed.teams[0].id,
-        123,
+        500,
         false,
       );
 
     bracket = await getBracket(tournamentId);
-    console.log(JSON.stringify(bracket))
     assertMatchComplete(bracket.winning[1].seeds[0], 0, [2, 1], Status.Archived);
-
+    expect(bracket.winning[1].seeds[0].games[0].externalMatchId).toEqual(300)
+    expect(bracket.winning[1].seeds[0].games[1].externalMatchId).toEqual(400)
+    expect(bracket.winning[1].seeds[0].games[2].externalMatchId).toEqual(500)
 
     expect(bracket.winning[0].seeds[0].status).toEqual(Status.Archived)
     expect(bracket.winning[0].seeds[1].status).toEqual(Status.Archived)
+
+
   });
 });

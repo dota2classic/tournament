@@ -75,7 +75,7 @@ export class TournamentController {
   @Post(':id/end_registration')
   async endRegistration(@Param('id') id: number) {
     return this.tournamentService
-      .finishRegistration(id)
+      .startReadyCheck(id)
       .then(this.mapper.mapTournament);
   }
 
@@ -131,7 +131,6 @@ export class TournamentController {
     @Param('id')
     id: number,
   ): Promise<BracketDto> {
-    await this.tournamentService.startTournament(id)
     await this.bracketService.generateBracket(id);
     return this.getBracket(id);
   }

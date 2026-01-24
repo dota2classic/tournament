@@ -30,6 +30,7 @@ import { getTypeormConfig } from './config/typeorm.config';
 import { TournamentRepository } from './repository/tournament.repository';
 import { TournamentService } from './service/tournament.service';
 import { ParticipationService } from './service/participation.service';
+import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 
 @Module({
   imports: [
@@ -53,6 +54,22 @@ import { ParticipationService } from './service/participation.service';
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature(Entities),
+    RabbitMQModule.forRootAsync({
+      useFactory(config: ConfigService): RabbitMQConfig {
+        return {
+          exchanges: [
+            {
+              name: 'app.events',
+              type: 'topic',
+            },
+          ],
+          enableControllerDiscovery: true,
+          uri: `amqp://${config.get('rabbitmq.user')}:${config.get('rabbitmq.password')}@${config.get('rabbitmq.host')}:${config.get('rabbitmq.port')}`,
+        };
+      },
+      imports: [],
+      inject: [ConfigService],
+    }),
     ClientsModule.registerAsync([
       {
         name: 'QueryCore',

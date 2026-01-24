@@ -20,6 +20,8 @@ import { TournamentRegistrationEntity } from '../db/entity/tournament-registrati
 import { minimizeLeftovers } from '../util/permutations';
 import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
 import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-participant-player.entity';
+import { EventBus } from '@nestjs/cqrs';
+import { TournamentReadyCheckStartedEvent } from '../gateway/events/tournament/tournament-ready-check-started.event';
 
 @Injectable()
 export class TournamentService {
@@ -27,13 +29,15 @@ export class TournamentService {
     private readonly ds: DataSource,
     @InjectRepository(TournamentEntity)
     private readonly tournamentEntityRepository: Repository<TournamentEntity>,
+    private readonly ebus: EventBus,
   ) {}
 
   /**
-   * Завершает регистрацию на турнир и меняет статус
+   * REGISTRATION -> READY_CHECK
+   * Завершает регистрацию на турнир и запускает проверку на готовность
    * @param tournamentId
    */
-  public async finishRegistration(tournamentId: number) {
+  public async startReadyCheck(tournamentId: number) {
     const tournament = await this.getFullTournament(tournamentId);
 
     if (!tournament) {
@@ -45,7 +49,7 @@ export class TournamentService {
       );
     }
 
-    await this.ds.transaction(async tx => {
+    const notifyPlayers = await this.ds.transaction(async tx => {
       // Change tournament state
       await tx.update(
         TournamentEntity,
@@ -74,13 +78,31 @@ export class TournamentService {
           state: TournamentRegistrationState.PENDING_CONFIRMATION,
         },
       );
+
+      return tx.find<TournamentRegistrationPlayerEntity>(
+        TournamentRegistrationPlayerEntity,
+        {
+          where: {
+            tournamentRegistrationId: In(
+              tournament.registrations.map(t => t.id),
+            ),
+            state: TournamentRegistrationState.PENDING_CONFIRMATION,
+          },
+        },
+      );
     });
+
+    this.ebus.publishAll(
+      notifyPlayers.map(
+        plr => new TournamentReadyCheckStartedEvent(tournamentId, plr.steamId),
+      ),
+    );
 
     return this.getFullTournament(tournamentId);
   }
 
   /**
-   * Создает сущность турнира
+   * Создает сущность турнира в статус DRAFT
    * @param teamSize
    * @param name
    * @param bracketType
@@ -117,7 +139,27 @@ export class TournamentService {
   }
 
   /**
+   * DRAFT -> REGISTRATION
+   * @param id
+   */
+  public async publish(id: number) {
+    const tournament = await this.getFullTournament(id);
+    if (tournament.state !== TournamentStatus.DRAFT) {
+      throw new BadRequestException('Must be draft status to publish');
+    }
+
+    await this.tournamentEntityRepository.update(
+      {
+        id,
+      },
+      { state: TournamentStatus.REGISTRATION },
+    );
+    return this.getFullTournament(id);
+  }
+
+  /**
    * Завершает проверку на готовность и выставляет актуальные статусы для зарегистрированных игроков
+   * READY_CHECK -> IN_PROGRESS
    * @param tournamentId
    */
   public async finishReadyCheck(tournamentId: number) {
@@ -206,29 +248,25 @@ WHERE tr.id = c.id::int;
       );
     });
 
+    await this.startTournament(tournamentId);
+
     return this.getFullTournament(tournamentId);
   }
 
-  public async publish(id: number) {
-    const tournament = await this.getFullTournament(id);
-    if (tournament.state !== TournamentStatus.DRAFT) {
-      throw new BadRequestException('Must be draft status to publish');
-    }
-
-    await this.tournamentEntityRepository.update(
-      {
+  public async getFullTournament(id: number): Promise<TournamentEntity> {
+    const tournament = await this.tournamentEntityRepository.findOne({
+      where: {
         id,
       },
-      { state: TournamentStatus.REGISTRATION },
-    );
-    return this.getFullTournament(id);
+      relations: ['registrations', 'registrations.players'],
+    });
+    if (!tournament) {
+      throw new NotFoundException('Tournament not found');
+    }
+    return tournament;
   }
 
-  /**
-   * Формируем участников. READY_CHECK -> IN_PROGRESS
-   * @param tournamentId
-   */
-  public async startTournament(tournamentId: number) {
+  private async startTournament(tournamentId: number) {
     const tournament = await this.getFullTournament(tournamentId);
 
     const confirmedParties = tournament.registrations.filter(
@@ -268,19 +306,6 @@ WHERE tr.id = c.id::int;
         { state: TournamentStatus.IN_PROGRESS },
       );
     });
-  }
-
-  public async getFullTournament(id: number): Promise<TournamentEntity> {
-    const tournament = await this.tournamentEntityRepository.findOne({
-      where: {
-        id,
-      },
-      relations: ['registrations', 'registrations.players'],
-    });
-    if (!tournament) {
-      throw new NotFoundException('Tournament not found');
-    }
-    return tournament;
   }
 
   private registrationsToParticipants(
