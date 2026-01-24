@@ -10,7 +10,7 @@ import { StageEntity } from '../db/entity/stage.entity';
 import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { GroupEntity } from '../db/entity/group.entity';
 import { TournamentRepository } from '../repository/tournament.repository';
-import { BracketsManager } from 'brackets-manager';
+import { BracketsManager, DeepPartial } from 'brackets-manager';
 import { Id } from 'brackets-model';
 
 @Injectable()
@@ -143,12 +143,35 @@ export class BracketMatchService {
 
     winner.result = 'win';
 
-    await this.manager.update.matchGame<BracketMatchGameEntity>({
-      id: gameId,
+    console.log(
+      `Updating match game[${game.id} of match ${game.parent_id}]. Winner is ${winner}, loser is ${loser}`,
+    );
+
+    const upd: DeepPartial<BracketMatchGameEntity> = {
       parent_id: matchId,
-      externalMatchId: d2cMatchId,
-      opponent1: game.opponent1,
-      opponent2: game.opponent2,
-    });
+      number: game.number,
+    };
+
+    if (winner === game.opponent1) {
+      upd.opponent1 = { result: 'win' };
+    } else {
+      upd.opponent2 = { result: 'win' };
+    }
+    await this.manager.update.matchGame<BracketMatchGameEntity>(upd);
+
+    // await this.manager.update.matchGame<BracketMatchGameEntity>({
+    //   id: gameId,
+    //   parent_id: matchId,
+    //   externalMatchId: d2cMatchId,
+    //   opponent1: game.opponent1,
+    //   opponent2: game.opponent2,
+    // });
+    // // Unfortunately, also here
+    // await this.matchGameEntityRepository.update({
+    //   id: gameId
+    // }, {
+    //   opponent1: game.opponent1,
+    //   opponent2: game.opponent2,
+    // })
   }
 }

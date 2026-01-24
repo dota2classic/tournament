@@ -82,7 +82,35 @@ export class BracketCrud implements CrudInterface {
     console.log(`Update table ${table}`, id, ` with data`, value);
     const rep = this.connection.getRepository(mapTable[table]);
     // id is either id or criteria
-    await rep.update(id, value);
+
+    if (table === 'match_game') {
+      // HERE WE NEED TO IMPLEMENT A DOGSHIT DEEP MERGE
+      const gamesToUpdate: BracketMatchGameEntity[] = [];
+      if(typeof id === 'number'){
+        gamesToUpdate.push(await this.select(table, id))
+      }else{
+        const entities: BracketMatchGameEntity[] = await this.select(table, id);
+        gamesToUpdate.push(...entities)
+      }
+      for (let existing of gamesToUpdate) {
+        for (const key in value) {
+          if (
+            existing[key] &&
+            typeof existing[key] === 'object' &&
+            typeof value[key] === 'object' &&
+            key.startsWith('opponent')
+          ) {
+            Object.assign(existing[key], value[key]); // For opponent objects, this does a deep merge of level 2.
+          } else {
+            existing[key] = value[key]; // Otherwise, do a simple value assignment.
+          }
+        }
+      }
+
+      await rep.save(gamesToUpdate);
+    } else {
+      await rep.update(id, value);
+    }
     return true;
   }
 

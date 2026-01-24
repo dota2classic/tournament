@@ -10,7 +10,11 @@ describe('TournamentService', () => {
 
   const te = useFullModule();
 
-  const createTournament = async (): Promise<number> => {
+  const createTournament = async (
+    rbo = 1,
+    fbo = 1,
+    gfbo = 1,
+  ): Promise<number> => {
     const res = await request(te.app.getHttpServer())
       .post('/tournament')
       .send({
@@ -20,9 +24,9 @@ describe('TournamentService', () => {
         startDate: new Date().toISOString(),
         imageUrl: 'img',
         strategy: 'SINGLE_ELIMINATION',
-        roundBestOf: 1,
-        finalBestOf: 1,
-        grandFinalBestOf: 1,
+        roundBestOf: rbo,
+        finalBestOf: fbo,
+        grandFinalBestOf: gfbo,
       })
       .expect(201);
 
@@ -128,18 +132,18 @@ describe('TournamentService', () => {
     expect(seed.games[0].status).toEqual(status);
   };
 
-  const assertMatchComplete = (seed: SeedDto, winnerIdx: 1 | 0) => {
+  const assertMatchComplete = (seed: SeedDto, winnerIdx: 1 | 0, scores: [number, number] = [1, 0], completeStatus: Status = Status.Completed) => {
     const loserIdx = 1 - winnerIdx;
     expect(seed.teams[winnerIdx].result).toEqual('win');
-    expect(seed.teams[winnerIdx].score).toEqual(1);
+    expect(seed.teams[winnerIdx].score).toEqual(scores[0]);
     expect(seed.teams[loserIdx].result).toEqual('loss');
-    expect(seed.teams[loserIdx].score).toEqual(0);
+    expect(seed.teams[loserIdx].score).toEqual(scores[1]);
 
-    assertMatchStatus(seed, Status.Completed);
+    assertMatchStatus(seed, completeStatus);
   };
 
   it('should complete tournament flow', async () => {
-    const tournamentId = await createTournament();
+    const tournamentId = await createTournament(1, 3, 1);
     // Publish tournament
     await publishTournament(tournamentId);
     // Create 6 registrations
@@ -215,6 +219,51 @@ describe('TournamentService', () => {
     // Check that finals are now ready to be played
     assertMatchStatus(bracket.winning[1].seeds[0], Status.Ready);
 
-    console.log(JSON.stringify(bracket));
+    // Let's play finals! we aim for 2-1 for 'first' team
+    const seed = bracket.winning[1].seeds[0];
+
+    // Win first game
+    await te
+      .service(BracketMatchService)
+      .setGameWinner(
+        tournamentId,
+        seed.id,
+        seed.games[0].gameId,
+        seed.teams[0].id,
+        123,
+        false,
+      );
+
+    // Lose second
+    await te
+      .service(BracketMatchService)
+      .setGameWinner(
+        tournamentId,
+        seed.id,
+        seed.games[1].gameId,
+        seed.teams[1].id,
+        123,
+        false,
+      );
+
+    // Win third
+    await te
+      .service(BracketMatchService)
+      .setGameWinner(
+        tournamentId,
+        seed.id,
+        seed.games[2].gameId,
+        seed.teams[0].id,
+        123,
+        false,
+      );
+
+    bracket = await getBracket(tournamentId);
+    console.log(JSON.stringify(bracket))
+    assertMatchComplete(bracket.winning[1].seeds[0], 0, [2, 1], Status.Archived);
+
+
+    expect(bracket.winning[0].seeds[0].status).toEqual(Status.Archived)
+    expect(bracket.winning[0].seeds[1].status).toEqual(Status.Archived)
   });
 });
