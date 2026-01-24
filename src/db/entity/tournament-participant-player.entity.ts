@@ -1,5 +1,5 @@
 import { Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
-import { TournamentParticipantEntity } from './tournament-participant.entity';
+import { ParticipantEntity } from './participant.entity';
 
 /**
  * @entity BracketParticipantPlayerEntity
@@ -33,14 +33,14 @@ export class TournamentParticipantPlayerEntity {
   /**
    * Регистрация, к которой привязан игрок.
    *
-   * Связь «многие к одному» с {@link TournamentParticipantEntity}.
+   * Связь «многие к одному» с {@link ParticipantEntity}.
    */
   @ManyToOne(
-    () => TournamentParticipantEntity,
+    () => ParticipantEntity,
     t => t.players,
   )
   @JoinColumn({ name: 'tournament_participant_id' })
-  tournamentParticipant?: TournamentParticipantEntity;
+  tournamentParticipant?: ParticipantEntity;
 
   constructor(tournamentParticipantId: number, steamId: string) {
     this.steamId = steamId;

@@ -10,7 +10,6 @@ import {
   SeedDto,
   SeedItemDto,
   TournamentDto,
-  TournamentMatchDto,
 } from '../model/tournament.dto';
 import { TeamEntity } from '../db/entity/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -22,7 +21,7 @@ import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { BracketType } from '../gateway/shared-types/tournament';
 import { splitBy } from '../util/splitBy';
-import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { ParticipantEntity } from '../db/entity/participant.entity';
 
 @Injectable()
 export class TournamentMapper {
@@ -63,10 +62,7 @@ export class TournamentMapper {
   private mapSeedItem = async (
     opp: ParticipantResult,
   ): Promise<SeedItemDto> => {
-    const rr = await this.crud.select<TournamentParticipantEntity>(
-      'participant',
-      opp.id,
-    );
+    const rr = await this.crud.select<ParticipantEntity>('participant', opp.id);
 
     if (!rr) return null;
     if (!rr.id)
@@ -102,7 +98,7 @@ export class TournamentMapper {
       id: match.id,
       scheduledDate: match.scheduledDate,
       number: match.number,
-      status: match.status
+      status: match.status,
     };
   };
 

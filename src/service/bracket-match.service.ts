@@ -1,31 +1,17 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { RoundEntity } from '../db/entity/round.entity';
 import { EventBus } from '@nestjs/cqrs';
-import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { ParticipantEntity } from '../db/entity/participant.entity';
 import { StageEntity } from '../db/entity/stage.entity';
 import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { GroupEntity } from '../db/entity/group.entity';
 import { TournamentRepository } from '../repository/tournament.repository';
 import { BracketsManager } from 'brackets-manager';
-import { Id, Status } from 'brackets-model';
-import { MatchmakingMode } from '../gateway/shared-types/matchmaking-mode';
-import { LobbyReadyEvent } from '../gateway/events/lobby-ready.event';
-import { Dota_Map } from '../gateway/shared-types/dota-map';
-import { Dota_GameMode } from '../gateway/shared-types/dota-game-mode';
-import { MatchPlayer } from '../gateway/events/room-ready.event';
-import { DotaTeam } from '../gateway/shared-types/dota-team';
-import { PlayerId } from '../gateway/shared-types/player-id';
-import { Dota2Version } from '../gateway/shared-types/dota2version';
-import { DotaPatch } from '../gateway/constants/patch';
-import { Region } from '../gateway/shared-types/region';
+import { Id } from 'brackets-model';
 
 @Injectable()
 export class BracketMatchService {
@@ -40,9 +26,9 @@ export class BracketMatchService {
     @InjectRepository(RoundEntity)
     private readonly roundEntityRepository: Repository<RoundEntity>,
     private readonly ebus: EventBus,
-    @InjectRepository(TournamentParticipantEntity)
+    @InjectRepository(ParticipantEntity)
     private readonly bracketParticipantEntityRepository: Repository<
-      TournamentParticipantEntity
+      ParticipantEntity
     >,
     @InjectRepository(GroupEntity)
     private readonly groupEntityRepository: Repository<GroupEntity>,
@@ -158,60 +144,5 @@ export class BracketMatchService {
       opponent1: game.opponent1,
       opponent2: game.opponent2,
     });
-  }
-
-  public async submitGameToLaunch(gameId: string) {
-    const game = await this.matchGameEntityRepository.findOneBy({ id: gameId });
-    if (!game) {
-      throw new NotFoundException('Game not found');
-    }
-
-    if (game.status !== Status.Ready) {
-      throw new BadRequestException('Game is not ready to be played!');
-    }
-
-    const players: MatchPlayer[] = [];
-
-    const participants = await Promise.all(
-      [game.opponent1, game.opponent2].map(it =>
-        this.bracketParticipantEntityRepository.findOne({
-          where: {
-            id: Number(it.id),
-          },
-          relations: ['players'],
-        }),
-      ),
-    );
-
-    const dotaTeams =
-      game.teamOffset === 0
-        ? [DotaTeam.RADIANT, DotaTeam.DIRE]
-        : [DotaTeam.DIRE, DotaTeam.RADIANT];
-
-    const teams = participants.map((part, idx) => {
-      for (let player of part.players) {
-        players.push({
-          playerId: new PlayerId(player.steamId),
-          team: dotaTeams[idx],
-          partyId: player.steamId,
-        });
-      }
-    });
-
-    // TODO: we need extract those settings into tournament stuff
-    this.ebus.publish(
-      new LobbyReadyEvent(
-        gameId,
-        MatchmakingMode.TOURNAMENT,
-        Dota_Map.DOTA,
-        Dota_GameMode.SOLOMID,
-        players,
-        Dota2Version.Dota_684,
-        false,
-        false,
-        DotaPatch.DOTA_684,
-        Region.RU_MOSCOW,
-      ),
-    );
   }
 }

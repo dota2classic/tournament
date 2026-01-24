@@ -14,7 +14,7 @@ import { TournamentParticipantPlayerEntity } from './tournament-participant-play
 import { Participant } from 'brackets-model';
 
 @Entity('tournament_participant')
-export class TournamentParticipantEntity implements Omit<Participant, "name"> {
+export class ParticipantEntity implements Omit<Participant, 'name'> {
   @PrimaryGeneratedColumn('increment')
   id: number;
 

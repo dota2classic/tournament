@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { ParticipantEntity } from '../db/entity/participant.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
@@ -13,9 +13,9 @@ import { TournamentRegistrationState } from '../model/tournament.dto';
 @Injectable()
 export class ParticipationService {
   constructor(
-    @InjectRepository(TournamentParticipantEntity)
+    @InjectRepository(ParticipantEntity)
     private readonly tournamentParticipantEntityRepository: Repository<
-      TournamentParticipantEntity
+      ParticipantEntity
     >,
     @InjectRepository(TournamentRegistrationEntity)
     private readonly tournamentRegistrationEntityRepository: Repository<

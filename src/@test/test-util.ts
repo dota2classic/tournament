@@ -1,10 +1,16 @@
 import { TestEnvironment, testUser } from './useFullModule';
-import { BestOfStrategy, TournamentEntity } from '../db/entity/tournament.entity';
-import { BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
+import {
+  BestOfStrategy,
+  TournamentEntity,
+} from '../db/entity/tournament.entity';
+import {
+  BracketType,
+  TournamentStatus,
+} from '../gateway/shared-types/tournament';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { TournamentRegistrationState } from '../model/tournament.dto';
-import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { ParticipantEntity } from '../db/entity/participant.entity';
 import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-participant-player.entity';
 import { BracketsManager } from 'brackets-manager';
 import { shuffle } from '../util/shuffle';
@@ -71,8 +77,8 @@ export const createTournamentWithParticipants = async (
   tour.participants = [];
   for (let i = 0; i < participantCount; i++) {
     const p = await te
-      .repo(TournamentParticipantEntity)
-      .save(new TournamentParticipantEntity(tour.id));
+      .repo(ParticipantEntity)
+      .save(new ParticipantEntity(tour.id));
     p.players = [
       await te
         .repo(TournamentParticipantPlayerEntity)

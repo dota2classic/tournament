@@ -31,6 +31,8 @@ import { ParticipationService } from './service/participation.service';
 import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { RmqController } from './rmq.controller';
 import { BracketMatchScheduleService } from './service/bracket-match-schedule.service';
+import { RedlockModule } from '@dota2classic/redlock';
+import { RedlockModuleOptions } from '@dota2classic/redlock/dist/redlock.module-definition';
 
 @Module({
   imports: [
@@ -40,6 +42,22 @@ import { BracketMatchScheduleService } from './service/bracket-match-schedule.se
     }),
     ScheduleModule.forRoot(),
     CqrsModule,
+    RedlockModule.registerAsync({
+      imports: [],
+      inject: [ConfigService],
+      useFactory(config: ConfigService): RedlockModuleOptions {
+        return {
+          host: config.get('redis.host'),
+          password: config.get('redis.password'),
+          port: parseInt(config.get('redis.port')) || 6379,
+          options: {
+            driftFactor: 0.01,
+            retryCount: 0,
+            automaticExtensionThreshold: 500,
+          },
+        };
+      },
+    }),
     TypeOrmModule.forRootAsync({
       useFactory(config: ConfigService): TypeOrmModuleOptions {
         return {

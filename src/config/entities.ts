@@ -7,14 +7,14 @@ import { BracketMatchEntity } from 'db/entity/bracket-match.entity';
 import { RoundEntity } from 'db/entity/round.entity';
 import { GroupEntity } from 'db/entity/group.entity';
 import { StageEntity } from 'db/entity/stage.entity';
-import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { ParticipantEntity } from '../db/entity/participant.entity';
 import { TournamentEntity } from 'db/entity/tournament.entity';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-participant-player.entity';
 
 export const Entities = [
   TournamentEntity,
-  TournamentParticipantEntity,
+  ParticipantEntity,
   TournamentParticipantPlayerEntity,
   StageEntity,
   GroupEntity,

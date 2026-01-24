@@ -18,7 +18,7 @@ import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-regi
 import { typeormBulkUpdate } from '../util/typeorm-bulk-update';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { minimizeLeftovers } from '../util/permutations';
-import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { ParticipantEntity } from '../db/entity/participant.entity';
 import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-participant-player.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { TournamentReadyCheckStartedEvent } from '../gateway/events/tournament/tournament-ready-check-started.event';
@@ -302,8 +302,8 @@ WHERE tr.id = c.id::int;
       for (const participantCfg of participants) {
         // Create root entity
         const participant = await tx.save(
-          TournamentParticipantEntity,
-          new TournamentParticipantEntity(tournamentId, participantCfg.teamId),
+          ParticipantEntity,
+          new ParticipantEntity(tournamentId, participantCfg.teamId),
         );
         // Create players
         await tx.save(

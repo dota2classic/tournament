@@ -7,7 +7,7 @@ import {
   ParticipantResultDto,
   TournamentBracketInfoDto,
 } from '../model/bracket.dto';
-import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { ParticipantEntity } from '../db/entity/participant.entity';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,7 +15,7 @@ import { TeamMapper } from './team.mapper';
 import { TeamEntity } from '../db/entity/team.entity';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
-import { ParticipantResult, Status } from 'brackets-model';
+import { ParticipantResult } from 'brackets-model';
 
 @Injectable()
 export class BracketMapper {
@@ -25,70 +25,15 @@ export class BracketMapper {
     @InjectRepository(TeamEntity)
     private readonly teamEntityRepository: Repository<TeamEntity>,
     @InjectRepository(BracketMatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
+    private readonly matchGameEntityRepository: Repository<
+      BracketMatchGameEntity
+    >,
     private readonly teamMapper: TeamMapper,
     private readonly crud: BracketCrud,
   ) {}
 
-  private mapParticipant = async (
-    b: TournamentParticipantEntity,
-  ): Promise<BracketParticipantDto | undefined> => {
+  public mapMatch = async (m: BracketMatchEntity): Promise<BracketMatchDto> => {
     throw 'TODO IMPLEMENT';
-    // if (b.name === undefined) return undefined;
-    // switch (entryType) {
-    //   case BracketEntryType.PLAYER:
-    //     return {
-    //       steam_id: b.name,
-    //       tournament_id: b.tournament_id,
-    //       id: b.id,
-    //     };
-    //   case BracketEntryType.TEAM:
-    //     return {
-    //       tournament_id: b.tournament_id,
-    //       team: this.teamMapper.mapTeam(
-    //         await this.teamEntityRepository.findOne({
-    //           where: { id: b.name },
-    //           relations: ['members'],
-    //         }),
-    //       ),
-    //       id: b.id,
-    //     };
-    // }
-  };
-
-  public mapBracket = async (
-    b: TournamentBracketInfo,
-  ): Promise<TournamentBracketInfoDto> => {
-    throw 'TODO IMPLEMENT';
-    // return {
-    //   ...b,
-    //   participant: await Promise.all(
-    //     b.participant.map(p => this.mapParticipant(b.tournament.entryType, p)),
-    //   ),
-    //   match: await Promise.all(
-    //     b.match.map(e => this.mapMatch(b.tournament.entryType, e)),
-    //   ),
-    // };
-  };
-
-  private mapOpponent = async (
-    opp: ParticipantResult,
-  ): Promise<ParticipantResultDto> => {
-    throw "TODO IMPLEMENT"
-    // const part: BracketParticipantEntity = await this.crud.select(
-    //   'participant',
-    //   opp.id,
-    // );
-    // return {
-    //   ...opp,
-    //   participant: await this.mapParticipant(entryType, part),
-    // };
-  };
-
-  public mapMatch = async (
-    m: BracketMatchEntity,
-  ): Promise<BracketMatchDto> => {
-    throw "TODO IMPLEMENT"
     // const games = await this.matchGameEntityRepository.find({
     //   where: {
     //     bm_id: m.id,
@@ -113,6 +58,61 @@ export class BracketMapper {
     //   startDate:
     //     (games.length && games[0].scheduledDate.getTime()) ||
     //     new Date().getTime(),
+    // };
+  };
+
+  public mapBracket = async (
+    b: TournamentBracketInfo,
+  ): Promise<TournamentBracketInfoDto> => {
+    throw 'TODO IMPLEMENT';
+    // return {
+    //   ...b,
+    //   participant: await Promise.all(
+    //     b.participant.map(p => this.mapParticipant(b.tournament.entryType, p)),
+    //   ),
+    //   match: await Promise.all(
+    //     b.match.map(e => this.mapMatch(b.tournament.entryType, e)),
+    //   ),
+    // };
+  };
+
+  private mapParticipant = async (
+    b: ParticipantEntity,
+  ): Promise<BracketParticipantDto | undefined> => {
+    throw 'TODO IMPLEMENT';
+    // if (b.name === undefined) return undefined;
+    // switch (entryType) {
+    //   case BracketEntryType.PLAYER:
+    //     return {
+    //       steam_id: b.name,
+    //       tournament_id: b.tournament_id,
+    //       id: b.id,
+    //     };
+    //   case BracketEntryType.TEAM:
+    //     return {
+    //       tournament_id: b.tournament_id,
+    //       team: this.teamMapper.mapTeam(
+    //         await this.teamEntityRepository.findOne({
+    //           where: { id: b.name },
+    //           relations: ['members'],
+    //         }),
+    //       ),
+    //       id: b.id,
+    //     };
+    // }
+  };
+
+  private mapOpponent = async (
+    opp: ParticipantResult,
+  ): Promise<ParticipantResultDto> => {
+    throw 'TODO IMPLEMENT';
+    // const part: BracketParticipantEntity = await this.crud.select(
+    //   'participant',
+    //   opp.id,
+    // );
+    // return {
+    //   ...opp,
+    //   participant: await this.mapParticipant(entryType, part),
     // };
   };
 

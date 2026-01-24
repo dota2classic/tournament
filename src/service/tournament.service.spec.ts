@@ -12,7 +12,7 @@ import { TournamentRegistrationEntity } from '../db/entity/tournament-registrati
 import { TournamentService } from './tournament.service';
 import { TournamentRegistrationState } from '../model/tournament.dto';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
-import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { ParticipantEntity } from '../db/entity/participant.entity';
 
 describe('TournamentService', () => {
   const te = useFullModule();
@@ -186,7 +186,7 @@ describe('TournamentService', () => {
       await service.startTournament(tournament.id);
 
       // Then
-      const participants = await te.repo(TournamentParticipantEntity).find({
+      const participants = await te.repo(ParticipantEntity).find({
         where: {
           tournament_id: tournament.id,
         },
@@ -236,13 +236,13 @@ describe('TournamentService', () => {
           [testUser()],
           TournamentRegistrationState.TIMED_OUT,
         ),
-      )
+      );
 
       // When
       await service.startTournament(tournament.id);
 
       // Then
-      const participants = await te.repo(TournamentParticipantEntity).find({
+      const participants = await te.repo(ParticipantEntity).find({
         where: {
           tournament_id: tournament.id,
         },
@@ -256,10 +256,11 @@ describe('TournamentService', () => {
           .flatMap(t => t.players.map(player => player.steamId))
           .sort(),
       ).toEqual(
-        registrations.slice(0, 4)
+        registrations
+          .slice(0, 4)
           .flatMap(t => t.players.map(player => player.steamId))
           .sort(),
       );
-    })
+    });
   });
 });

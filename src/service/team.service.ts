@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TeamMemberEntity } from '../db/entity/team-member.entity';
 import { TeamInvitationEntity } from '../db/entity/team-invitation.entity';
 import { TournamentEntity } from '../db/entity/tournament.entity';
-import { TournamentParticipantEntity } from '../db/entity/tournament-participant.entity';
+import { ParticipantEntity } from '../db/entity/participant.entity';
 import { TournamentStatus } from '../gateway/shared-types/tournament';
 import { EditTeamDto } from '../model/team.dto';
 
@@ -24,9 +24,9 @@ export class TeamService {
     private readonly teamInvitationEntityRepository: Repository<
       TeamInvitationEntity
     >,
-    @InjectRepository(TournamentParticipantEntity)
+    @InjectRepository(ParticipantEntity)
     private readonly bracketParticipantEntityRepository: Repository<
-      TournamentParticipantEntity
+      ParticipantEntity
     >,
   ) {}
 

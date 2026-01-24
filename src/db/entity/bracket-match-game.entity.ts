@@ -24,19 +24,16 @@ export class BracketMatchGameEntity implements MatchGame {
   /**
    * Dota2classic match attached or not
    */
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'external_match_id' })
   externalMatchId?: number;
 
   /**
    * It is random offset(1/0) which is used to determine radiant/dire
    */
-  @Column({ default: 0 })
+  @Column({ default: 0, name: 'team_offset' })
   teamOffset: number;
 
-  @Column({ default: false })
-  finished: boolean;
-
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'scheduled_date' })
   scheduledDate: Date;
 
   @Column({
@@ -75,13 +72,20 @@ export class BracketMatchGameEntity implements MatchGame {
   })
   status: Status;
 
+  @Column({
+    type: 'boolean',
+    default: false,
+    name: 'gameserver_scheduled',
+  })
+  gameserverScheduled: boolean;
+
   constructor(
     parentId: number,
     stageId: number,
     number: number,
     opponent1: ParticipantResult,
     opponent2: ParticipantResult,
-    status: Status
+    status: Status,
   ) {
     this.parent_id = parentId;
     this.stage_id = stageId;
