@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { BracketCrud, TournamentBracketInfo } from '../service/bracket.crud';
 import {
   BracketMatchDto,
-  BracketMatchGameDto,
   BracketParticipantDto,
   ParticipantResultDto,
   TournamentBracketInfoDto,
@@ -114,17 +113,5 @@ export class BracketMapper {
     //   ...opp,
     //   participant: await this.mapParticipant(entryType, part),
     // };
-  };
-
-  private mapMatchGame = (mg: BracketMatchGameEntity): BracketMatchGameDto => {
-    return {
-      id: mg.id,
-      bm_id: mg.parent_id,
-      externalMatchId: mg.externalMatchId,
-      scheduledDate: mg.scheduledDate.getTime(),
-      teamOffset: mg.teamOffset,
-      number: mg.number,
-      finished: mg.finished,
-    };
   };
 }

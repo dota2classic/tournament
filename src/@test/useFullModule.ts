@@ -23,11 +23,11 @@ import { BracketCrud } from 'service/bracket.crud';
 import { BracketsManager } from 'brackets-manager';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TournamentService } from '../service/tournament.service';
-import SpyInstance = jest.SpyInstance;
 import { TournamentRepository } from '../repository/tournament.repository';
 import { ParticipationService } from '../service/participation.service';
 import { RmqController } from '../rmq.controller';
-import { BracketMatchScheduleService } from '../service/bracket-match-schedule.service';
+import { MatchScheduleService } from '../service/match-schedule.service';
+import SpyInstance = jest.SpyInstance;
 
 export interface TestEnvironment {
   module: TestingModule;
@@ -210,7 +210,7 @@ export function useFullModule(): TestEnvironment {
         BracketCrud,
         TournamentService,
         ParticipationService,
-        BracketMatchScheduleService
+        MatchScheduleService,
       ],
       controllers: [TeamController, TournamentController, RmqController],
     }).compile();

@@ -3,9 +3,9 @@ import { BracketMatchService } from './bracket-match.service';
 import { createBracket } from '../@test/test-util';
 import { BracketsManager } from 'brackets-manager';
 import {
-  BracketMatchScheduleService,
+  MatchScheduleService,
   ROUND_OFFSET_SECONDS,
-} from './bracket-match-schedule.service';
+} from './match-schedule.service';
 import { BracketCrud } from './bracket.crud';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { TournamentMapper } from '../mapper/tournament.mapper';
@@ -13,12 +13,12 @@ import { TournamentMapper } from '../mapper/tournament.mapper';
 describe('BracketMatchService', () => {
   const te = useFullModule();
 
-  let service: BracketMatchScheduleService;
+  let service: MatchScheduleService;
   let bm: BracketsManager;
   let mapper: TournamentMapper;
 
   beforeEach(() => {
-    service = te.service(BracketMatchScheduleService);
+    service = te.service(MatchScheduleService);
     bm = te.service(BracketsManager);
     mapper = te.service(TournamentMapper);
   });
@@ -82,16 +82,15 @@ describe('BracketMatchService', () => {
       );
     }
 
-
     // x3 because its 3 games per match
-    const finalStart = new Date(tournament.startDate.getTime() + ROUND_OFFSET_SECONDS * 1000 * 3);
+    const finalStart = new Date(
+      tournament.startDate.getTime() + ROUND_OFFSET_SECONDS * 1000 * 3,
+    );
     // Final
     expect(bj.winning[1].seeds[0].scheduledDate).toEqual(finalStart);
     for (let i = 0; i < 3; i++) {
       expect(bj.winning[1].seeds[0].games[i].scheduledDate).toEqual(
-        new Date(
-          finalStart.getTime() + ROUND_OFFSET_SECONDS * 1000 * i,
-        ),
+        new Date(finalStart.getTime() + ROUND_OFFSET_SECONDS * 1000 * i),
       );
     }
 

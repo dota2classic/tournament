@@ -30,8 +30,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 
 export const ROUND_OFFSET_SECONDS = 60 * 60; // 1 hour between games.
 @Injectable()
-export class BracketMatchScheduleService {
-  private readonly logger = new Logger(BracketMatchScheduleService.name);
+export class MatchScheduleService {
+  private readonly logger = new Logger(MatchScheduleService.name);
 
   constructor(
     private readonly ebus: EventBus,

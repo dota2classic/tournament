@@ -20,7 +20,6 @@ import { BracketUpdatedHandler } from 'event/bracket-updated.handler';
 import { MatchCancelledHandler } from 'event/match-cancelled.handler';
 import { BracketsManager } from 'brackets-manager';
 import { BracketGameResultHandler } from 'event/bracket-game-result/bracket-game-result.handler';
-import { BracketGameTimerReadyHandler } from 'event/bracket-game-timer-ready/bracket-game-timer-ready.handler';
 import configuration from './config/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Entities } from './config/entities';
@@ -30,7 +29,7 @@ import { TournamentService } from './service/tournament.service';
 import { ParticipationService } from './service/participation.service';
 import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { RmqController } from './rmq.controller';
-import { BracketMatchScheduleService } from './service/bracket-match-schedule.service';
+import { MatchScheduleService } from './service/match-schedule.service';
 import { RedlockModule } from '@dota2classic/redlock';
 import { RedlockModuleOptions } from '@dota2classic/redlock/dist/redlock.module-definition';
 
@@ -131,10 +130,9 @@ import { RedlockModuleOptions } from '@dota2classic/redlock/dist/redlock.module-
     MatchCancelledHandler,
     TournamentService,
     ParticipationService,
-    BracketMatchScheduleService,
+    MatchScheduleService,
 
     BracketGameResultHandler,
-    BracketGameTimerReadyHandler,
 
     {
       provide: BracketsManager,

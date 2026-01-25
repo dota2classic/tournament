@@ -20,8 +20,6 @@ import { shuffle } from '../util/shuffle';
 import { padArrayToClosestPower } from '../util/arrays';
 import { BracketUpdatedEvent } from '../event/bracket-updated.event';
 
-export type EntryIdType = string;
-
 @Injectable()
 export class BracketService {
   constructor(
@@ -89,8 +87,6 @@ export class BracketService {
       },
     });
 
-
-
     // Create game/games for each match
     await this.ds.transaction(async tx => {
       return await Promise.all(
@@ -135,7 +131,7 @@ export class BracketService {
       new BracketUpdatedEvent(
         await this.utilQuery.matchTournamentId(matchId),
         matchId,
-        -1,
+        '',
       ),
     );
   }
