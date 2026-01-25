@@ -99,6 +99,16 @@ describe('TournamentService', () => {
     return res.body;
   };
 
+  const scheduleBracket = async (tid: number) => {
+    const res = await request(te.app.getHttpServer())
+      .post(`/tournament/${tid}/auto_schedule_bracket`)
+      .expect(201);
+
+    // Assertions on response body
+    expect(res.body).toBeDefined();
+    return res.body;
+  };
+
   const getBracket = async (tid: number) => {
     const res = await request(te.app.getHttpServer())
       .get(`/tournament/${tid}/bracket`)
@@ -202,6 +212,7 @@ describe('TournamentService', () => {
 
     // Generate bracket and check that its correct
     let bracket: BracketDto = await generateBracket(tournamentId);
+    await scheduleBracket(tournamentId);
     bracket.winning[0].seeds.sort((a, b) => a.id - b.id);
     console.log(JSON.stringify(bracket));
     // It's a single elimination bracket
@@ -303,5 +314,7 @@ describe('TournamentService', () => {
 
     expect(bracket.winning[0].seeds[0].status).toEqual(Status.Archived);
     expect(bracket.winning[0].seeds[1].status).toEqual(Status.Archived);
+
+    console.log(JSON.stringify(bracket));
   });
 });

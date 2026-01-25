@@ -1,15 +1,5 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  Relation,
-} from 'typeorm';
-import {
-  BracketType,
-  TournamentStatus,
-} from '../../gateway/shared-types/tournament';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import { BracketType, TournamentStatus } from '../../gateway/shared-types/tournament';
 import { ParticipantEntity } from './participant.entity';
 import { TournamentRegistrationEntity } from './tournament-registration.entity';
 import { StageEntity } from './stage.entity';
@@ -56,8 +46,20 @@ export class TournamentEntity {
   @Column({
     type: 'simple-json',
     default: { round: 1, final: 1, grandFinal: 1 },
+    name: 'best_of_config',
   })
   bestOfConfig: BestOfStrategy;
+
+
+  @Column({
+    type: 'simple-json',
+    name: 'schedule_strategy',
+    default: {
+      gameBreakDurationSeconds: 60 * 10,
+      gameDurationSeconds: 60 * 50,
+    } satisfies ScheduleStrategy,
+  })
+  scheduleStrategy: ScheduleStrategy;
 
   @OneToMany(
     e => ParticipantEntity,
@@ -103,4 +105,9 @@ export interface BestOfStrategy {
   round: number;
   final: number;
   grandFinal: number;
+}
+
+export interface ScheduleStrategy {
+  gameDurationSeconds: number;
+  gameBreakDurationSeconds: number;
 }

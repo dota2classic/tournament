@@ -19,7 +19,7 @@ export class RmqController {
     routingKey: GameResultsEvent.name,
     queue: `api-queue.${GameResultsEvent.name}`,
   })
-  private async handleGameServerPerformance(msg: GameResultsEvent) {
+  private async handleGameResults(msg: GameResultsEvent) {
     this.event(GameResultsEvent, msg);
   }
 

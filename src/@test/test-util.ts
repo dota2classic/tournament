@@ -73,7 +73,15 @@ export const createTournamentWithParticipants = async (
   bracketType = BracketType.SINGLE_ELIMINATION,
   bestOf: BestOfStrategy = { round: 1, final: 1, grandFinal: 1 },
 ) => {
-  const tour = await createTournament(te, teamSize, bracketType, state, bestOf.round, bestOf.final, bestOf.grandFinal);
+  const tour = await createTournament(
+    te,
+    teamSize,
+    bracketType,
+    state,
+    bestOf.round,
+    bestOf.final,
+    bestOf.grandFinal,
+  );
   tour.participants = [];
   for (let i = 0; i < participantCount; i++) {
     const p = await te
@@ -90,14 +98,21 @@ export const createTournamentWithParticipants = async (
   return tour;
 };
 
-export const createBracket = async (te: TestEnvironment, bestOf: BestOfStrategy = undefined) => {
+export const createBracket = async (
+  te: TestEnvironment,
+  bestOf: BestOfStrategy = {
+    round: 1,
+    final: 1,
+    grandFinal: 1,
+  },
+) => {
   const tournament = await createTournamentWithParticipants(
     te,
     TournamentStatus.IN_PROGRESS,
     4,
     1,
     BracketType.SINGLE_ELIMINATION,
-    bestOf
+    bestOf,
   );
   return te.service(BracketsManager).create({
     name: 'Example',

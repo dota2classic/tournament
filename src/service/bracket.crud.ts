@@ -60,15 +60,15 @@ export class BracketCrud implements CrudInterface {
   select<T>(table: Table, id: number | string): Promise<T | null>;
   select<T>(table: Table, filter: Partial<T>): Promise<T[] | null>;
   select(table: Table, id?): any {
-    console.log(`Select table ${table} by `, id);
+    console.log(`Select table ${table} by`, id);
     const rep = this.connection.getRepository(mapTable[table]);
     if (typeof id === 'object') {
       // its a filter
       return rep.find({
         where: id,
       });
-    } else if (typeof id === 'number') {
-      return rep.findOneBy({ id });
+    } else if (typeof id === 'number' || typeof id === 'string') {
+      return rep.findOneBy({ id: id as any });
     }
   }
 
@@ -88,7 +88,7 @@ export class BracketCrud implements CrudInterface {
       );
       // HERE WE NEED TO IMPLEMENT A DOGSHIT DEEP MERGE
       const gamesToUpdate: BracketMatchGameEntity[] = [];
-      if (typeof id === 'number') {
+      if (typeof id === 'number' || typeof id == 'string') {
         gamesToUpdate.push(await this.select(table, id));
       } else {
         const entities: BracketMatchGameEntity[] = await this.select(table, id);

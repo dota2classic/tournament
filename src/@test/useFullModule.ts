@@ -6,7 +6,7 @@ import { Constructor, CqrsModule, EventBus } from '@nestjs/cqrs';
 import { ObjectLiteral, Repository } from 'typeorm';
 import { ClientsModule, RedisOptions, RmqOptions, Transport } from '@nestjs/microservices';
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RabbitMQContainer, StartedRabbitMQContainer } from '@testcontainers/rabbitmq';
 import { WinstonWrapper } from '@dota2classic/nest_logger';
 import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
@@ -27,6 +27,8 @@ import { TournamentRepository } from '../repository/tournament.repository';
 import { ParticipationService } from '../service/participation.service';
 import { RmqController } from '../rmq.controller';
 import { MatchScheduleService } from '../service/match-schedule.service';
+import { RedlockModule } from '@dota2classic/redlock';
+import { RedlockModuleOptions } from '@dota2classic/redlock/dist/redlock.module-definition';
 import SpyInstance = jest.SpyInstance;
 
 export interface TestEnvironment {
@@ -86,6 +88,22 @@ export function useFullModule(): TestEnvironment {
 
     te.module = await Test.createTestingModule({
       imports: [
+        RedlockModule.registerAsync({
+          imports: [],
+          inject: [ConfigService],
+          useFactory(config: ConfigService): RedlockModuleOptions {
+            return {
+              port: te.containers.redis.getPort(),
+              host: te.containers.redis.getHost(),
+              password: te.containers.redis.getPassword(),
+              options: {
+                driftFactor: 0.01,
+                retryCount: 0,
+                automaticExtensionThreshold: 500,
+              },
+            };
+          },
+        }),
         ScheduleModule.forRoot(),
         await ConfigModule.forRoot({
           isGlobal: true,

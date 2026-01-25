@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,9 +12,12 @@ import { GroupEntity } from '../db/entity/group.entity';
 import { TournamentRepository } from '../repository/tournament.repository';
 import { BracketsManager } from 'brackets-manager';
 import { Id } from 'brackets-model';
+import { MatchScheduleService } from './match-schedule.service';
 
 @Injectable()
 export class BracketMatchService {
+  private logger = new Logger(BracketMatchService.name);
+
   constructor(
     private readonly ds: DataSource,
     @InjectRepository(BracketMatchEntity)
@@ -40,6 +43,7 @@ export class BracketMatchService {
       BracketMatchGameEntity
     >,
     private readonly manager: BracketsManager,
+    private readonly matchScheduleService: MatchScheduleService,
   ) {}
 
   /**
@@ -143,6 +147,27 @@ export class BracketMatchService {
       externalMatchId: d2cMatchId,
       opponent1: game.opponent1,
       opponent2: game.opponent2,
+    });
+
+    const match = await this.bracketMatchEntityRepository.findOne({
+      where: { id: matchId },
+      relations: ['games'],
+    });
+
+    await this.handleMatchUpdatedPerhaps(match, game.number);
+  }
+
+  private async handleMatchUpdatedPerhaps(
+    m: BracketMatchEntity,
+    finishedGameNumber: number,
+  ) {
+    this.logger.log('Match game finished! We need to reschedule everything');
+    await this.ds.transaction(async tx => {
+      await this.matchScheduleService.updateScheduleGameFinished(
+        m,
+        finishedGameNumber,
+        tx,
+      );
     });
   }
 }

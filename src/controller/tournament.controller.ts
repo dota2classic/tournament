@@ -22,6 +22,7 @@ import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { TournamentRepository } from '../repository/tournament.repository';
 import { TournamentService } from '../service/tournament.service';
 import { ParticipationService } from '../service/participation.service';
+import { MatchScheduleService } from '../service/match-schedule.service';
 
 @Controller('tournament')
 @ApiTags('tournament')
@@ -46,6 +47,7 @@ export class TournamentController {
     private readonly bracketMapper: BracketMapper,
     private readonly tournamentService: TournamentService,
     private readonly participationService: ParticipationService,
+    private readonly matchScheduleService: MatchScheduleService,
   ) {}
 
   // Tournament statuses
@@ -127,12 +129,19 @@ export class TournamentController {
       .then(t => this.mapper.mapBracket(t, tournament));
   }
 
+  @Post('/:id/auto_schedule_bracket')
+  async autoScheduleBracket(@Param('id') id: number) {
+    await this.matchScheduleService.scheduleMatches(id);
+    return this.getBracket(id);
+  }
+
   @Post(`/:id/generate_bracket`)
   public async startTournament(
     @Param('id')
     id: number,
   ): Promise<BracketDto> {
     await this.bracketService.generateBracket(id);
+    await this.matchScheduleService.scheduleMatches(id);
     return this.getBracket(id);
   }
 

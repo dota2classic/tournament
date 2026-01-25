@@ -9,7 +9,7 @@ import { TournamentEntity } from '../db/entity/tournament.entity';
 import { TournamentStatus } from '../gateway/shared-types/tournament';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
-import { Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { RoundEntity } from '../db/entity/round.entity';
 import { Status } from 'brackets-model';
@@ -27,22 +27,27 @@ import { EventBus } from '@nestjs/cqrs';
 import { ParticipantEntity } from '../db/entity/participant.entity';
 import { RedlockService } from '@dota2classic/redlock/dist/redlock.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { addSeconds, isBefore } from 'date-fns';
+import { BracketsManager } from 'brackets-manager';
 
-export const ROUND_OFFSET_SECONDS = 60 * 60; // 1 hour between games.
 @Injectable()
 export class MatchScheduleService {
   private readonly logger = new Logger(MatchScheduleService.name);
 
   constructor(
+    private readonly ds: DataSource,
     private readonly ebus: EventBus,
     @InjectRepository(BracketMatchEntity)
     private readonly bracketMatchEntityRepository: Repository<
       BracketMatchEntity
     >,
+    @InjectRepository(StageEntity)
+    private readonly stageEntityRepository: Repository<StageEntity>,
     @InjectRepository(BracketMatchGameEntity)
     private readonly matchGameEntityRepository: Repository<
       BracketMatchGameEntity
     >,
+    private readonly manager: BracketsManager,
     @InjectRepository(TournamentEntity)
     private readonly tournamentRepository: Repository<TournamentEntity>,
     @InjectRepository(RoundEntity)
@@ -60,6 +65,7 @@ export class MatchScheduleService {
       ['tournament-schedule-matches'],
       30_000,
       async signal => {
+        this.logger.log('Checking games for schedule using lock');
         const gamesToSchedule = await this.gameRepository
           .createQueryBuilder('gm')
           .where('gm.gameserver_scheduled = false')
@@ -85,7 +91,8 @@ export class MatchScheduleService {
 
   public async scheduleMatches(tid: number) {
     const tournament = await this.tournamentRepository.findOneBy({ id: tid });
-    const pendingMatches = await this.bracketMatchEntityRepository
+
+    const readyMatches = await this.bracketMatchEntityRepository
       .createQueryBuilder('bm')
       .innerJoin(StageEntity, 'stage', 'bm.stage_id = stage.id')
       .innerJoinAndSelect('bm.round', 'round')
@@ -97,6 +104,9 @@ export class MatchScheduleService {
       )
       .where('tournament.state = :state', {
         state: TournamentStatus.IN_PROGRESS,
+      })
+      .andWhere('bm.status = :status', {
+        status: Status.Ready,
       })
       .andWhere('tournament.id = :tid', {
         tid,
@@ -114,34 +124,165 @@ export class MatchScheduleService {
      */
 
     const tournamentStartDate = tournament.startDate;
+    await this.ds.transaction(async tx => {
+      await Promise.all(
+        readyMatches.map(match =>
+          this.tryRescheduleMatch(match, tournamentStartDate, tx),
+        ),
+      );
+      this.logger.log(`Scheduled ${readyMatches.length} initial matches`);
+    });
+  }
 
-    // Sort by round order
-    pendingMatches.sort(t => t.round.number);
+  public async tryRescheduleMatch(
+    match: BracketMatchEntity,
+    newMatchStart: Date,
+    tx: EntityManager = this.bracketMatchEntityRepository.manager,
+  ) {
+    return this.tryRescheduleMatchGame(match, 1, newMatchStart, tx);
+  }
 
-    const bestOf = tournament.bestOfConfig;
-
-    this.logger.log('Tournament start date is: ', tournament.startDate);
-
-    const perGameOffset = ROUND_OFFSET_SECONDS * 1000;
-
-    for (const match of pendingMatches) {
-      const roundOffset =
-        (match.round.number - 1) * perGameOffset * bestOf.round;
-      const matchStart = new Date(tournamentStartDate.getTime() + roundOffset);
-
-      match.scheduledDate = matchStart;
-      match.games.sort((a, b) => a.number - b.number);
-      for (let i = 0; i < match.games.length; i++) {
-        match.games[i].scheduledDate = new Date(
-          matchStart.getTime() + i * perGameOffset,
-        );
-      }
+  public async updateScheduleGameFinished(
+    match: BracketMatchEntity,
+    gameNumber: number,
+    tx: EntityManager = this.bracketMatchEntityRepository.manager,
+  ) {
+    // Game is finished! we need to update next games in match if needed, and also update parent matches
+    if (!match.games) {
+      match.games = await this.matchGameEntityRepository.findBy({
+        parent_id: match.id,
+      });
     }
 
-    await this.bracketMatchEntityRepository.save(pendingMatches);
-    await this.gameRepository.save(pendingMatches.flatMap(t => t.games));
+    const tournament = await this.getTournament(match);
+    const nextGameStart = addSeconds(
+      new Date(),
+      tournament.scheduleStrategy.gameBreakDurationSeconds,
+    );
 
-    this.logger.log(`Scheduled ${pendingMatches.length} matches`);
+    if (match.games.length === gameNumber) {
+      // Match is completely finished: we only need to update parent matches
+      this.logger.log(
+        'Match games fully finished: only updating parent matches',
+      );
+      await this.updateParentMatches(match, nextGameStart, tx);
+    } else {
+      // Match is not completely finished: need to update next games first
+      this.logger.log(
+        'Match games are not fully finished: updating next games',
+      );
+      await this.tryRescheduleMatchGame(
+        match,
+        gameNumber + 1,
+        nextGameStart,
+        tx,
+      );
+    }
+  }
+
+  public async tryRescheduleMatchGame(
+    match: BracketMatchEntity,
+    gameNumber: number,
+    startTime: Date,
+    tx: EntityManager = this.bracketMatchEntityRepository.manager,
+  ) {
+    const game = await tx.findOne<BracketMatchGameEntity>(
+      BracketMatchGameEntity,
+      {
+        where: {
+          parent_id: match.id,
+          number: gameNumber,
+        },
+      },
+    );
+
+    if (game.scheduledDate && isBefore(startTime, game.scheduledDate)) {
+      // No need to recalculate match start: we do not move start date back in time
+      this.logger.warn('Tried to schedule game to earlier time');
+      return;
+    }
+
+    if (!match.games) {
+      match.games = await this.matchGameEntityRepository.findBy({
+        parent_id: match.id,
+      });
+    }
+    match.games.sort((a, b) => a.number - b.number);
+
+    await this.scheduleSubsequentGames(match, gameNumber, startTime, tx);
+  }
+
+  private async scheduleSubsequentGames(
+    match: BracketMatchEntity,
+    startFromGameNumber: number,
+    startTime: Date,
+    tx: EntityManager = this.bracketMatchEntityRepository.manager,
+  ) {
+    const tournament = await this.getTournament(match);
+
+    // Calculate start times of match and games
+    if (startFromGameNumber === 1) {
+      match.scheduledDate = startTime;
+    }
+    const gameWithBreakSeconds =
+      tournament.scheduleStrategy.gameDurationSeconds +
+      tournament.scheduleStrategy.gameBreakDurationSeconds;
+
+    for (let i = startFromGameNumber - 1; i < match.games.length; i++) {
+      match.games[i].scheduledDate = addSeconds(
+        startTime,
+        i * gameWithBreakSeconds,
+      );
+    }
+
+    const matchEndTime = addSeconds(
+      startTime,
+      (match.games.length - startFromGameNumber + 1) * gameWithBreakSeconds,
+    );
+    await tx.save(BracketMatchEntity, match);
+    await tx.save(BracketMatchGameEntity, match.games);
+
+    this.logger.log(
+      `Updated schedule for match ${match.id}. New start time: ${match.scheduledDate}, end time: ${matchEndTime}`,
+    );
+
+    // Update parents
+    await this.updateParentMatches(match, matchEndTime, tx);
+  }
+
+  private async updateParentMatches(
+    match: BracketMatchEntity,
+    startTime: Date,
+    tx: EntityManager,
+  ) {
+    // Update parents
+    const parentMatches = await this.getParentMatches(match);
+    await Promise.all(
+      parentMatches.map(match => this.tryRescheduleMatch(match, startTime, tx)),
+    );
+  }
+
+  private async getParentMatches(
+    match: BracketMatchEntity,
+  ): Promise<BracketMatchEntity[]> {
+    const stage = await this.stageEntityRepository.findOneBy({
+      id: match.stage_id,
+    });
+
+    // @ts-ignore
+    const {
+      roundNumber,
+      roundCount,
+      // @ts-ignore
+    } = await this.manager.update.getRoundPositionalInfo(match.round_id);
+    // @ts-ignore
+    return await this.manager.update.getNextMatches(
+      match,
+      'single_bracket',
+      stage,
+      roundNumber,
+      roundCount,
+    );
   }
 
   private async submitGameToLaunch(gameId: string) {
@@ -207,5 +348,13 @@ export class MatchScheduleService {
         gameserverScheduled: true,
       },
     );
+  }
+
+  private getTournament(match: BracketMatchEntity) {
+    return this.tournamentRepository
+      .createQueryBuilder('t')
+      .innerJoin('t.stages', 'stg')
+      .where('stg.id = :stage_id', { stage_id: match.stage_id })
+      .getOne();
   }
 }
