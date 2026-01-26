@@ -1,8 +1,18 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { BestOfStrategy, TournamentEntity } from '../db/entity/tournament.entity';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  BestOfStrategy,
+  TournamentEntity,
+} from '../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
-import { BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
+import {
+  BracketType,
+  TournamentStatus,
+} from '../gateway/shared-types/tournament';
 import { TournamentRegistrationState } from '../model/tournament.dto';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { typeormBulkUpdate } from '../util/typeorm-bulk-update';
@@ -282,8 +292,6 @@ WHERE tr.id = c.id::int;
       t => t.state === TournamentRegistrationState.CONFIRMED,
     );
 
-
-    console.log("Heyllo", con'Heyllo'rties)
     // Fill ;participants
     const participants = this.registrationsToParticipants(
       confirmedParties,

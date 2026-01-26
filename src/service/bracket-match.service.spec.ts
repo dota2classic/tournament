@@ -28,6 +28,9 @@ describe('BracketMatchService', () => {
       where: {
         stage_id: stage.id,
       },
+      order: {
+        id: 'ASC',
+      },
     });
 
     // When

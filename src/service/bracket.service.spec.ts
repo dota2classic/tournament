@@ -32,7 +32,9 @@ describe('BracketService', () => {
     ).resolves.toHaveLength(2); // Semi finals + finals
 
     await expect(
-      te.repo(BracketMatchEntity).find({ where: { stage_id: stage.id } }),
+      te
+        .repo(BracketMatchEntity)
+        .find({ where: { stage_id: Number(stage.id) } }),
     ).resolves.toHaveLength(3); // 2 x Semifinals + finals
 
     await expect(
