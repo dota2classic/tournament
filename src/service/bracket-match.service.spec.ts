@@ -24,11 +24,9 @@ describe('BracketMatchService', () => {
       .repo(StageEntity)
       .findOneBy({ tournament_id: tournament.id });
 
-
     const firstMatch = await te.repo(BracketMatchGameEntity).findOne({
       where: {
-        stag,
-        e_id: stage.id,
+        stage_id: stage.id,
       },
     });
 
@@ -42,7 +40,7 @@ describe('BracketMatchService', () => {
     // Then
     const m = await bm.storage.selectFirst('match', {
       id: firstMatch.parent_id,
-      stage_id,: stage.id
+      stage_id: stage.id,
     });
 
     expect(m).toEqual(

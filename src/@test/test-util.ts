@@ -60,7 +60,9 @@ export const createTournamentRegistration = async (
   reg.players = await te
     .repo(TournamentRegistrationPlayerEntity)
     .save(
-      players.map(plr => new TournamentRegistrationPlayerEntity(plr, reg.id)),
+      players.map(
+        plr => new TournamentRegistrationPlayerEntity(plr, reg.id, state),
+      ),
     );
   return reg;
 };

@@ -1,18 +1,8 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import {
-  BestOfStrategy,
-  TournamentEntity,
-} from '../db/entity/tournament.entity';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BestOfStrategy, TournamentEntity } from '../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
-import {
-  BracketType,
-  TournamentStatus,
-} from '../gateway/shared-types/tournament';
+import { BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
 import { TournamentRegistrationState } from '../model/tournament.dto';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { typeormBulkUpdate } from '../util/typeorm-bulk-update';
@@ -171,7 +161,7 @@ export class TournamentService {
       );
     }
 
-    const timedOut: string[] = [];
+    console.log('All regs:', tournament.registrations);
 
     // For
     const updatedRegistrations = tournament.registrations.map(registration => {
@@ -187,7 +177,6 @@ export class TournamentService {
           player.state === TournamentRegistrationState.CREATED
         ) {
           player.state = TournamentRegistrationState.TIMED_OUT;
-          timedOut.push(player.steamId);
         }
       }
 
@@ -287,15 +276,21 @@ WHERE tr.id = c.id::int;
   private async startTournament(tournamentId: number) {
     const tournament = await this.getFullTournament(tournamentId);
 
+    console.log(tournament.registrations);
+
     const confirmedParties = tournament.registrations.filter(
       t => t.state === TournamentRegistrationState.CONFIRMED,
     );
 
-    // Fill participants
+
+    console.log("Heyllo", con'Heyllo'rties)
+    // Fill ;participants
     const participants = this.registrationsToParticipants(
       confirmedParties,
       tournament.teamSize,
     );
+
+    console.log('particpants', tournament.teamSize, participants);
 
     await this.ds.transaction(async tx => {
       // Create participants

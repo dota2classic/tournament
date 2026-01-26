@@ -160,7 +160,7 @@ describe('TournamentService', () => {
   });
 
   describe('startTournament', () => {
-    it('should convert participants into players', async () => {
+    it('should convert registration entries into players', async () => {
       // Given
       const tournament = await createTournament(
         te,
@@ -183,7 +183,7 @@ describe('TournamentService', () => {
       }
 
       // When
-      await service.startTournament(tournament.id);
+      await service.finishReadyCheck(tournament.id);
 
       // Then
       const participants = await te.repo(ParticipantEntity).find({
@@ -239,7 +239,7 @@ describe('TournamentService', () => {
       );
 
       // When
-      await service.startTournament(tournament.id);
+      await service.finishReadyCheck(tournament.id);
 
       // Then
       const participants = await te.repo(ParticipantEntity).find({

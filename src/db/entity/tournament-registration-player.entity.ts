@@ -52,15 +52,19 @@ export class TournamentRegistrationPlayerEntity {
   @Column({
     name: 'state',
     default: TournamentRegistrationState.CREATED,
-    type: "enum",
+    type: 'enum',
     enum: TournamentRegistrationState,
     enumName: 'tournament_registration_state',
   })
   state: TournamentRegistrationState;
 
-
-  constructor(steamId: string, tournamentRegistrationId: number) {
+  constructor(
+    steamId: string,
+    tournamentRegistrationId: number,
+    state = TournamentRegistrationState.CREATED,
+  ) {
     this.steamId = steamId;
     this.tournamentRegistrationId = tournamentRegistrationId;
+    this.state = state;
   }
 }
