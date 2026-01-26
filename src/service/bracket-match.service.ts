@@ -76,6 +76,7 @@ export class BracketMatchService {
     const maxRounds = totalRounds.sort((a, b) => b.number - a.number)[0].number;
 
     let bestOf: number;
+
     if (group.number === 3) {
       bestOf = tour.bestOfConfig.grandFinal;
     } else if (round.number === maxRounds) {

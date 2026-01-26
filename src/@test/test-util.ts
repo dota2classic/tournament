@@ -12,9 +12,9 @@ import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-regi
 import { TournamentRegistrationState } from '../model/tournament.dto';
 import { ParticipantEntity } from '../db/entity/participant.entity';
 import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-participant-player.entity';
-import { BracketsManager } from 'brackets-manager';
-import { shuffle } from '../util/shuffle';
-import { padArrayToClosestPower } from '../util/arrays';
+import { TournamentService } from '../service/tournament.service';
+import { ParticipationService } from '../service/participation.service';
+import { BracketService } from '../service/bracket.service';
 
 export const BestOfOne: BestOfStrategy = {
   round: 1,
@@ -98,35 +98,51 @@ export const createTournamentWithParticipants = async (
   return tour;
 };
 
-export const createBracket = async (
-  te: TestEnvironment,
-  bestOf: BestOfStrategy = {
-    round: 1,
-    final: 1,
-    grandFinal: 1,
-  },
-) => {
-  const tournament = await createTournamentWithParticipants(
-    te,
-    TournamentStatus.IN_PROGRESS,
-    4,
-    1,
-    BracketType.SINGLE_ELIMINATION,
-    bestOf,
-  );
-  return te.service(BracketsManager).create({
-    name: 'Example',
-    tournamentId: tournament.id,
-    type:
-      tournament.strategy === BracketType.DOUBLE_ELIMINATION
-        ? 'double_elimination'
-        : 'single_elimination',
-    seeding: shuffle(
-      padArrayToClosestPower(tournament.participants.map(t => t.id)),
-    ),
-    settings: {
-      grandFinal: 'simple',
-      matchesChildCount: bestOf.round,
-    },
-  });
-};
+export const createNativeTournament = async (
+         te: TestEnvironment,
+         bestOf: BestOfStrategy = {
+           round: 1,
+           final: 1,
+           grandFinal: 1,
+         },
+         pc = 4,
+       ) => {
+         const ts = te.service(TournamentService);
+         // Create tournament
+         const t = await ts.createTournament(
+           1,
+           Math.random().toString(),
+           BracketType.SINGLE_ELIMINATION,
+           '123',
+           '123',
+           new Date(),
+           bestOf,
+         );
+
+         // Publish
+         await ts.publish(t.id);
+
+         // Register
+         const steamIds = Array.from({ length: pc }, testUser);
+         for (let i = 0; i < pc; i++) {
+           await te
+             .service(ParticipationService)
+             .registerAsParty(t.id, [steamIds[i]]);
+         }
+
+         // Confirm ready check
+         await ts.startReadyCheck(t.id);
+         for (let i = 0; i < pc; i++) {
+           await te
+             .service(ParticipationService)
+             .setRegistrationConfirmed(
+               t.id,
+               steamIds[i],
+               TournamentRegistrationState.CONFIRMED,
+             );
+         }
+
+         await ts.finishReadyCheck(t.id);
+         await te.service(BracketService).generateBracket(t.id);
+         return ts.getFullTournament(t.id);
+       };

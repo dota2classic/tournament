@@ -195,6 +195,9 @@ export class MatchScheduleService {
         },
       },
     );
+    this.logger.log(
+      `Trying to schedule match game ${match.id}, game_number=${gameNumber}, current=${game.scheduledDate}, want=${startTime}`,
+    );
 
     if (game.scheduledDate && isBefore(startTime, game.scheduledDate)) {
       // No need to recalculate match start: we do not move start date back in time
