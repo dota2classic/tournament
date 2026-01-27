@@ -15,4 +15,4 @@ COPY --from=build /usr/src/app/dist ./dist
 COPY --from=build /usr/src/app/package.json .
 COPY --from=build /usr/src/app/yarn.lock .
 
-CMD ["node", "dist/src/main"]
+CMD ["node", "dist/main"]
