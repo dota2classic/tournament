@@ -34,11 +34,7 @@ describe('BracketMatchService', () => {
     });
 
     // When
-    await service.setGameWinner(
-      firstMatch.parent_id,
-      firstMatch.id,
-      firstMatch.opponent1.id,
-    );
+    await service.setGameWinner(firstMatch.id, firstMatch.opponent1.id);
 
     // Then
     const m = await bm.storage.selectFirst('match', {
