@@ -82,12 +82,11 @@ export class BracketMatchGameDto {
 }
 
 export class OpponentDto {
-  id?: n;
-  umber;
-  position?: number;
-  result?: Result;
-  participant?: BracketParticipantDto;
-}
+         id?: number;
+         position?: number;
+         result?: Result;
+         participant?: BracketParticipantDto;
+       }
 
 export class BracketParticipantDto {
   id: number;

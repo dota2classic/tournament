@@ -80,26 +80,25 @@ export class RegistrationPlayerDto {
   state: TournamentRegistrationState;
 }
 export class RegistrationDto {
-         id: number;
-         players: RegistrationPlayerDto[];
-         @ApiProperty({
-           enum: TournamentRegistrationState,
-           enumName: 'TournamentRegistrationState',
-         })
-         state: TournamentRegistrationState;
-       }
+  id: number;
+  players: RegistrationPlayerDto[];
+  @ApiProperty({
+    enum: TournamentRegistrationState,
+    enumName: 'TournamentRegistrationState',
+  })
+  state: TournamentRegistrationState;
+}
 
 export class TournamentDto {
-         id: number;
-         name: string;
-         @ApiProperty({ enum: TournamentStatus, enumName: 'TournamentStatus' })
-         status: TournamentStatus;
-         startDate: Date;
-         imageUrl: string;
-         description: string;
-         registrations: RegistrationDto[];
-       }
-
+  id: number;
+  name: string;
+  @ApiProperty({ enum: TournamentStatus, enumName: 'TournamentStatus' })
+  status: TournamentStatus;
+  startDate: Date;
+  imageUrl: string;
+  description: string;
+  registrations: RegistrationDto[];
+}
 
 export class TournamentStandingDto {
   steam_id?: string;
@@ -160,11 +159,11 @@ export class BracketRoundDto {
 }
 
 export class BracketDto {
-         @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
-         type: BracketType;
-         winning: BracketRoundDto[];
-         losing: BracketRoundDto[];
-       }
+  @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
+  type: BracketType;
+  winning: BracketRoundDto[];
+  losing: BracketRoundDto[];
+}
 
 export class TournamentMatchDto {
          public readonly id: number;
@@ -194,7 +193,6 @@ export class SetGameWinnerDto {
   winnerId: number;
   d2cMatchId?: number;
 }
-
 
 export class StartGameDto {
   gameId: string;
