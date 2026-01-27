@@ -230,7 +230,6 @@ describe('TournamentService', () => {
     await te
       .service(BracketMatchService)
       .setGameWinner(
-        bracket.winning[0].seeds[0].id,
         bracket.winning[0].seeds[0].games[0].gameId,
         bracket.winning[0].seeds[0].teams[0].id,
         100,
@@ -250,7 +249,6 @@ describe('TournamentService', () => {
     await te
       .service(BracketMatchService)
       .setGameWinner(
-        bracket.winning[0].seeds[1].id,
         bracket.winning[0].seeds[1].games[0].gameId,
         bracket.winning[0].seeds[1].teams[1].id,
         200,
@@ -271,35 +269,17 @@ describe('TournamentService', () => {
     // Win first game
     await te
       .service(BracketMatchService)
-      .setGameWinner(
-        seed.id,
-        seed.games[0].gameId,
-        seed.teams[0].id,
-        300,
-        false,
-      );
+      .setGameWinner(seed.games[0].gameId, seed.teams[0].id, 300, false);
 
     // Lose second
     await te
       .service(BracketMatchService)
-      .setGameWinner(
-        seed.id,
-        seed.games[1].gameId,
-        seed.teams[1].id,
-        400,
-        false,
-      );
+      .setGameWinner(seed.games[1].gameId, seed.teams[1].id, 400, false);
 
     // Win third
     await te
       .service(BracketMatchService)
-      .setGameWinner(
-        seed.id,
-        seed.games[2].gameId,
-        seed.teams[0].id,
-        500,
-        false,
-      );
+      .setGameWinner(seed.games[2].gameId, seed.teams[0].id, 500, false);
 
     bracket = await getBracket(tournamentId);
     assertMatchComplete(
