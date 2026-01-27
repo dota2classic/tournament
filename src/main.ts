@@ -112,7 +112,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(6100);
+  await app.listen(6600);
   //
   // await app.get(BracketMatchService).scheduleMatches();
   // // await bs.getStandings(2)
