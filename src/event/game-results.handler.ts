@@ -41,7 +41,6 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
     }
 
     await this.bracketMatchService.setGameWinner(
-      game.parent_id,
       game.id,
       winnerId,
       event.matchId,

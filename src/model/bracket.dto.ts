@@ -1,61 +1,97 @@
-import { StageEntity } from '../db/entity/stage.entity';
-import { GroupEntity } from '../db/entity/group.entity';
-import { RoundEntity } from '../db/entity/round.entity';
 import { TeamDto } from './team.dto';
 import { Result, Status } from 'brackets-model';
+import { ApiProperty } from '@nestjs/swagger';
+import { Status as MatchStatus } from 'brackets-model/dist/other';
+import { StageType } from 'brackets-model/dist/unions';
 
 export class TournamentBracketInfoDto {
   participant: BracketParticipantDto[];
-  stage: StageEntity[];
-  group: GroupEntity[];
-  round: RoundEntity[];
+  stage: StageDto[];
+  group: GroupDto[];
+  round: RoundDto[];
   match: BracketMatchDto[];
 }
 
-export class BracketMatchDto {
+export class RoundDto {
   id: number;
   stage_id: number;
   group_id: number;
-  round_id: number;
-  child_count: number;
   number: number;
-  status: Status;
-  opponent1?: ParticipantResultDto;
-  opponent2?: ParticipantResultDto;
-  startDate: number;
-  games: BracketMatchGameDto[];
 }
+
+export class GroupDto {
+  id: number;
+  stage_id: number;
+  number: number;
+}
+
+export class StageDto {
+  id: number;
+  tournament_id: number;
+  name: string;
+  type: StageType;
+  settings: object;
+  number: number;
+}
+
+export class BracketMatchDto {
+         id: number;
+         stage_id: number;
+         group_id: number;
+         round_id: number;
+         child_count: number;
+         number: number;
+         @ApiProperty({ enum: MatchStatus, enumName: 'MatchStatus' })
+         status: Status;
+         opponent1?: ParticipantResultDto;
+         opponent2?: ParticipantResultDto;
+         startDate: Date;
+         games: BracketMatchGameDto[];
+       }
 
 export class ParticipantResultDto {
-  /** If `null`, the participant is to be determined. */
-  id: string | number | null;
-  /** Indicates where the participant comes from. */
-  position?: number;
-  /** If this participant forfeits, the other automatically wins. */
-  forfeit?: boolean;
-  /** The current score of the participant. */
-  score?: number;
-  /** Tells what is the result of a duel for this participant. */
-  result?: Result;
+         /** If `null`, the participant is to be determined. */
+         id?: number;
+         /** Indicates where the participant comes from. */
+         position?: number;
+         /** If this participant forfeits, the other automatically wins. */
+         forfeit?: boolean;
+         /** The current score of the participant. */
+         score?: number;
+         /** Tells what is the result of a duel for this participant. */
+         result?: Result;
 
-  tbd?: boolean;
+         tbd?: boolean;
 
-  participant?: BracketParticipantDto;
-}
+         participant?: BracketParticipantDto;
+       }
 
 export class BracketMatchGameDto {
   id: string;
-  bm_id: number;
+  bracket_match_id: number;
   number: number;
   externalMatchId?: number;
   teamOffset: number;
+  @ApiProperty({ enum: MatchStatus, enumName: 'MatchStatus' })
+  status: MatchStatus;
   finished: boolean;
-  scheduledDate: number;
+  scheduledDate: Date;
+
+  opponent1?: ParticipantResultDto;
+  opponent2?: ParticipantResultDto;
+}
+
+export class OpponentDto {
+  id?: n;
+  umber;
+  position?: number;
+  result?: Result;
+  participant?: BracketParticipantDto;
 }
 
 export class BracketParticipantDto {
   id: number;
   tournament_id: number;
-  steam_id?: string;
   team?: TeamDto;
+  players?: string[];
 }

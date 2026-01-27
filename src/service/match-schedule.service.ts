@@ -288,7 +288,7 @@ export class MatchScheduleService {
     );
   }
 
-  private async submitGameToLaunch(gameId: string) {
+  public async submitGameToLaunch(gameId: string) {
     const game = await this.matchGameEntityRepository.findOneBy({ id: gameId });
     if (!game) {
       throw new NotFoundException('Game not found');

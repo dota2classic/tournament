@@ -7,6 +7,8 @@ import {
   ConfirmRegistrationDto,
   CreateTournamentDto,
   RegisterAsPartyDto,
+  SetGameWinnerDto,
+  StartGameDto,
   TournamentDto,
   TournamentRegistrationState,
 } from '../model/tournament.dto';
@@ -23,6 +25,7 @@ import { TournamentRepository } from '../repository/tournament.repository';
 import { TournamentService } from '../service/tournament.service';
 import { ParticipationService } from '../service/participation.service';
 import { MatchScheduleService } from '../service/match-schedule.service';
+import { TournamentBracketInfoDto } from '../model/bracket.dto';
 
 @Controller('tournament')
 @ApiTags('tournament')
@@ -31,6 +34,7 @@ export class TournamentController {
     private readonly crud: BracketCrud,
     private readonly mapper: TournamentMapper,
     private readonly teamMapper: TeamMapper,
+    private readonly bracketMapper: BracketMapper,
     @InjectRepository(TournamentEntity)
     private readonly tournamentEntityRepository: Repository<TournamentEntity>,
     private readonly bracketService: BracketService,
@@ -43,12 +47,22 @@ export class TournamentController {
     private readonly matchGameEntityRepository: Repository<
       BracketMatchGameEntity
     >,
+    private readonly matchService: BracketMatchService,
     private readonly utilQuery: TournamentRepository,
-    private readonly bracketMapper: BracketMapper,
     private readonly tournamentService: TournamentService,
     private readonly participationService: ParticipationService,
     private readonly matchScheduleService: MatchScheduleService,
   ) {}
+
+  // todo pagination
+  @Get(`/list`)
+  public async listTournaments(): Promise<TournamentDto[]> {
+    return this.tournamentEntityRepository
+      .find({
+        relations: ['registrations', 'registrations.players'],
+      })
+      .then(t => t.map(this.mapper.mapTournament));
+  }
 
   // Tournament statuses
   @Post()
@@ -129,6 +143,13 @@ export class TournamentController {
       .then(t => this.mapper.mapBracket(t, tournament));
   }
 
+  @Get('/:id/bracket_render')
+  async getBracketRender(
+    @Param('id') id: number,
+  ): Promise<TournamentBracketInfoDto> {
+    return await this.crud.getBracket(id).then(this.bracketMapper.mapBracket);
+  }
+
   @Post('/:id/auto_schedule_bracket')
   async autoScheduleBracket(@Param('id') id: number) {
     await this.matchScheduleService.scheduleMatches(id);
@@ -136,21 +157,27 @@ export class TournamentController {
   }
 
   @Post(`/:id/generate_bracket`)
-  public async startTournament(
-    @Param('id')
-    id: number,
-  ): Promise<BracketDto> {
+  public async startTournament(@Param('id') id: number): Promise<BracketDto> {
     await this.bracketService.generateBracket(id);
     await this.matchScheduleService.scheduleMatches(id);
     return this.getBracket(id);
   }
 
-  // todo pagination
-  @Get(`/list`)
-  public async listTournaments(): Promise<TournamentDto[]> {
-    return this.tournamentEntityRepository
-      .find()
-      .then(t => t.map(this.mapper.mapTournament));
+  @Post(':id/set_game_winner')
+  public async setGameWinner(
+    @Param('id') id: number,
+    @Body() dto: SetGameWinnerDto,
+  ) {
+    await this.matchService.setGameWinner(
+      dto.gameId,
+      dto.winnerId,
+      dto.d2cMatchId,
+    );
+  }
+
+  @Post(':id/start_game')
+  public async startGame(@Param('id') id: number, @Body() dto: StartGameDto) {
+    await this.matchScheduleService.submitGameToLaunch(dto.gameId);
   }
 
   // @Post(`/tournament_match/:id/schedule`)

@@ -111,14 +111,12 @@ export class BracketMatchService {
 
   /**
    * Sets a winner for given MatchGame.
-   * @param matchId - match id within tournament
    * @param gameId - gameid of a match
    * @param winnerOpponentId - id of BracketParticipantEntity
    * @param d2cMatchId - id of dota2classic match if it happened
    * @param forfeit - tech lose
    */
   public async setGameWinner(
-    matchId: number,
     gameId: string,
     winnerOpponentId: Id,
     d2cMatchId?: number,
@@ -144,14 +142,13 @@ export class BracketMatchService {
 
     await this.manager.update.matchGame<BracketMatchGameEntity>({
       id: gameId,
-      parent_id: matchId,
       externalMatchId: d2cMatchId,
       opponent1: game.opponent1,
       opponent2: game.opponent2,
     });
 
     const match = await this.bracketMatchEntityRepository.findOne({
-      where: { id: matchId },
+      where: { id: Number(game.parent_id) },
       relations: ['games'],
     });
 
