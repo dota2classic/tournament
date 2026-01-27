@@ -49,18 +49,34 @@ export class ConfirmRegistrationDto {
 }
 
 export class CreateTournamentDto {
-         name: string;
-         teamSize: number;
-         description: string;
-         startDate: Date;
-         imageUrl: string;
+  name: string;
+  teamSize: number;
+  description: string;
+  startDate: Date;
+  imageUrl: string;
 
-         @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
-         strategy: BracketType;
-         roundBestOf: number;
-         finalBestOf: number;
-         grandFinalBestOf: number;
-       }
+  @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
+  strategy: BracketType;
+  roundBestOf: number;
+  finalBestOf: number;
+  grandFinalBestOf: number;
+}
+
+export class UpdateTournamentDto {
+  name?: string;
+  description?: string;
+
+  teamSize?: number;
+  startDate?: Date;
+  imageUrl?: string;
+
+  @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
+  strategy?: BracketType;
+  roundBestOf?: number;
+  finalBestOf?: number;
+  grandFinalBestOf?: number;
+}
+
 
 export class UpdateTournamentStatusDto {
   status: TournamentStatus;

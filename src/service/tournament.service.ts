@@ -1,19 +1,9 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import {
-  BestOfStrategy,
-  TournamentEntity,
-} from '../db/entity/tournament.entity';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BestOfStrategy, TournamentEntity } from '../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
-import {
-  BracketType,
-  TournamentStatus,
-} from '../gateway/shared-types/tournament';
-import { TournamentRegistrationState } from '../model/tournament.dto';
+import { BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
+import { TournamentRegistrationState, UpdateTournamentDto } from '../model/tournament.dto';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { typeormBulkUpdate } from '../util/typeorm-bulk-update';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
@@ -137,6 +127,36 @@ export class TournamentService {
       ),
     );
     return this.getFullTournament(t.id);
+  }
+
+  async updateTournament(id: number, dto: UpdateTournamentDto) {
+    const t = await this.tournamentEntityRepository.findOneBy({ id });
+    if (!t) throw new NotFoundException('Tournament not found');
+
+    const updateDto: Partial<TournamentEntity> = {
+      name: dto.name,
+      description: dto.description,
+      imageUrl: dto.imageUrl,
+    };
+
+    if (t.state === TournamentStatus.DRAFT) {
+      updateDto.teamSize = dto.teamSize;
+      updateDto.startDate = dto.startDate;
+      updateDto.strategy = dto.strategy;
+
+      updateDto.bestOfConfig = t.bestOfConfig;
+      Object.assign(updateDto.bestOfConfig, {
+        round: dto.roundBestOf,
+        final: dto.finalBestOf,
+        grandFinal: dto.grandFinalBestOf,
+      } satisfies BestOfStrategy);
+    }
+
+    await this.tournamentEntityRepository.update({
+      id,
+    }, updateDto);
+
+    return this.getFullTournament(id);
   }
 
   /**

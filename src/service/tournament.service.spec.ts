@@ -1,18 +1,12 @@
 import { testUser, useFullModule } from '../@test/useFullModule';
-import {
-  BestOfOne,
-  createTournament,
-  createTournamentRegistration,
-} from '../@test/test-util';
-import {
-  BracketType,
-  TournamentStatus,
-} from '../gateway/shared-types/tournament';
+import { BestOfOne, createTournament, createTournamentRegistration } from '../@test/test-util';
+import { BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { TournamentService } from './tournament.service';
 import { TournamentRegistrationState } from '../model/tournament.dto';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { ParticipantEntity } from '../db/entity/participant.entity';
+import { BestOfStrategy, TournamentEntity } from '../db/entity/tournament.entity';
 
 describe('TournamentService', () => {
   const te = useFullModule();
@@ -261,6 +255,97 @@ describe('TournamentService', () => {
           .flatMap(t => t.players.map(player => player.steamId))
           .sort(),
       );
+    });
+  });
+
+  describe('updateTournament', () => {
+    it('should update all fields when in draft', async () => {
+      // Given
+      const tournament = await createTournament(
+        te,
+        2,
+        BracketType.SINGLE_ELIMINATION,
+        TournamentStatus.DRAFT,
+      );
+
+      const d = new Date();
+
+      // When
+      const res = await service.updateTournament(tournament.id, {
+        name: 'hey',
+        description: 'hey',
+
+        teamSize: 5,
+        startDate: d,
+        imageUrl: 'img',
+
+        strategy: BracketType.DOUBLE_ELIMINATION,
+        roundBestOf: 5,
+        finalBestOf: 3,
+        grandFinalBestOf: 7,
+      });
+
+      // Then
+      expect(res).toMatchObject({
+        name: 'hey',
+        description: 'hey',
+
+        teamSize: 5,
+        startDate: d,
+        imageUrl: 'img',
+
+        strategy: BracketType.DOUBLE_ELIMINATION,
+
+        bestOfConfig: {
+          round: 5,
+          final: 3,
+          grandFinal: 7,
+        },
+
+      } satisfies Partial<TournamentEntity>);
+    });
+
+    it('should only update meta fields after publish', async () => {
+      // Given
+      const tournament = await createTournament(
+        te,
+        2,
+        BracketType.SINGLE_ELIMINATION,
+        TournamentStatus.IN_PROGRESS,
+      );
+
+      const d = new Date();
+
+      // When
+      const res = await service.updateTournament(tournament.id, {
+        name: 'hey',
+        description: 'hey',
+        imageUrl: 'img',
+
+        teamSize: 5,
+        startDate: d,
+
+        strategy: BracketType.DOUBLE_ELIMINATION,
+        roundBestOf: 5,
+        finalBestOf: 3,
+        grandFinalBestOf: 7,
+      });
+
+      // Then
+      expect(res).toMatchObject({
+        name: 'hey',
+        description: 'hey',
+        imageUrl: 'img',
+      } satisfies Partial<TournamentEntity>);
+
+      expect(res.bestOfConfig).toEqual({
+        final: 1,
+        grandFinal: 1,
+        round: 1,
+      } satisfies BestOfStrategy);
+      expect(res.strategy).toEqual(BracketType.SINGLE_ELIMINATION);
+      expect(res.teamSize).toEqual(2);
+      expect(res.startDate).toEqual(tournament.startDate);
     });
   });
 });

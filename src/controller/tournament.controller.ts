@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { BracketCrud } from '../service/bracket.crud';
 import { TournamentMapper } from '../mapper/tournament.mapper';
 import { ApiTags } from '@nestjs/swagger';
@@ -11,6 +11,7 @@ import {
   StartGameDto,
   TournamentDto,
   TournamentRegistrationState,
+  UpdateTournamentDto,
 } from '../model/tournament.dto';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { Repository } from 'typeorm';
@@ -80,6 +81,15 @@ export class TournamentController {
         grandFinal: dto.grandFinalBestOf,
       },
     );
+    return this.mapper.mapTournament(tournament);
+  }
+
+  @Patch(':id')
+  async updateTournament(
+    @Param('id') id: number,
+    @Body() dto: UpdateTournamentDto,
+  ) {
+    const tournament = await this.tournamentService.updateTournament(id, dto);
     return this.mapper.mapTournament(tournament);
   }
 
