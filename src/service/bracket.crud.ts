@@ -37,14 +37,12 @@ export class BracketCrud implements CrudInterface {
   ) {}
 
   delete<T>(table: Table, filter?: Partial<T>): Promise<boolean> {
-    console.log(`delete table ${table} with filter`, filter);
     throw 'not implemented';
   }
 
   insert<T>(table: Table, value: OmitId<T>): Promise<number>;
   insert<T>(table: Table, values: OmitId<T>[]): Promise<boolean>;
   async insert(table: Table, value): Promise<number | boolean> {
-    console.log(`Insert table ${table} with data`, value);
     const rep = this.connection.getRepository(mapTable[table]);
 
     if (Array.isArray(value)) {
@@ -60,7 +58,6 @@ export class BracketCrud implements CrudInterface {
   select<T>(table: Table, id: number | string): Promise<T | null>;
   select<T>(table: Table, filter: Partial<T>): Promise<T[] | null>;
   select(table: Table, id?): any {
-    console.log(`Select table ${table} by`, id);
     const rep = this.connection.getRepository(mapTable[table]);
     if (typeof id === 'object') {
       // its a filter
@@ -79,7 +76,6 @@ export class BracketCrud implements CrudInterface {
     value: Partial<T>,
   ): Promise<boolean>;
   async update(table: Table, id, value): Promise<boolean> {
-    console.log(`Update table ${table}`, id, ` with data`, value);
     // id is either id or criteria
 
     if (table === 'match_game') {
