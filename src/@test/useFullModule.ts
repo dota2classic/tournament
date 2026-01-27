@@ -8,7 +8,6 @@ import { ClientsModule, RedisOptions, RmqOptions, Transport } from '@nestjs/micr
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RabbitMQContainer, StartedRabbitMQContainer } from '@testcontainers/rabbitmq';
-import { WinstonWrapper } from '@dota2classic/nest_logger';
 import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { TeamController } from 'controller/team.controller';
 import { TournamentController } from 'controller/tournament.controller';
@@ -234,7 +233,7 @@ export function useFullModule(): TestEnvironment {
     }).compile();
 
     te.app = await te.module.createNestApplication({
-      logger: new WinstonWrapper('localhost', 7777, 'demo', true),
+      // logger: new WinstonWrapper('localhost', 7777, 'demo', true),
     });
 
     await te.app.listen(0);

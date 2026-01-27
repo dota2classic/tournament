@@ -171,8 +171,6 @@ export class TournamentService {
       );
     }
 
-    console.log('All regs:', tournament.registrations);
-
     // For
     const updatedRegistrations = tournament.registrations.map(registration => {
       let isReady = true;
@@ -286,8 +284,6 @@ WHERE tr.id = c.id::int;
   private async startTournament(tournamentId: number) {
     const tournament = await this.getFullTournament(tournamentId);
 
-    console.log(tournament.registrations);
-
     const confirmedParties = tournament.registrations.filter(
       t => t.state === TournamentRegistrationState.CONFIRMED,
     );
@@ -297,8 +293,6 @@ WHERE tr.id = c.id::int;
       confirmedParties,
       tournament.teamSize,
     );
-
-    console.log('particpants', tournament.teamSize, participants);
 
     await this.ds.transaction(async tx => {
       // Create participants
