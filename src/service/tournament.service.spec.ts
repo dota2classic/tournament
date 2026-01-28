@@ -1,12 +1,22 @@
 import { testUser, useFullModule } from '../@test/useFullModule';
-import { BestOfOne, createTournament, createTournamentRegistration } from '../@test/test-util';
-import { BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
+import {
+  BestOfOne,
+  createTournament,
+  createTournamentRegistration,
+} from '../@test/test-util';
+import {
+  BracketType,
+  TournamentStatus,
+} from '../gateway/shared-types/tournament';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { TournamentService } from './tournament.service';
 import { TournamentRegistrationState } from '../model/tournament.dto';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { ParticipantEntity } from '../db/entity/participant.entity';
-import { BestOfStrategy, TournamentEntity } from '../db/entity/tournament.entity';
+import {
+  BestOfStrategy,
+  TournamentEntity,
+} from '../db/entity/tournament.entity';
 
 describe('TournamentService', () => {
   const te = useFullModule();
@@ -100,7 +110,7 @@ describe('TournamentService', () => {
         .repo(TournamentRegistrationEntity)
         .findOne({ where: { id: rg.id }, relations: ['players'] });
       expect(rg.state).toEqual(TournamentRegistrationState.DECLINED);
-      expect(rg.players.map(t => t.state)).toEqual([
+      expect(rg.players.map((t) => t.state)).toEqual([
         TournamentRegistrationState.TIMED_OUT,
         TournamentRegistrationState.TIMED_OUT,
       ]);
@@ -111,7 +121,7 @@ describe('TournamentService', () => {
       let rg = await createRegistration();
 
       rg.players.forEach(
-        plr => (plr.state = TournamentRegistrationState.CONFIRMED),
+        (plr) => (plr.state = TournamentRegistrationState.CONFIRMED),
       );
       await te.repo(TournamentRegistrationPlayerEntity).save(rg.players);
 
@@ -123,7 +133,7 @@ describe('TournamentService', () => {
         .repo(TournamentRegistrationEntity)
         .findOne({ where: { id: rg.id }, relations: ['players'] });
       expect(rg.state).toEqual(TournamentRegistrationState.CONFIRMED);
-      expect(rg.players.map(t => t.state)).toEqual([
+      expect(rg.players.map((t) => t.state)).toEqual([
         TournamentRegistrationState.CONFIRMED,
         TournamentRegistrationState.CONFIRMED,
       ]);
@@ -146,7 +156,7 @@ describe('TournamentService', () => {
         .repo(TournamentRegistrationEntity)
         .findOne({ where: { id: rg.id }, relations: ['players'] });
       expect(rg.state).toEqual(TournamentRegistrationState.DECLINED);
-      expect(rg.players.map(t => t.state)).toEqual([
+      expect(rg.players.map((t) => t.state)).toEqual([
         TournamentRegistrationState.CONFIRMED,
         TournamentRegistrationState.TIMED_OUT,
       ]);
@@ -191,11 +201,11 @@ describe('TournamentService', () => {
 
       expect(
         participants
-          .flatMap(t => t.players.map(player => player.steamId))
+          .flatMap((t) => t.players.map((player) => player.steamId))
           .sort(),
       ).toEqual(
         registrations
-          .flatMap(t => t.players.map(player => player.steamId))
+          .flatMap((t) => t.players.map((player) => player.steamId))
           .sort(),
       );
     });
@@ -247,12 +257,12 @@ describe('TournamentService', () => {
 
       expect(
         participants
-          .flatMap(t => t.players.map(player => player.steamId))
+          .flatMap((t) => t.players.map((player) => player.steamId))
           .sort(),
       ).toEqual(
         registrations
           .slice(0, 4)
-          .flatMap(t => t.players.map(player => player.steamId))
+          .flatMap((t) => t.players.map((player) => player.steamId))
           .sort(),
       );
     });
@@ -276,7 +286,7 @@ describe('TournamentService', () => {
         description: 'hey',
 
         teamSize: 5,
-        startDate: d,
+        startDate: d.toISOString(),
         imageUrl: 'img',
 
         strategy: BracketType.DOUBLE_ELIMINATION,
@@ -301,7 +311,6 @@ describe('TournamentService', () => {
           final: 3,
           grandFinal: 7,
         },
-
       } satisfies Partial<TournamentEntity>);
     });
 
@@ -323,7 +332,7 @@ describe('TournamentService', () => {
         imageUrl: 'img',
 
         teamSize: 5,
-        startDate: d,
+        startDate: d.toISOString(),
 
         strategy: BracketType.DOUBLE_ELIMINATION,
         roundBestOf: 5,
