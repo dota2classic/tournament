@@ -106,24 +106,24 @@ export class RegistrationDto {
 }
 
 export class TournamentDto {
-         id: number;
-         name: string;
-         imageUrl: string;
+  id: number;
+  name: string;
+  imageUrl: string;
 
-         teamSize: number;
+  teamSize: number;
 
-         @ApiProperty({ enum: TournamentStatus, enumName: 'TournamentStatus' })
-         status: TournamentStatus;
+  @ApiProperty({ enum: TournamentStatus, enumName: 'TournamentStatus' })
+  status: TournamentStatus;
 
-         @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
-         strategy: BracketType;
+  @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
+  strategy: BracketType;
 
-         bestOfStrategy: BestOfStrategy;
+  bestOfStrategy: BestOfStrategy;
 
-         startDate: Date;
-         description: string;
-         registrations: RegistrationDto[];
-       }
+  startDate: Date;
+  description: string;
+  registrations: RegistrationDto[];
+}
 
 export class TournamentStandingDto {
   steam_id?: string;
@@ -191,17 +191,17 @@ export class BracketDto {
 }
 
 export class TournamentMatchDto {
-         public readonly id: number;
-         public readonly stage_id: number;
-         public readonly group_id: number;
-         public readonly round_id: number;
-         public readonly child_count: number;
-         public readonly number: number;
-         public readonly games: MatchGameDto[];
-         public readonly status: MatchStatus;
-         public readonly opponent1?: SeedItemDto;
-         public readonly opponent2?: SeedItemDto;
-       }
+  public readonly id: number;
+  public readonly stage_id: number;
+  public readonly group_id: number;
+  public readonly round_id: number;
+  public readonly child_count: number;
+  public readonly number: number;
+  public readonly games: MatchGameDto[];
+  public readonly status: MatchStatus;
+  public readonly opponent1?: SeedItemDto;
+  public readonly opponent2?: SeedItemDto;
+}
 
 export class ScheduleTournamentMatchDto {
   gameId: number;
