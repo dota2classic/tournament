@@ -4,6 +4,7 @@ import { Result as OpponentResult } from 'brackets-model/dist/unions';
 import { Status as MatchStatus } from 'brackets-model';
 import { ApiProperty } from '@nestjs/swagger';
 import { BestOfStrategy } from '../db/entity/tournament.entity';
+import { Dota_GameMode } from '../gateway/shared-types/dota-game-mode';
 
 /**
  * Состояние регистрации на турнир.
@@ -58,6 +59,13 @@ export class CreateTournamentDto {
 
   @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
   strategy: BracketType;
+
+  @ApiProperty({ enum: Dota_GameMode, enumName: 'Dota_GameMode' })
+  gameMode: Dota_GameMode;
+
+  gameDurationSeconds: number;
+  gameBreakDurationSeconds: number
+
   roundBestOf: number;
   finalBestOf: number;
   grandFinalBestOf: number;
@@ -71,20 +79,18 @@ export class UpdateTournamentDto {
   startDate?: string;
   imageUrl?: string;
 
+
+  @ApiProperty({ enum: Dota_GameMode, enumName: 'Dota_GameMode' })
+  gameMode?: Dota_GameMode;
+
+  gameDurationSeconds?: number;
+  gameBreakDurationSeconds?: number
+
   @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
   strategy?: BracketType;
   roundBestOf?: number;
   finalBestOf?: number;
   grandFinalBestOf?: number;
-}
-
-export class UpdateTournamentStatusDto {
-  status: TournamentStatus;
-}
-
-export class TournamentParticipantDto {
-  public readonly players: string[];
-  public readonly team?: TeamDto;
 }
 
 export class RegistrationPlayerDto {
@@ -120,27 +126,12 @@ export class TournamentDto {
 
   bestOfStrategy: BestOfStrategy;
 
+  @ApiProperty({ enum: Dota_GameMode, enumName: 'Dota_GameMode' })
+  gameMode: Dota_GameMode;
+
   startDate: string;
   description: string;
   registrations: RegistrationDto[];
-}
-
-export class TournamentStandingDto {
-  steam_id?: string;
-  team?: TeamDto;
-  position: string;
-}
-
-export class FullTournamentDto {
-  id: number;
-  name: string;
-  @ApiProperty({ enum: TournamentStatus, enumName: 'TournamentStatus' })
-  status: TournamentStatus;
-  startDate: number;
-  imageUrl: string;
-  participants: TournamentParticipantDto[];
-  standings?: TournamentStandingDto[];
-  description: string;
 }
 
 export class SeedItemDto {

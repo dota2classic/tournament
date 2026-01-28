@@ -41,13 +41,9 @@ export class TournamentController {
     private readonly bracketService: BracketService,
     private readonly bmService: BracketMatchService,
     @InjectRepository(BracketMatchEntity)
-    private readonly bracketMatchEntityRepository: Repository<
-      BracketMatchEntity
-    >,
+    private readonly bracketMatchEntityRepository: Repository<BracketMatchEntity>,
     @InjectRepository(BracketMatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<
-      BracketMatchGameEntity
-    >,
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
     private readonly matchService: BracketMatchService,
     private readonly utilQuery: TournamentRepository,
     private readonly tournamentService: TournamentService,
@@ -62,7 +58,7 @@ export class TournamentController {
       .find({
         relations: ['registrations', 'registrations.players'],
       })
-      .then(t => t.map(this.mapper.mapTournament));
+      .then((t) => t.map(this.mapper.mapTournament));
   }
 
   // Tournament statuses
@@ -79,6 +75,11 @@ export class TournamentController {
         round: dto.roundBestOf,
         final: dto.finalBestOf,
         grandFinal: dto.grandFinalBestOf,
+      },
+      dto.gameMode,
+      {
+        gameBreakDurationSeconds: dto.gameBreakDurationSeconds,
+        gameDurationSeconds: dto.gameDurationSeconds,
       },
     );
     return this.mapper.mapTournament(tournament);
@@ -141,7 +142,7 @@ export class TournamentController {
   ) {
     return this.participationService
       .registerAsParty(id, dto.steamIds)
-      .then(t => t.id);
+      .then((t) => t.id);
   }
 
   // Bracket
@@ -150,7 +151,7 @@ export class TournamentController {
     const tournament = await this.tournamentEntityRepository.findOneBy({ id });
     return this.crud
       .getBracket(id)
-      .then(t => this.mapper.mapBracket(t, tournament));
+      .then((t) => this.mapper.mapBracket(t, tournament));
   }
 
   @Get('/:id/bracket_render')

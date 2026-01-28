@@ -1,16 +1,25 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
-import { BracketType, TournamentStatus } from '../../gateway/shared-types/tournament';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  Relation,
+} from 'typeorm';
+import {
+  BracketType,
+  TournamentStatus,
+} from '../../gateway/shared-types/tournament';
 import { ParticipantEntity } from './participant.entity';
 import { TournamentRegistrationEntity } from './tournament-registration.entity';
 import { StageEntity } from './stage.entity';
-
+import { Dota_GameMode } from '../../gateway/shared-types/dota-game-mode';
 
 export class BestOfStrategy {
   round: number;
   final: number;
   grandFinal: number;
 }
-
 
 @Entity('tournament')
 export class TournamentEntity {
@@ -33,6 +42,13 @@ export class TournamentEntity {
     enumName: 'tournament_state',
   })
   state: TournamentStatus;
+
+  @Column({
+    type: 'smallint',
+    name: 'game_mode',
+    default: Dota_GameMode.CAPTAINS_MODE,
+  })
+  gameMode: Dota_GameMode;
 
   @Column()
   strategy: BracketType;
@@ -58,7 +74,6 @@ export class TournamentEntity {
   })
   bestOfConfig: BestOfStrategy;
 
-
   @Column({
     type: 'simple-json',
     name: 'schedule_strategy',
@@ -69,25 +84,15 @@ export class TournamentEntity {
   })
   scheduleStrategy: ScheduleStrategy;
 
-  @OneToMany(
-    e => ParticipantEntity,
-    e => e.tournament,
-    { eager: false },
-  )
+  @OneToMany((e) => ParticipantEntity, (e) => e.tournament, { eager: false })
   participants: Relation<ParticipantEntity>[];
 
-  @OneToMany(
-    e => TournamentRegistrationEntity,
-    e => e.tournament,
-    { eager: false },
-  )
+  @OneToMany((e) => TournamentRegistrationEntity, (e) => e.tournament, {
+    eager: false,
+  })
   registrations: Relation<TournamentRegistrationEntity>[];
 
-  @OneToMany(
-    e => StageEntity,
-    e => e.tournament,
-    { eager: false },
-  )
+  @OneToMany((e) => StageEntity, (e) => e.tournament, { eager: false })
   stages: Relation<StageEntity>[];
 
   constructor(
@@ -98,6 +103,8 @@ export class TournamentEntity {
     imageUrl: string,
     startDate: Date,
     bestOfConfig: BestOfStrategy,
+    gameMode: Dota_GameMode,
+    scheduleStrategy: ScheduleStrategy,
   ) {
     this.teamSize = teamSize;
     this.name = name;
@@ -106,6 +113,8 @@ export class TournamentEntity {
     this.imageUrl = imageUrl;
     this.startDate = startDate;
     this.bestOfConfig = bestOfConfig;
+    this.gameMode = gameMode;
+    this.scheduleStrategy = scheduleStrategy;
   }
 }
 

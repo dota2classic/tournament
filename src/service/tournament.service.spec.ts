@@ -17,6 +17,7 @@ import {
   BestOfStrategy,
   TournamentEntity,
 } from '../db/entity/tournament.entity';
+import { Dota_GameMode } from '../gateway/shared-types/dota-game-mode';
 
 describe('TournamentService', () => {
   const te = useFullModule();
@@ -52,6 +53,11 @@ describe('TournamentService', () => {
           '',
           new Date(),
           BestOfOne,
+          Dota_GameMode.CAPTAINS_MODE,
+          {
+            gameDurationSeconds: 60 * 50,
+            gameBreakDurationSeconds: 60 * 10,
+          },
         ),
       ).toBeDefined();
     });
@@ -66,6 +72,11 @@ describe('TournamentService', () => {
           '',
           new Date(),
           BestOfOne,
+          Dota_GameMode.CAPTAINS_MODE,
+          {
+            gameDurationSeconds: 60 * 50,
+            gameBreakDurationSeconds: 60 * 10,
+          },
         ),
       ).rejects.toThrow();
 
@@ -78,6 +89,11 @@ describe('TournamentService', () => {
           '',
           new Date(),
           BestOfOne,
+          Dota_GameMode.CAPTAINS_MODE,
+          {
+            gameDurationSeconds: 60 * 50,
+            gameBreakDurationSeconds: 60 * 10,
+          },
         ),
       ).rejects.toThrow();
     });

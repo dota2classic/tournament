@@ -7,6 +7,7 @@ import { Status } from 'brackets-model';
 import { tap } from 'rxjs';
 import { TournamentReadyCheckDeclinedEvent } from './gateway/events/tournament/tournament-ready-check-declined.event';
 import { TournamentReadyCheckStartedEvent } from './gateway/events/tournament/tournament-ready-check-started.event';
+import { Dota_GameMode } from './gateway/shared-types/dota-game-mode';
 
 describe('TournamentService', () => {
   jest.setTimeout(60000);
@@ -15,7 +16,9 @@ describe('TournamentService', () => {
 
   const collectEvents = () => {
     const collectedEvents: any[] = [];
-    const obs = te.ebus.pipe(tap(evt => collectedEvents.push(evt))).subscribe();
+    const obs = te.ebus
+      .pipe(tap((evt) => collectedEvents.push(evt)))
+      .subscribe();
 
     return () => {
       obs.unsubscribe();
@@ -36,10 +39,14 @@ describe('TournamentService', () => {
         description: 'Test tournament',
         startDate: new Date().toISOString(),
         imageUrl: 'img',
+        gameMode: Dota_GameMode.CAPTAINS_MODE,
         strategy: 'SINGLE_ELIMINATION',
         roundBestOf: rbo,
         finalBestOf: fbo,
         grandFinalBestOf: gfbo,
+
+        gameDurationSeconds: 50 * 60,
+        gameBreakDurationSeconds: 10 * 60,
       })
       .expect(201);
 
@@ -189,7 +196,7 @@ describe('TournamentService', () => {
     const readyCheckEvents = collectEvents$();
     expect(
       readyCheckEvents.filter(
-        t => t instanceof TournamentReadyCheckStartedEvent,
+        (t) => t instanceof TournamentReadyCheckStartedEvent,
       ).length,
     ).toBeGreaterThanOrEqual(4);
 
@@ -206,8 +213,9 @@ describe('TournamentService', () => {
     await finishReadyCheck(tournamentId);
     const timedOutEvents = collectEvents$();
     expect(
-      timedOutEvents.filter(t => t instanceof TournamentReadyCheckDeclinedEvent)
-        .length,
+      timedOutEvents.filter(
+        (t) => t instanceof TournamentReadyCheckDeclinedEvent,
+      ).length,
     ).toEqual(2);
 
     // Generate bracket and check that its correct

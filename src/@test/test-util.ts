@@ -1,6 +1,7 @@
 import { TestEnvironment, testUser } from './useFullModule';
 import {
   BestOfStrategy,
+  ScheduleStrategy,
   TournamentEntity,
 } from '../db/entity/tournament.entity';
 import {
@@ -15,6 +16,7 @@ import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-parti
 import { TournamentService } from '../service/tournament.service';
 import { ParticipationService } from '../service/participation.service';
 import { BracketService } from '../service/bracket.service';
+import { Dota_GameMode } from '../gateway/shared-types/dota-game-mode';
 
 export const BestOfOne: BestOfStrategy = {
   round: 1,
@@ -30,6 +32,11 @@ export const createTournament = (
   round = 1,
   final = 1,
   grandFinal = 1,
+  gameMode = Dota_GameMode.CAPTAINS_MODE,
+  scheduleStrategy: ScheduleStrategy = {
+    gameBreakDurationSeconds: 60 * 10,
+    gameDurationSeconds: 60 * 50,
+  },
 ) => {
   const tour = new TournamentEntity(
     teamSize,
@@ -43,6 +50,8 @@ export const createTournament = (
       final,
       grandFinal,
     },
+    gameMode,
+    scheduleStrategy,
   );
   tour.state = state;
   return te.repo(TournamentEntity).save(tour);
@@ -61,7 +70,7 @@ export const createTournamentRegistration = async (
     .repo(TournamentRegistrationPlayerEntity)
     .save(
       players.map(
-        plr => new TournamentRegistrationPlayerEntity(plr, reg.id, state),
+        (plr) => new TournamentRegistrationPlayerEntity(plr, reg.id, state),
       ),
     );
   return reg;
@@ -101,50 +110,53 @@ export const createTournamentWithParticipants = async (
 };
 
 export const createNativeTournament = async (
-         te: TestEnvironment,
-         bestOf: BestOfStrategy = {
-           round: 1,
-           final: 1,
-           grandFinal: 1,
-         },
-         pc = 4,
-       ) => {
-         const ts = te.service(TournamentService);
-         // Create tournament
-         const t = await ts.createTournament(
-           1,
-           Math.random().toString(),
-           BracketType.SINGLE_ELIMINATION,
-           '123',
-           '123',
-           new Date(),
-           bestOf,
-         );
+  te: TestEnvironment,
+  bestOf: BestOfStrategy = {
+    round: 1,
+    final: 1,
+    grandFinal: 1,
+  },
+  pc = 4,
+) => {
+  const ts = te.service(TournamentService);
+  // Create tournament
+  const t = await ts.createTournament(
+    1,
+    Math.random().toString(),
+    BracketType.SINGLE_ELIMINATION,
+    '123',
+    '123',
+    new Date(),
+    bestOf,
+    Dota_GameMode.CAPTAINS_MODE,
+    {
+      gameDurationSeconds: 60 * 50,
+      gameBreakDurationSeconds: 60 * 10,
+    },
+  );
 
-         // Publish
-         await ts.publish(t.id);
+  // Publish
+  await ts.publish(t.id);
 
-         // Register
-         const steamIds = Array.from({ length: pc }, testUser);
-         for (let i = 0; i < pc; i++) {
-           await te
-             .service(ParticipationService)
-             .registerAsParty(t.id, [steamIds[i]]);
-         }
+  // Register
+  const steamIds = Array.from({ length: pc }, testUser);
+  for (let i = 0; i < pc; i++) {
+    await te.service(ParticipationService).registerAsParty(t.id, [steamIds[i]]);
+  }
 
-         // Confirm ready check
-         await ts.startReadyCheck(t.id);
-         for (let i = 0; i < pc; i++) {
-           await te
-             .service(ParticipationService)
-             .setRegistrationConfirmed(
-               t.id,
-               steamIds[i],
-               TournamentRegistrationState.CONFIRMED,
-             );
-         }
+  // Confirm ready check
+  await ts.startReadyCheck(t.id);
+  for (let i = 0; i < pc; i++) {
+    await te
+      .service(ParticipationService)
+      .setRegistrationConfirmed(
+        t.id,
+        steamIds[i],
+        TournamentRegistrationState.CONFIRMED,
+      );
+  }
 
-         await ts.finishReadyCheck(t.id);
-         await te.service(BracketService).generateBracket(t.id);
-         return ts.getFullTournament(t.id);
-       };
+  await ts.finishReadyCheck(t.id);
+  await te.service(BracketService).generateBracket(t.id);
+  return ts.getFullTournament(t.id);
+};

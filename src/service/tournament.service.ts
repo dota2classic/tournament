@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import {
   BestOfStrategy,
+  ScheduleStrategy,
   TournamentEntity,
 } from '../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -26,6 +27,7 @@ import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-parti
 import { EventBus } from '@nestjs/cqrs';
 import { TournamentReadyCheckStartedEvent } from '../gateway/events/tournament/tournament-ready-check-started.event';
 import { TournamentReadyCheckDeclinedEvent } from '../gateway/events/tournament/tournament-ready-check-declined.event';
+import { Dota_GameMode } from '../gateway/shared-types/dota-game-mode';
 
 @Injectable()
 export class TournamentService {
@@ -126,6 +128,8 @@ export class TournamentService {
     imageUrl: string,
     startDate: Date,
     bestOfConfig: BestOfStrategy,
+    gameMode: Dota_GameMode,
+    scheduleStrategy: ScheduleStrategy,
   ) {
     if (teamSize > 5 || teamSize <= 0) {
       throw new BadRequestException('Team size must be > 0 and <= 5');
@@ -140,6 +144,8 @@ export class TournamentService {
         imageUrl,
         startDate,
         bestOfConfig,
+        gameMode,
+        scheduleStrategy,
       ),
     );
     return this.getFullTournament(t.id);
@@ -159,6 +165,12 @@ export class TournamentService {
       updateDto.teamSize = dto.teamSize;
       updateDto.startDate = new Date(dto.startDate);
       updateDto.strategy = dto.strategy;
+      updateDto.gameMode = dto.gameMode;
+      updateDto.scheduleStrategy = t.scheduleStrategy;
+      Object.assign(updateDto.scheduleStrategy, {
+        gameBreakDurationSeconds: dto.gameBreakDurationSeconds,
+        gameDurationSeconds: dto.gameDurationSeconds,
+      });
 
       updateDto.bestOfConfig = t.bestOfConfig;
       Object.assign(updateDto.bestOfConfig, {

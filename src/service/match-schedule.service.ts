@@ -38,15 +38,11 @@ export class MatchScheduleService {
     private readonly ds: DataSource,
     private readonly ebus: EventBus,
     @InjectRepository(BracketMatchEntity)
-    private readonly bracketMatchEntityRepository: Repository<
-      BracketMatchEntity
-    >,
+    private readonly bracketMatchEntityRepository: Repository<BracketMatchEntity>,
     @InjectRepository(StageEntity)
     private readonly stageEntityRepository: Repository<StageEntity>,
     @InjectRepository(BracketMatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<
-      BracketMatchGameEntity
-    >,
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
     private readonly manager: BracketsManager,
     @InjectRepository(TournamentEntity)
     private readonly tournamentRepository: Repository<TournamentEntity>,
@@ -64,7 +60,7 @@ export class MatchScheduleService {
     await this.redlock.withLock(
       ['tournament-schedule-matches'],
       30_000,
-      async signal => {
+      async (signal) => {
         this.logger.log('Checking games for schedule using lock');
         const gamesToSchedule = await this.gameRepository
           .createQueryBuilder('gm')
@@ -124,9 +120,10 @@ export class MatchScheduleService {
      */
 
     const tournamentStartDate = tournament.startDate;
-    await this.ds.transaction(async tx => {
+
+    await this.ds.transaction(async (tx) => {
       await Promise.all(
-        readyMatches.map(match =>
+        readyMatches.map((match) =>
           this.tryRescheduleMatch(match, tournamentStartDate, tx),
         ),
       );
@@ -253,41 +250,6 @@ export class MatchScheduleService {
     await this.updateParentMatches(match, matchEndTime, tx);
   }
 
-  private async updateParentMatches(
-    match: BracketMatchEntity,
-    startTime: Date,
-    tx: EntityManager,
-  ) {
-    // Update parents
-    const parentMatches = await this.getParentMatches(match);
-    await Promise.all(
-      parentMatches.map(match => this.tryRescheduleMatch(match, startTime, tx)),
-    );
-  }
-
-  private async getParentMatches(
-    match: BracketMatchEntity,
-  ): Promise<BracketMatchEntity[]> {
-    const stage = await this.stageEntityRepository.findOneBy({
-      id: match.stage_id,
-    });
-
-    // @ts-ignore
-    const {
-      roundNumber,
-      roundCount,
-      // @ts-ignore
-    } = await this.manager.update.getRoundPositionalInfo(match.round_id);
-    // @ts-ignore
-    return await this.manager.update.getNextMatches(
-      match,
-      'single_bracket',
-      stage,
-      roundNumber,
-      roundCount,
-    );
-  }
-
   public async submitGameToLaunch(gameId: string) {
     const game = await this.matchGameEntityRepository.findOneBy({ id: gameId });
     if (!game) {
@@ -301,7 +263,7 @@ export class MatchScheduleService {
     const players: MatchPlayer[] = [];
 
     const participants = await Promise.all(
-      [game.opponent1, game.opponent2].map(it =>
+      [game.opponent1, game.opponent2].map((it) =>
         this.participantEntityRepository.findOne({
           where: {
             id: Number(it.id),
@@ -350,6 +312,43 @@ export class MatchScheduleService {
       {
         gameserverScheduled: true,
       },
+    );
+  }
+
+  private async getParentMatches(
+    match: BracketMatchEntity,
+  ): Promise<BracketMatchEntity[]> {
+    const stage = await this.stageEntityRepository.findOneBy({
+      id: match.stage_id,
+    });
+
+    // @ts-ignore
+    const {
+      roundNumber,
+      roundCount,
+      // @ts-ignore
+    } = await this.manager.update.getRoundPositionalInfo(match.round_id);
+    // @ts-ignore
+    return await this.manager.update.getNextMatches(
+      match,
+      'single_bracket',
+      stage,
+      roundNumber,
+      roundCount,
+    );
+  }
+
+  private async updateParentMatches(
+    match: BracketMatchEntity,
+    startTime: Date,
+    tx: EntityManager,
+  ) {
+    // Update parents
+    const parentMatches = await this.getParentMatches(match);
+    await Promise.all(
+      parentMatches.map((match) =>
+        this.tryRescheduleMatch(match, startTime, tx),
+      ),
     );
   }
 

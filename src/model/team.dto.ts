@@ -1,4 +1,3 @@
-import { FullTournamentDto } from './tournament.dto';
 
 export class CreateTeamDto {
   public readonly name: string;

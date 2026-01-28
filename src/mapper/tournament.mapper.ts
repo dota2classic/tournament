@@ -43,6 +43,7 @@ export class TournamentMapper {
       status: t.state,
       strategy: t.strategy,
       bestOfStrategy: t.bestOfConfig,
+      gameMode: t.gameMode,
 
       description: t.description,
       startDate: t.startDate.toISOString(),
