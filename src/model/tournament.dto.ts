@@ -78,7 +78,6 @@ export class UpdateTournamentDto {
   grandFinalBestOf?: number;
 }
 
-
 export class UpdateTournamentStatusDto {
   status: TournamentStatus;
 }
@@ -116,8 +115,8 @@ export class TournamentDto {
          @ApiProperty({ enum: TournamentStatus, enumName: 'TournamentStatus' })
          status: TournamentStatus;
 
-         @ApiProperty({ enum: BracketType, e;numName: 'BracketType' })
-        ; strategy: BracketType;
+         @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
+         strategy: BracketType;
 
          bestOfStrategy: BestOfStrategy;
 
