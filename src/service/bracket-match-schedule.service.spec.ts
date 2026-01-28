@@ -103,8 +103,8 @@ describe('BracketMatchService', () => {
     bj.match.sort((a, b) => a.id - b.id);
 
     // When we update match in round 3, only finals should update
-    const final = bj.round.find(t => t.number === 2);
-    const finalMatch = bj.match.find(m => m.round_id === final.id);
+    const final = bj.round.find((t) => t.number === 2);
+    const finalMatch = bj.match.find((m) => m.round_id === final.id);
     await service.updateScheduleGameFinished(finalMatch, 1);
 
     // Then
@@ -148,8 +148,8 @@ describe('BracketMatchService', () => {
     bj.match.sort((a, b) => a.id - b.id);
 
     // When we update match in round 3, only finals should update
-    const thirdRound = bj.round.find(t => t.number === 3);
-    const thirdRoundMatch = bj.match.find(m => m.round_id === thirdRound.id);
+    const thirdRound = bj.round.find((t) => t.number === 3);
+    const thirdRoundMatch = bj.match.find((m) => m.round_id === thirdRound.id);
 
     await service.updateScheduleGameFinished(thirdRoundMatch, 1);
 
@@ -159,7 +159,7 @@ describe('BracketMatchService', () => {
     // Only final is scheduled
     expect(bj.match[bj.match.length - 1].scheduledDate).toBeTruthy();
 
-    expect(bj.match.filter(t => t.scheduledDate)).toHaveLength(1);
+    expect(bj.match.filter((t) => t.scheduledDate)).toHaveLength(1);
   });
 
   it('should do initial scheduling for simple bo-1 tournaments', async () => {
@@ -177,25 +177,29 @@ describe('BracketMatchService', () => {
     const bj = await te
       .service(BracketCrud)
       .getBracket(tournament.id)
-      .then(t => mapper.mapBracket(t, tournament));
+      .then((t) => mapper.mapBracket(t, tournament));
 
     // Matches in first round start when tournament starts
-    expect(bj.winning[0].seeds[0].scheduledDate).toEqual(tournament.startDate);
-    expect(bj.winning[0].seeds[0].games[0].scheduledDate).toEqual(
-      tournament.startDate,
+    expect(bj.winning[0].seeds[0].scheduledDate).toEqual(
+      tournament.startDate.toISOString(),
     );
-    expect(bj.winning[0].seeds[1].scheduledDate).toEqual(tournament.startDate);
+    expect(bj.winning[0].seeds[0].games[0].scheduledDate).toEqual(
+      tournament.startDate.toISOString(),
+    );
+    expect(bj.winning[0].seeds[1].scheduledDate).toEqual(
+      tournament.startDate.toISOString(),
+    );
     expect(bj.winning[0].seeds[1].games[0].scheduledDate).toEqual(
-      tournament.startDate,
+      tournament.startDate.toISOString(),
     );
 
     // Matches in second round always start later
-    expect(bj.winning[1].seeds[0].scheduledDate.getTime()).toBeGreaterThan(
-      bj.winning[0].seeds[0].scheduledDate.getTime(),
-    );
     expect(
-      bj.winning[1].seeds[0].games[0].scheduledDate.getTime(),
-    ).toBeGreaterThan(bj.winning[0].seeds[0].scheduledDate.getTime());
+      new Date(bj.winning[1].seeds[0].scheduledDate).getTime(),
+    ).toBeGreaterThan(new Date(bj.winning[0].seeds[0].scheduledDate).getTime());
+    expect(
+      new Date(bj.winning[1].seeds[0].games[0].scheduledDate).getTime(),
+    ).toBeGreaterThan(new Date(bj.winning[0].seeds[0].scheduledDate).getTime());
   });
 
   it('should do initial scheduling for best-of-3 tournaments', async () => {
@@ -213,31 +217,37 @@ describe('BracketMatchService', () => {
     const bj = await te
       .service(BracketCrud)
       .getBracket(tournament.id)
-      .then(t => mapper.mapBracket(t, tournament));
+      .then((t) => mapper.mapBracket(t, tournament));
 
     // Matches in first round start when tournament starts
-    expect(bj.winning[0].seeds[0].scheduledDate).toEqual(tournament.startDate);
-    expect(bj.winning[0].seeds[0].games[0].scheduledDate).toEqual(
-      tournament.startDate,
+    expect(bj.winning[0].seeds[0].scheduledDate).toEqual(
+      tournament.startDate.toISOString(),
     );
-    expect(bj.winning[0].seeds[1].scheduledDate).toEqual(tournament.startDate);
+    expect(bj.winning[0].seeds[0].games[0].scheduledDate).toEqual(
+      tournament.startDate.toISOString(),
+    );
+    expect(bj.winning[0].seeds[1].scheduledDate).toEqual(
+      tournament.startDate.toISOString(),
+    );
     expect(bj.winning[0].seeds[1].games[0].scheduledDate).toEqual(
-      tournament.startDate,
+      tournament.startDate.toISOString(),
     );
 
     // Matches in second round always start later
-    expect(bj.winning[1].seeds[0].scheduledDate.getTime()).toBeGreaterThan(
-      bj.winning[0].seeds[0].scheduledDate.getTime(),
-    );
     expect(
-      bj.winning[1].seeds[0].games[0].scheduledDate.getTime(),
-    ).toBeGreaterThan(bj.winning[0].seeds[0].scheduledDate.getTime());
+      new Date(bj.winning[1].seeds[0].scheduledDate).getTime(),
+    ).toBeGreaterThan(new Date(bj.winning[0].seeds[0].scheduledDate).getTime());
+    expect(
+      new Date(bj.winning[1].seeds[0].games[0].scheduledDate).getTime(),
+    ).toBeGreaterThan(new Date(bj.winning[0].seeds[0].scheduledDate).getTime());
 
-    let previousScheduleDate: number = bj.winning[0].seeds[0].scheduledDate.getTime();
+    let previousScheduleDate: number = new Date(
+      bj.winning[0].seeds[0].scheduledDate,
+    ).getTime();
     for (let i = 0; i < 3; i++) {
-      const gameScheduleTime = bj.winning[1].seeds[0].games[
-        i
-      ].scheduledDate.getTime();
+      const gameScheduleTime = new Date(
+        bj.winning[1].seeds[0].games[i].scheduledDate,
+      ).getTime();
       expect(gameScheduleTime).toBeGreaterThan(previousScheduleDate);
       previousScheduleDate = gameScheduleTime;
     }
