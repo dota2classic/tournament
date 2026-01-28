@@ -2,9 +2,9 @@ import { useFullModule } from '../@test/useFullModule';
 import { BracketMatchService } from './bracket-match.service';
 import { createNativeTournament } from '../@test/test-util';
 import { BracketsManager } from 'brackets-manager';
-import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { Status } from 'brackets-model';
 import { StageEntity } from '../db/entity/stage.entity';
+import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 
 describe('BracketMatchService', () => {
   const te = useFullModule();
@@ -24,21 +24,25 @@ describe('BracketMatchService', () => {
       .repo(StageEntity)
       .findOneBy({ tournament_id: tournament.id });
 
-    const firstMatch = await te.repo(BracketMatchGameEntity).findOne({
+
+    const firstMatch = await te.repo(BracketMatchEntity).findOne({
       where: {
-        stage_id: stage.id,
+        stage_id: stage.id,,
       },
       order: {
-        id: 'ASC',
+        number: 'ASC',
       },
+      relations: ['games'],
     });
 
+    const firstGame = firstMatch.games[0]
+
     // When
-    await service.setGameWinner(firstMatch.id, firstMatch.opponent1.id);
+    await service.setGameWinner(firstGame.id, firstGame.opponent1.id);
 
     // Then
     const m = await bm.storage.selectFirst('match', {
-      id: firstMatch.parent_id,
+      id: firstMatch.id,
       stage_id: stage.id,
     });
 
