@@ -1,9 +1,22 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { BestOfStrategy, TournamentEntity } from '../db/entity/tournament.entity';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  BestOfStrategy,
+  TournamentEntity,
+} from '../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
-import { BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
-import { TournamentRegistrationState, UpdateTournamentDto } from '../model/tournament.dto';
+import {
+  BracketType,
+  TournamentStatus,
+} from '../gateway/shared-types/tournament';
+import {
+  TournamentRegistrationState,
+  UpdateTournamentDto,
+} from '../model/tournament.dto';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { typeormBulkUpdate } from '../util/typeorm-bulk-update';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
@@ -40,7 +53,7 @@ export class TournamentService {
       );
     }
 
-    const notifyPlayers = await this.ds.transaction(async tx => {
+    const notifyPlayers = await this.ds.transaction(async (tx) => {
       // Change tournament state
       await tx.update(
         TournamentEntity,
@@ -63,7 +76,9 @@ export class TournamentService {
       await tx.update<TournamentRegistrationPlayerEntity>(
         TournamentRegistrationPlayerEntity,
         {
-          tournamentRegistrationId: In(tournament.registrations.map(t => t.id)),
+          tournamentRegistrationId: In(
+            tournament.registrations.map((t) => t.id),
+          ),
         },
         {
           state: TournamentRegistrationState.PENDING_CONFIRMATION,
@@ -75,7 +90,7 @@ export class TournamentService {
         {
           where: {
             tournamentRegistrationId: In(
-              tournament.registrations.map(t => t.id),
+              tournament.registrations.map((t) => t.id),
             ),
             state: TournamentRegistrationState.PENDING_CONFIRMATION,
           },
@@ -85,7 +100,8 @@ export class TournamentService {
 
     this.ebus.publishAll(
       notifyPlayers.map(
-        plr => new TournamentReadyCheckStartedEvent(tournamentId, plr.steamId),
+        (plr) =>
+          new TournamentReadyCheckStartedEvent(tournamentId, plr.steamId),
       ),
     );
 
@@ -141,7 +157,7 @@ export class TournamentService {
 
     if (t.state === TournamentStatus.DRAFT) {
       updateDto.teamSize = dto.teamSize;
-      updateDto.startDate = dto.startDate;
+      updateDto.startDate = new Date(dto.startDate);
       updateDto.strategy = dto.strategy;
 
       updateDto.bestOfConfig = t.bestOfConfig;
@@ -152,9 +168,12 @@ export class TournamentService {
       } satisfies BestOfStrategy);
     }
 
-    await this.tournamentEntityRepository.update({
-      id,
-    }, updateDto);
+    await this.tournamentEntityRepository.update(
+      {
+        id,
+      },
+      updateDto,
+    );
 
     return this.getFullTournament(id);
   }
@@ -192,49 +211,50 @@ export class TournamentService {
     }
 
     // For
-    const updatedRegistrations = tournament.registrations.map(registration => {
-      let isReady = true;
-      for (let player of registration.players) {
-        if (player.state === TournamentRegistrationState.CONFIRMED) {
-          continue;
+    const updatedRegistrations = tournament.registrations.map(
+      (registration) => {
+        let isReady = true;
+        for (let player of registration.players) {
+          if (player.state === TournamentRegistrationState.CONFIRMED) {
+            continue;
+          }
+
+          isReady = false;
+          if (
+            player.state === TournamentRegistrationState.PENDING_CONFIRMATION ||
+            player.state === TournamentRegistrationState.CREATED
+          ) {
+            player.state = TournamentRegistrationState.TIMED_OUT;
+          }
         }
 
-        isReady = false;
-        if (
-          player.state === TournamentRegistrationState.PENDING_CONFIRMATION ||
-          player.state === TournamentRegistrationState.CREATED
-        ) {
-          player.state = TournamentRegistrationState.TIMED_OUT;
+        registration.state = isReady
+          ? TournamentRegistrationState.CONFIRMED
+          : TournamentRegistrationState.DECLINED;
+
+        if (!isReady) {
+          this.ebus.publishAll(
+            registration.players.map(
+              (plr) =>
+                new TournamentReadyCheckDeclinedEvent(
+                  tournamentId,
+                  registration.id,
+                  plr.steamId,
+                ),
+            ),
+          );
         }
-      }
 
-      registration.state = isReady
-        ? TournamentRegistrationState.CONFIRMED
-        : TournamentRegistrationState.DECLINED;
+        return registration;
+      },
+    );
 
-      if (!isReady) {
-        this.ebus.publishAll(
-          registration.players.map(
-            plr =>
-              new TournamentReadyCheckDeclinedEvent(
-                tournamentId,
-                registration.id,
-                plr.steamId,
-              ),
-          ),
-        );
-      }
-
-      return registration;
-    });
-
-    await this.ds.transaction(async tx => {
-      const players: TournamentRegistrationPlayerEntity[] = updatedRegistrations.flatMap(
-        t => t.players,
-      );
+    await this.ds.transaction(async (tx) => {
+      const players: TournamentRegistrationPlayerEntity[] =
+        updatedRegistrations.flatMap((t) => t.players);
       // Bulk update players
       if (players.length > 0) {
-        const batches: unknown[][] = players.map(plr => [
+        const batches: unknown[][] = players.map((plr) => [
           plr.steamId,
           plr.tournamentRegistrationId,
           plr.state,
@@ -257,7 +277,7 @@ WHERE c.steam_id = trp.steam_id
 
       // Bulk update registrations
       if (updatedRegistrations.length > 0) {
-        const batches = updatedRegistrations.map(reg => [reg.id, reg.state]);
+        const batches = updatedRegistrations.map((reg) => [reg.id, reg.state]);
         const [parameters, placeholder] = typeormBulkUpdate(batches);
 
         await tx.query(
@@ -305,7 +325,7 @@ WHERE tr.id = c.id::int;
     const tournament = await this.getFullTournament(tournamentId);
 
     const confirmedParties = tournament.registrations.filter(
-      t => t.state === TournamentRegistrationState.CONFIRMED,
+      (t) => t.state === TournamentRegistrationState.CONFIRMED,
     );
 
     // Fill ;participants
@@ -314,7 +334,7 @@ WHERE tr.id = c.id::int;
       tournament.teamSize,
     );
 
-    await this.ds.transaction(async tx => {
+    await this.ds.transaction(async (tx) => {
       // Create participants
       for (const participantCfg of participants) {
         // Create root entity
@@ -326,7 +346,7 @@ WHERE tr.id = c.id::int;
         await tx.save(
           TournamentParticipantPlayerEntity,
           participantCfg.players.map(
-            steamId =>
+            (steamId) =>
               new TournamentParticipantPlayerEntity(participant.id, steamId),
           ),
         );
@@ -355,15 +375,15 @@ WHERE tr.id = c.id::int;
     // Fill full
     participations.push(
       ...registrations
-        .filter(t => t.players.length === teamSize)
-        .map(it => ({
+        .filter((t) => t.players.length === teamSize)
+        .map((it) => ({
           teamId: it.teamId,
-          players: it.players.map(t => t.steamId),
+          players: it.players.map((t) => t.steamId),
         })),
     );
 
     // Merge partial
-    const partials = registrations.filter(t => t.players.length < teamSize);
+    const partials = registrations.filter((t) => t.players.length < teamSize);
     const { teams, leftovers } = this.mergePartials(partials);
 
     for (let team of teams) {
@@ -375,11 +395,12 @@ WHERE tr.id = c.id::int;
     return participations;
   }
 
-  private mergePartials(
-    partials: TournamentRegistrationEntity[],
-  ): { teams: string[][]; leftovers: string[] } {
+  private mergePartials(partials: TournamentRegistrationEntity[]): {
+    teams: string[][];
+    leftovers: string[];
+  } {
     const { teams, leftovers } = minimizeLeftovers(
-      partials.map(t => t.players.map(p => p.steamId)),
+      partials.map((t) => t.players.map((p) => p.steamId)),
       5,
     );
     return {

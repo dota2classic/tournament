@@ -31,9 +31,7 @@ export class TournamentMapper {
     private readonly teamEntityRepository: Repository<TeamEntity>,
     private readonly teamMapper: TeamMapper,
     @InjectRepository(BracketMatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<
-      BracketMatchGameEntity
-    >,
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
   ) {}
 
   public mapTournament = (t: TournamentEntity): TournamentDto => {
@@ -47,7 +45,7 @@ export class TournamentMapper {
       bestOfStrategy: t.bestOfConfig,
 
       description: t.description,
-      startDate: t.startDate,
+      startDate: t.startDate.toISOString(),
       registrations: t.registrations.map(this.mapRegistration),
     };
   };
@@ -57,7 +55,7 @@ export class TournamentMapper {
   ): RegistrationDto => ({
     id: t.id,
     state: t.state,
-    players: t.players.map(t => ({
+    players: t.players.map((t) => ({
       steamId: t.steamId,
       state: t.state,
     })),
@@ -78,7 +76,7 @@ export class TournamentMapper {
 
     return {
       id: Number(opp.id),
-      players: rr.players.map(t => t.steamId),
+      players: rr.players.map((t) => t.steamId),
       score: opp.score,
       result: opp.result,
     };
@@ -100,7 +98,7 @@ export class TournamentMapper {
       games: await Promise.all(games.map(this.mapTournamentMatchGame)),
       ch: match.child_count,
       id: match.id,
-      scheduledDate: match.scheduledDate,
+      scheduledDate: match.scheduledDate.toISOString(),
       number: match.number,
       status: match.status,
     };
@@ -158,7 +156,7 @@ export class TournamentMapper {
       gameId: game.id,
       bracketMatchId: game.parent_id,
       externalMatchId: game.externalMatchId,
-      scheduledDate: game.scheduledDate,
+      scheduledDate: game.scheduledDate.toISOString(),
       teamOffset: game.teamOffset,
       number: game.number,
       status: game.status,

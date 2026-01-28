@@ -53,7 +53,7 @@ export class CreateTournamentDto {
   name: string;
   teamSize: number;
   description: string;
-  startDate: Date;
+  startDate: string;
   imageUrl: string;
 
   @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
@@ -68,7 +68,7 @@ export class UpdateTournamentDto {
   description?: string;
 
   teamSize?: number;
-  startDate?: Date;
+  startDate?: string;
   imageUrl?: string;
 
   @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
@@ -120,7 +120,7 @@ export class TournamentDto {
 
   bestOfStrategy: BestOfStrategy;
 
-  startDate: Date;
+  startDate: string;
   description: string;
   registrations: RegistrationDto[];
 }
@@ -157,7 +157,7 @@ export class MatchGameDto {
   gameId: string;
   bracketMatchId: number;
   externalMatchId?: number;
-  scheduledDate?: Date;
+  scheduledDate?: string;
   teamOffset: number;
   number: number;
   @ApiProperty({ enum: MatchStatus, enumName: 'MatchStatus' })
@@ -172,7 +172,7 @@ export class SeedDto {
   @ApiProperty({ enum: MatchStatus, enumName: 'MatchStatus' })
   status: MatchStatus;
   id: number;
-  scheduledDate: Date;
+  scheduledDate: string;
   number: number;
   ch: number;
 }
