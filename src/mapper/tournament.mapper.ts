@@ -40,8 +40,12 @@ export class TournamentMapper {
     return {
       id: t.id,
       name: t.name,
-      status: t.state,
       imageUrl: t.imageUrl,
+      teamSize: t.teamSize,
+      status: t.state,
+      strategy: t.strategy,
+      bestOfStrategy: t.bestOfConfig,
+
       description: t.description,
       startDate: t.startDate,
       registrations: t.registrations.map(this.mapRegistration),

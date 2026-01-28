@@ -3,6 +3,7 @@ import { TeamDto } from './team.dto';
 import { Result as OpponentResult } from 'brackets-model/dist/unions';
 import { Status as MatchStatus } from 'brackets-model';
 import { ApiProperty } from '@nestjs/swagger';
+import { BestOfStrategy } from '../db/entity/tournament.entity';
 
 /**
  * Состояние регистрации на турнир.
@@ -106,15 +107,24 @@ export class RegistrationDto {
 }
 
 export class TournamentDto {
-  id: number;
-  name: string;
-  @ApiProperty({ enum: TournamentStatus, enumName: 'TournamentStatus' })
-  status: TournamentStatus;
-  startDate: Date;
-  imageUrl: string;
-  description: string;
-  registrations: RegistrationDto[];
-}
+         id: number;
+         name: string;
+         imageUrl: string;
+
+         teamSize: number;
+
+         @ApiProperty({ enum: TournamentStatus, enumName: 'TournamentStatus' })
+         status: TournamentStatus;
+
+         @ApiProperty({ enum: BracketType, e;numName: 'BracketType' })
+        ; strategy: BracketType;
+
+         bestOfStrategy: BestOfStrategy;
+
+         startDate: Date;
+         description: string;
+         registrations: RegistrationDto[];
+       }
 
 export class TournamentStandingDto {
   steam_id?: string;

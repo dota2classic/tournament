@@ -4,6 +4,14 @@ import { ParticipantEntity } from './participant.entity';
 import { TournamentRegistrationEntity } from './tournament-registration.entity';
 import { StageEntity } from './stage.entity';
 
+
+export class BestOfStrategy {
+  round: number;
+  final: number;
+  grandFinal: number;
+}
+
+
 @Entity('tournament')
 export class TournamentEntity {
   @PrimaryGeneratedColumn()
@@ -99,12 +107,6 @@ export class TournamentEntity {
     this.startDate = startDate;
     this.bestOfConfig = bestOfConfig;
   }
-}
-
-export interface BestOfStrategy {
-  round: number;
-  final: number;
-  grandFinal: number;
 }
 
 export interface ScheduleStrategy {
