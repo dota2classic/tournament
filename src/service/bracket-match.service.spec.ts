@@ -24,10 +24,9 @@ describe('BracketMatchService', () => {
       .repo(StageEntity)
       .findOneBy({ tournament_id: tournament.id });
 
-
     const firstMatch = await te.repo(BracketMatchEntity).findOne({
       where: {
-        stage_id: stage.id,,
+        stage_id: stage.id,
       },
       order: {
         number: 'ASC',
@@ -35,7 +34,7 @@ describe('BracketMatchService', () => {
       relations: ['games'],
     });
 
-    const firstGame = firstMatch.games[0]
+    const firstGame = firstMatch.games[0];
 
     // When
     await service.setGameWinner(firstGame.id, firstGame.opponent1.id);
