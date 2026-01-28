@@ -3,7 +3,7 @@ import { TeamDto } from './team.dto';
 import { Result as OpponentResult } from 'brackets-model/dist/unions';
 import { Status as MatchStatus } from 'brackets-model';
 import { ApiProperty } from '@nestjs/swagger';
-import { BestOfStrategy } from '../db/entity/tournament.entity';
+import { BestOfStrategy, ScheduleStrategy } from '../db/entity/tournament.entity';
 import { Dota_GameMode } from '../gateway/shared-types/dota-game-mode';
 
 /**
@@ -125,9 +125,12 @@ export class TournamentDto {
   strategy: BracketType;
 
   bestOfStrategy: BestOfStrategy;
+  scheduleStrategy: ScheduleStrategy;
 
   @ApiProperty({ enum: Dota_GameMode, enumName: 'Dota_GameMode' })
   gameMode: Dota_GameMode;
+
+
 
   startDate: string;
   description: string;

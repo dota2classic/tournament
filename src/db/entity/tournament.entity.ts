@@ -21,6 +21,11 @@ export class BestOfStrategy {
   grandFinal: number;
 }
 
+export class ScheduleStrategy {
+  gameDurationSeconds: number;
+  gameBreakDurationSeconds: number;
+}
+
 @Entity('tournament')
 export class TournamentEntity {
   @PrimaryGeneratedColumn()
@@ -116,9 +121,4 @@ export class TournamentEntity {
     this.gameMode = gameMode;
     this.scheduleStrategy = scheduleStrategy;
   }
-}
-
-export interface ScheduleStrategy {
-  gameDurationSeconds: number;
-  gameBreakDurationSeconds: number;
 }

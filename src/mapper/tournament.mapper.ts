@@ -48,6 +48,7 @@ export class TournamentMapper {
       description: t.description,
       startDate: t.startDate.toISOString(),
       registrations: t.registrations.map(this.mapRegistration),
+      scheduleStrategy: t.scheduleStrategy,
     };
   };
 
