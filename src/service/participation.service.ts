@@ -9,22 +9,20 @@ import { DataSource, Repository } from 'typeorm';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { TournamentRegistrationState } from '../model/tournament.dto';
+import { TournamentEntity } from '../db/entity/tournament.entity';
+import { TournamentStatus } from '../gateway/shared-types/tournament';
 
 @Injectable()
 export class ParticipationService {
   constructor(
     @InjectRepository(ParticipantEntity)
-    private readonly tournamentParticipantEntityRepository: Repository<
-      ParticipantEntity
-    >,
+    private readonly tournamentParticipantEntityRepository: Repository<ParticipantEntity>,
     @InjectRepository(TournamentRegistrationEntity)
-    private readonly tournamentRegistrationEntityRepository: Repository<
-      TournamentRegistrationEntity
-    >,
+    private readonly tournamentRegistrationEntityRepository: Repository<TournamentRegistrationEntity>,
     @InjectRepository(TournamentRegistrationPlayerEntity)
-    private readonly tournamentRegistrationPlayerEntityRepository: Repository<
-      TournamentRegistrationPlayerEntity
-    >,
+    private readonly tournamentRegistrationPlayerEntityRepository: Repository<TournamentRegistrationPlayerEntity>,
+    @InjectRepository(TournamentEntity)
+    private readonly tournamentEntityRepository: Repository<TournamentEntity>,
     private readonly ds: DataSource,
   ) {}
 
@@ -32,7 +30,7 @@ export class ParticipationService {
     tournamentId: number,
     steamIds: string[],
   ): Promise<TournamentRegistrationEntity> {
-    return await this.ds.transaction(async tx => {
+    return await this.ds.transaction(async (tx) => {
       const alreadyRegistered = await tx
         .createQueryBuilder()
         .select('trp.steam_id', 'steam_id')
@@ -49,17 +47,38 @@ export class ParticipationService {
       if (alreadyRegistered.length > 0) {
         throw new BadRequestException(
           `Игроки ${alreadyRegistered.map(
-            t => t.steam_id,
+            (t) => t.steam_id,
           )} уже зарегистрированы`,
         );
       }
 
-      const reg = await tx.save(new TournamentRegistrationEntity(tournamentId));
+      const tournamentState = await this.tournamentEntityRepository.findOneBy({
+        id: tournamentId,
+      });
+
+      let startingState: TournamentRegistrationState =
+        TournamentRegistrationState.CREATED;
+      if (tournamentState.state === TournamentStatus.READY_CHECK) {
+        startingState = TournamentRegistrationState.PENDING_CONFIRMATION;
+      }
+
+      const reg = await tx.save(
+        new TournamentRegistrationEntity(
+          tournamentId,
+          undefined,
+          startingState,
+        ),
+      );
 
       // First, we validate that no other player registration exists in this tournament
       reg.players = await tx.save(
         steamIds.map(
-          steamId => new TournamentRegistrationPlayerEntity(steamId, reg.id),
+          (steamId) =>
+            new TournamentRegistrationPlayerEntity(
+              steamId,
+              reg.id,
+              startingState,
+            ),
         ),
       );
       return reg;
@@ -74,7 +93,7 @@ export class ParticipationService {
       | TournamentRegistrationState.DECLINED
       | TournamentRegistrationState.TIMED_OUT,
   ) {
-    await this.ds.transaction(async tx => {
+    await this.ds.transaction(async (tx) => {
       const player = await tx
         .getRepository<TournamentRegistrationPlayerEntity>(
           TournamentRegistrationPlayerEntity,
