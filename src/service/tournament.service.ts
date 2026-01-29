@@ -112,20 +112,15 @@ export class TournamentService {
 
   /**
    * Создает сущность турнира в статус DRAFT
-   * @param teamSize
-   * @param name
-   * @param bracketType
-   * @param description
-   * @param imageUrl
-   * @param startDate
-   * @param bestOfConfig
-   */
+   *
+   **/
   public async createTournament(
     teamSize: number,
     name: string,
     bracketType: BracketType,
     description: string,
     imageUrl: string,
+    prize: string,
     startDate: Date,
     bestOfConfig: BestOfStrategy,
     gameMode: Dota_GameMode,
@@ -142,6 +137,7 @@ export class TournamentService {
         bracketType,
         description,
         imageUrl,
+        prize,
         startDate,
         bestOfConfig,
         gameMode,
@@ -159,6 +155,7 @@ export class TournamentService {
       name: dto.name,
       description: dto.description,
       imageUrl: dto.imageUrl,
+      prize: dto.prize,
     };
 
     if (t.state === TournamentStatus.DRAFT) {

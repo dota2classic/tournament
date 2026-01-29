@@ -44,6 +44,7 @@ export class TournamentMapper {
       strategy: t.strategy,
       bestOfStrategy: t.bestOfConfig,
       gameMode: t.gameMode,
+      prize: t.prize,
 
       description: t.description,
       startDate: t.startDate.toISOString(),

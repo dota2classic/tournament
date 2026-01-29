@@ -44,6 +44,7 @@ export const createTournament = (
     bracket,
     'Description',
     'imageurl',
+    '100$',
     new Date('2030-01-01'),
     {
       round,
@@ -126,6 +127,7 @@ export const createNativeTournament = async (
     BracketType.SINGLE_ELIMINATION,
     '123',
     '123',
+    '123$',
     new Date(),
     bestOf,
     Dota_GameMode.CAPTAINS_MODE,

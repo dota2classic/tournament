@@ -61,8 +61,17 @@ export class TournamentEntity {
   @Column({ default: '' })
   description: string;
 
-  @Column()
+  @Column({
+    name: 'image_url',
+    default: '',
+  })
   imageUrl: string;
+
+  @Column({
+    name: 'prize',
+    default: '',
+  })
+  prize: string;
 
   @CreateDateColumn()
   created_at: Date;
@@ -106,6 +115,7 @@ export class TournamentEntity {
     strategy: BracketType,
     description: string,
     imageUrl: string,
+    prize: string,
     startDate: Date,
     bestOfConfig: BestOfStrategy,
     gameMode: Dota_GameMode,
@@ -116,6 +126,7 @@ export class TournamentEntity {
     this.strategy = strategy;
     this.description = description;
     this.imageUrl = imageUrl;
+    this.prize = prize;
     this.startDate = startDate;
     this.bestOfConfig = bestOfConfig;
     this.gameMode = gameMode;

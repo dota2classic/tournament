@@ -70,6 +70,7 @@ export class TournamentController {
       dto.strategy,
       dto.description,
       dto.imageUrl,
+      dto.prize,
       new Date(dto.startDate),
       {
         round: dto.roundBestOf,
