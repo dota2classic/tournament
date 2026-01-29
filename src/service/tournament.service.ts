@@ -233,7 +233,7 @@ export class TournamentService {
             player.state === TournamentRegistrationState.PENDING_CONFIRMATION ||
             player.state === TournamentRegistrationState.CREATED
           ) {
-            player.state = TournamentRegistrationState.TIMED_OUT;
+            player.state = TournamentRegistrationState.DECLINED;
           }
         }
 

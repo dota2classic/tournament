@@ -90,8 +90,7 @@ export class ParticipationService {
     steamId: string,
     state:
       | TournamentRegistrationState.CONFIRMED
-      | TournamentRegistrationState.DECLINED
-      | TournamentRegistrationState.TIMED_OUT,
+      | TournamentRegistrationState.DECLINED,
   ) {
     await this.ds.transaction(async (tx) => {
       const player = await tx
@@ -99,7 +98,7 @@ export class ParticipationService {
           TournamentRegistrationPlayerEntity,
         )
         .createQueryBuilder('trp')
-        .innerJoin('trp.registration', 'tr')
+        .innerJoinAndSelect('trp.registration', 'tr')
         .where('trp.steamId = :steamId', { steamId })
         .andWhere('tr.tournamentId = :tournamentId', { tournamentId })
         .getOne();
@@ -121,6 +120,33 @@ export class ParticipationService {
           state,
         },
       );
+
+      const reg = await tx.findOne<TournamentRegistrationEntity>(
+        TournamentRegistrationEntity,
+        {
+          where: { id: player.tournamentRegistrationId },
+          relations: ['players'],
+        },
+      );
+      const isAllAccepted =
+        reg.players.findIndex(
+          (plr) => plr.state !== TournamentRegistrationState.CONFIRMED,
+        ) === -1;
+
+      const isAnyoneDeclined =
+        reg.players.findIndex(
+          (plr) => plr.state !== TournamentRegistrationState.DECLINED,
+        ) !== -1;
+
+      // Update status based on stuff
+      if (isAllAccepted) {
+        reg.state = TournamentRegistrationState.CONFIRMED;
+        await tx.save(reg);
+      } else if (isAnyoneDeclined) {
+        reg.state = TournamentRegistrationState.DECLINED;
+        await tx.save(reg);
+      }
+
       // TODO: emit something?
     });
   }

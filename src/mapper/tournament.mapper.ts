@@ -10,7 +10,6 @@ import {
   SeedDto,
   SeedItemDto,
   TournamentDto,
-  TournamentRegistrationState,
 } from '../model/tournament.dto';
 import { TeamEntity } from '../db/entity/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -57,12 +56,9 @@ export class TournamentMapper {
   public mapRegistration = (
     t: TournamentRegistrationEntity,
   ): RegistrationDto => {
-    const isAllReady =
-      t.players.filter((t) => t.state !== TournamentRegistrationState.CONFIRMED)
-        .length === 0;
     return {
       id: t.id,
-      state: isAllReady ? TournamentRegistrationState.CONFIRMED : t.state,
+      state: t.state,
       players: t.players.map((t) => ({
         steamId: t.steamId,
         state: t.state,

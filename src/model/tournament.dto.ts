@@ -32,13 +32,7 @@ export enum TournamentRegistrationState {
   /**
    * Подтверждение отклонено игроком
    */
-  DECLINED = 'DECLINED',
-
-  /**
-   * Регистрация автоматически отклонена из-за превышения времени ожидания.
-   * Используется, если заявка не была подтверждена в установленный срок.
-   */
-  TIMED_OUT = 'TIMED_OUT',
+  DECLINED = 'DECLINED'
 }
 
 export class RegisterAsPartyDto {

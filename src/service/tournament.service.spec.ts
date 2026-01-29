@@ -130,8 +130,8 @@ describe('TournamentService', () => {
         .findOne({ where: { id: rg.id }, relations: ['players'] });
       expect(rg.state).toEqual(TournamentRegistrationState.DECLINED);
       expect(rg.players.map((t) => t.state)).toEqual([
-        TournamentRegistrationState.TIMED_OUT,
-        TournamentRegistrationState.TIMED_OUT,
+        TournamentRegistrationState.DECLINED,
+        TournamentRegistrationState.DECLINED,
       ]);
     });
 
@@ -177,7 +177,7 @@ describe('TournamentService', () => {
       expect(rg.state).toEqual(TournamentRegistrationState.DECLINED);
       expect(rg.players.map((t) => t.state)).toEqual([
         TournamentRegistrationState.CONFIRMED,
-        TournamentRegistrationState.TIMED_OUT,
+        TournamentRegistrationState.DECLINED,
       ]);
     });
   });
@@ -257,7 +257,7 @@ describe('TournamentService', () => {
           te,
           tournament.id,
           [testUser()],
-          TournamentRegistrationState.TIMED_OUT,
+          TournamentRegistrationState.DECLINED,
         ),
       );
 
