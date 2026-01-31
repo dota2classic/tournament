@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -28,15 +29,50 @@ import { EventBus } from '@nestjs/cqrs';
 import { TournamentReadyCheckStartedEvent } from '../gateway/events/tournament/tournament-ready-check-started.event';
 import { TournamentReadyCheckDeclinedEvent } from '../gateway/events/tournament/tournament-ready-check-declined.event';
 import { Dota_GameMode } from '../gateway/shared-types/dota-game-mode';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { RedlockService } from '@dota2classic/redlock/dist/redlock.service';
+import { BracketService } from './bracket.service';
 
 @Injectable()
 export class TournamentService {
+  private logger = new Logger(TournamentService.name);
+
   constructor(
     private readonly ds: DataSource,
     @InjectRepository(TournamentEntity)
     private readonly tournamentEntityRepository: Repository<TournamentEntity>,
     private readonly ebus: EventBus,
+    private readonly redlock: RedlockService,
+    private readonly bracketService: BracketService,
   ) {}
+
+  /**
+   * This automatically starts tournaments when its time has come
+   */
+  @Cron(CronExpression.EVERY_MINUTE)
+  public async startTournaments() {
+    await this.redlock.withLock(
+      ['tournament-scheduled-transitions'],
+      30_000,
+      async (signal) => {
+        const startingTournaments = await this.tournamentEntityRepository
+          .createQueryBuilder('tm')
+          .where('t.state = :state', { state: TournamentStatus.READY_CHECK })
+          .andWhere('t.start_date <= now()')
+          .getMany();
+
+        if (startingTournaments.length === 0) return;
+
+        await Promise.all(
+          startingTournaments.map(async (tournament) => {
+            await this.finishReadyCheck(tournament.id);
+            await this.bracketService.generateBracket(tournament.id);
+          }),
+        );
+        this.logger.log(`Started ${startingTournaments.length} tournaments`);
+      },
+    );
+  }
 
   /**
    * REGISTRATION -> READY_CHECK

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 
@@ -22,6 +23,8 @@ import { BracketUpdatedEvent } from '../event/bracket-updated.event';
 
 @Injectable()
 export class BracketService {
+  private logger = new Logger(BracketService.name);
+
   constructor(
     private readonly ds: DataSource,
     @InjectRepository(TournamentEntity)
@@ -29,9 +32,7 @@ export class BracketService {
     private readonly bracketMatchService: BracketMatchService,
     private readonly manager: BracketsManager,
     @InjectRepository(BracketMatchEntity)
-    private readonly bracketMatchEntityRepository: Repository<
-      BracketMatchEntity
-    >,
+    private readonly bracketMatchEntityRepository: Repository<BracketMatchEntity>,
     @InjectRepository(StageEntity)
     private readonly stageEntityRepository: Repository<StageEntity>,
     private readonly ebus: EventBus,
@@ -64,7 +65,7 @@ export class BracketService {
     // it's just stupid to do this right
     if (participants.length < Math.pow(2, 2)) return;
 
-    const preparedParticipants: number[] = participants.map(p => p.id);
+    const preparedParticipants: number[] = participants.map((p) => p.id);
 
     const stageSetup: InputStage = {
       name: 'Example',
@@ -88,13 +89,14 @@ export class BracketService {
     });
 
     // Create game/games for each match
-    await this.ds.transaction(async tx => {
+    await this.ds.transaction(async (tx) => {
       return await Promise.all(
-        allMatches.map(async m =>
+        allMatches.map(async (m) =>
           this.bracketMatchService.generateGames(tournament, m, tx),
         ),
       );
     });
+    this.logger.log(`Generated bracket for tournament ${tournamentId}`);
 
     // TODO
     // await Promise.all(
@@ -106,13 +108,12 @@ export class BracketService {
   }
 
   public async setMatchResults(matchId: number, winnerOpponentId: number) {
-    const m: BracketMatchEntity = await this.bracketMatchEntityRepository.findOne(
-      {
+    const m: BracketMatchEntity =
+      await this.bracketMatchEntityRepository.findOne({
         where: {
           id: matchId,
         },
-      },
-    );
+      });
     if (m.opponent1?.id === winnerOpponentId) {
       m.opponent1.result = 'win';
     } else if (m.opponent2?.id === winnerOpponentId) {
