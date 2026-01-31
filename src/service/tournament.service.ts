@@ -32,6 +32,7 @@ import { Dota_GameMode } from '../gateway/shared-types/dota-game-mode';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { RedlockService } from '@dota2classic/redlock/dist/redlock.service';
 import { BracketService } from './bracket.service';
+import { MatchScheduleService } from './match-schedule.service';
 
 @Injectable()
 export class TournamentService {
@@ -44,6 +45,7 @@ export class TournamentService {
     private readonly ebus: EventBus,
     private readonly redlock: RedlockService,
     private readonly bracketService: BracketService,
+    private readonly scheduleService: MatchScheduleService,
   ) {}
 
   /**
@@ -67,6 +69,7 @@ export class TournamentService {
           startingTournaments.map(async (tournament) => {
             await this.finishReadyCheck(tournament.id);
             await this.bracketService.generateBracket(tournament.id);
+            await this.scheduleService.scheduleMatches(tournament.id);
           }),
         );
         this.logger.log(`Started ${startingTournaments.length} tournaments`);
