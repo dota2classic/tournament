@@ -56,7 +56,7 @@ export class TournamentService {
       30_000,
       async (signal) => {
         const startingTournaments = await this.tournamentEntityRepository
-          .createQueryBuilder('tm')
+          .createQueryBuilder('t')
           .where('t.state = :state', { state: TournamentStatus.READY_CHECK })
           .andWhere('t.start_date <= now()')
           .getMany();
