@@ -4,30 +4,17 @@ export class RemoveExtraStatus1769719581064 implements MigrationInterface {
   name = 'RemoveExtraStatus1769719581064';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Rename old type
     await queryRunner.query(
       `ALTER TYPE "public"."tournament_registration_state" RENAME TO "tournament_registration_state_old"`,
     );
+
+    // Create new type
     await queryRunner.query(
       `CREATE TYPE "public"."tournament_registration_state" AS ENUM('CREATED', 'PENDING_CONFIRMATION', 'CONFIRMED', 'DECLINED')`,
     );
-    await queryRunner.query(
-      `ALTER TABLE "tournament_registration_player" ALTER COLUMN "state" DROP DEFAULT`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "tournament_registration_player" ALTER COLUMN "state" TYPE "public"."tournament_registration_state" USING "state"::"text"::"public"."tournament_registration_state"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "tournament_registration_player" ALTER COLUMN "state" SET DEFAULT 'CREATED'`,
-    );
-    await queryRunner.query(
-      `DROP TYPE "public"."tournament_registration_state_old"`,
-    );
-    await queryRunner.query(
-      `ALTER TYPE "public"."tournament_registration_state" RENAME TO "tournament_registration_state_old"`,
-    );
-    await queryRunner.query(
-      `CREATE TYPE "public"."tournament_registration_state" AS ENUM('CREATED', 'PENDING_CONFIRMATION', 'CONFIRMED', 'DECLINED')`,
-    );
+
+    // Change registration
     await queryRunner.query(
       `ALTER TABLE "tournament_registration" ALTER COLUMN "state" DROP DEFAULT`,
     );
@@ -37,6 +24,19 @@ export class RemoveExtraStatus1769719581064 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "tournament_registration" ALTER COLUMN "state" SET DEFAULT 'CREATED'`,
     );
+
+    // Change registration player
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registration_player" ALTER COLUMN "state" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registration_player" ALTER COLUMN "state" TYPE "public"."tournament_registration_state" USING "state"::"text"::"public"."tournament_registration_state"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registration_player" ALTER COLUMN "state" SET DEFAULT 'CREATED'`,
+    );
+
+    // Drop old type
     await queryRunner.query(
       `DROP TYPE "public"."tournament_registration_state_old"`,
     );
