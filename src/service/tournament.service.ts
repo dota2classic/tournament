@@ -160,9 +160,13 @@ export class TournamentService {
 
     if (t.state === TournamentStatus.DRAFT) {
       updateDto.teamSize = dto.teamSize;
+    }
+
+    if (t.state !== TournamentStatus.IN_PROGRESS) {
       updateDto.startDate = new Date(dto.startDate);
       updateDto.strategy = dto.strategy;
       updateDto.gameMode = dto.gameMode;
+
       updateDto.scheduleStrategy = t.scheduleStrategy;
       Object.assign(updateDto.scheduleStrategy, {
         gameBreakDurationSeconds: dto.gameBreakDurationSeconds,
@@ -176,7 +180,6 @@ export class TournamentService {
         grandFinal: dto.grandFinalBestOf,
       } satisfies BestOfStrategy);
     }
-
     await this.tournamentEntityRepository.update(
       {
         id,
