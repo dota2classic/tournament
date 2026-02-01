@@ -9,7 +9,7 @@ import { ParticipantEntity } from './participant.entity';
  * Один игрок (по Steam ID) связан с конкретным участием
  */
 @Entity('tournament_participant_player')
-export class TournamentParticipantPlayerEntity {
+export class ParticipantPlayerEntity {
   /**
    * Уникальный идентификатор игрока в Steam.
    *

@@ -12,7 +12,7 @@ import { TournamentRegistrationEntity } from '../db/entity/tournament-registrati
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { TournamentRegistrationState } from '../model/tournament.dto';
 import { ParticipantEntity } from '../db/entity/participant.entity';
-import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-participant-player.entity';
+import { ParticipantPlayerEntity } from '../db/entity/participant-player.entity';
 import { TournamentService } from '../service/tournament.service';
 import { ParticipationService } from '../service/participation.service';
 import { BracketService } from '../service/bracket.service';
@@ -101,8 +101,8 @@ export const createTournamentWithParticipants = async (
       .save(new ParticipantEntity(tour.id));
     p.players = [
       await te
-        .repo(TournamentParticipantPlayerEntity)
-        .save(new TournamentParticipantPlayerEntity(p.id, testUser())),
+        .repo(ParticipantPlayerEntity)
+        .save(new ParticipantPlayerEntity(p.id, testUser())),
     ];
     tour.participants.push(p);
   }

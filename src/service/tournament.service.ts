@@ -24,7 +24,7 @@ import { typeormBulkUpdate } from '../util/typeorm-bulk-update';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { minimizeLeftovers } from '../util/permutations';
 import { ParticipantEntity } from '../db/entity/participant.entity';
-import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-participant-player.entity';
+import { ParticipantPlayerEntity } from '../db/entity/participant-player.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { TournamentReadyCheckStartedEvent } from '../gateway/events/tournament/tournament-ready-check-started.event';
 import { TournamentReadyCheckDeclinedEvent } from '../gateway/events/tournament/tournament-ready-check-declined.event';
@@ -395,10 +395,9 @@ WHERE tr.id = c.id::int;
         );
         // Create players
         await tx.save(
-          TournamentParticipantPlayerEntity,
+          ParticipantPlayerEntity,
           participantCfg.players.map(
-            (steamId) =>
-              new TournamentParticipantPlayerEntity(participant.id, steamId),
+            (steamId) => new ParticipantPlayerEntity(participant.id, steamId),
           ),
         );
       }

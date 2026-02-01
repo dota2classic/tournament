@@ -1,13 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from '@testcontainers/postgresql';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { INestApplication } from '@nestjs/common';
 import { Constructor, CqrsModule, EventBus } from '@nestjs/cqrs';
 import { ObjectLiteral, Repository } from 'typeorm';
-import { ClientsModule, RedisOptions, RmqOptions, Transport } from '@nestjs/microservices';
+import {
+  ClientsModule,
+  RedisOptions,
+  RmqOptions,
+  Transport,
+} from '@nestjs/microservices';
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { RabbitMQContainer, StartedRabbitMQContainer } from '@testcontainers/rabbitmq';
+import {
+  RabbitMQContainer,
+  StartedRabbitMQContainer,
+} from '@testcontainers/rabbitmq';
 import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { TeamController } from 'controller/team.controller';
 import { TournamentController } from 'controller/tournament.controller';
@@ -28,6 +39,8 @@ import { RmqController } from '../rmq.controller';
 import { MatchScheduleService } from '../service/match-schedule.service';
 import { RedlockModule } from '@dota2classic/redlock';
 import { RedlockModuleOptions } from '@dota2classic/redlock/dist/redlock.module-definition';
+import { GameResultsHandler } from '../event/game-results.handler';
+import { MatchFailedHandler } from '../event/match-failed.handler';
 import SpyInstance = jest.SpyInstance;
 
 export interface TestEnvironment {
@@ -51,13 +64,13 @@ export function useFullModule(): TestEnvironment {
   jest.setTimeout(120_000);
 
   const te: TestEnvironment = {
-    module: (undefined as unknown) as any,
-    containers: ({} as unknown) as any,
-    ebus: ({} as unknown) as any,
-    ebusSpy: ({} as unknown) as any,
-    app: ({} as unknown) as any,
-    service: ({} as unknown) as any,
-    repo: ({} as unknown) as any,
+    module: undefined as unknown as any,
+    containers: {} as unknown as any,
+    ebus: {} as unknown as any,
+    ebusSpy: {} as unknown as any,
+    app: {} as unknown as any,
+    service: {} as unknown as any,
+    repo: {} as unknown as any,
 
     queryMocks: {},
   };
@@ -228,6 +241,9 @@ export function useFullModule(): TestEnvironment {
         TournamentService,
         ParticipationService,
         MatchScheduleService,
+
+        MatchFailedHandler,
+        GameResultsHandler,
       ],
       controllers: [TeamController, TournamentController, RmqController],
     }).compile();
@@ -238,8 +254,8 @@ export function useFullModule(): TestEnvironment {
 
     await te.app.listen(0);
 
-    te.service = con => te.module.get(con);
-    te.repo = con => te.module.get(getRepositoryToken(con));
+    te.service = (con) => te.module.get(con);
+    te.repo = (con) => te.module.get(getRepositoryToken(con));
     te.ebus = te.module.get(EventBus);
     te.ebusSpy = jest.spyOn(te.ebus, 'publish');
     // Mocks:
@@ -259,5 +275,5 @@ export function testUser(): string {
 }
 
 export async function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

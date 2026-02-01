@@ -10,12 +10,12 @@ import { StageEntity } from 'db/entity/stage.entity';
 import { ParticipantEntity } from '../db/entity/participant.entity';
 import { TournamentEntity } from 'db/entity/tournament.entity';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
-import { TournamentParticipantPlayerEntity } from '../db/entity/tournament-participant-player.entity';
+import { ParticipantPlayerEntity } from '../db/entity/participant-player.entity';
 
 export const Entities = [
   TournamentEntity,
   ParticipantEntity,
-  TournamentParticipantPlayerEntity,
+  ParticipantPlayerEntity,
   StageEntity,
   GroupEntity,
   RoundEntity,

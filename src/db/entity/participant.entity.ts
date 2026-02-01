@@ -10,7 +10,7 @@ import {
 import { TournamentEntity } from './tournament.entity';
 import { TeamEntity } from './team.entity';
 import { UUID } from '../../types';
-import { TournamentParticipantPlayerEntity } from './tournament-participant-player.entity';
+import { ParticipantPlayerEntity } from './participant-player.entity';
 import { Participant } from 'brackets-model';
 
 @Entity('tournament_participant')
@@ -24,11 +24,7 @@ export class ParticipantEntity implements Omit<Participant, 'name'> {
    * Может быть `null`, если регистрация идёт не от команды, а от
    * индивидуального игрока или временной группы.
    */
-  @ManyToOne(
-    () => TeamEntity,
-    t => t.participations,
-    { nullable: true },
-  )
+  @ManyToOne(() => TeamEntity, (t) => t.participations, { nullable: true })
   @JoinColumn({ name: 'team_id' })
   team?: Relation<TeamEntity>;
 
@@ -47,10 +43,7 @@ export class ParticipantEntity implements Omit<Participant, 'name'> {
   /**
    * Турнир
    */
-  @ManyToOne(
-    () => TournamentEntity,
-    t => t.participants,
-  )
+  @ManyToOne(() => TournamentEntity, (t) => t.participants)
   @JoinColumn({ name: 'tournament_id' })
   tournament: Relation<TournamentEntity>;
 
@@ -69,12 +62,10 @@ export class ParticipantEntity implements Omit<Participant, 'name'> {
    * Eager-загрузка включена, чтобы данные игроков подгружались
    * автоматически при запросе регистрации.
    */
-  @OneToMany(
-    () => TournamentParticipantPlayerEntity,
-    t => t.tournamentParticipant,
-    { eager: true },
-  )
-  players: Relation<TournamentParticipantPlayerEntity>[];
+  @OneToMany(() => ParticipantPlayerEntity, (t) => t.tournamentParticipant, {
+    eager: true,
+  })
+  players: Relation<ParticipantPlayerEntity>[];
 
   constructor(tournamentId: number, teamId?: UUID) {
     this.teamId = teamId;

@@ -21,27 +21,21 @@ export class BracketMatchService {
   constructor(
     private readonly ds: DataSource,
     @InjectRepository(BracketMatchEntity)
-    private readonly bracketMatchEntityRepository: Repository<
-      BracketMatchEntity
-    >,
+    private readonly bracketMatchEntityRepository: Repository<BracketMatchEntity>,
     @InjectRepository(TournamentEntity)
     private readonly tournamentEntityRepository: Repository<TournamentEntity>,
     @InjectRepository(RoundEntity)
     private readonly roundEntityRepository: Repository<RoundEntity>,
     private readonly ebus: EventBus,
     @InjectRepository(ParticipantEntity)
-    private readonly bracketParticipantEntityRepository: Repository<
-      ParticipantEntity
-    >,
+    private readonly bracketParticipantEntityRepository: Repository<ParticipantEntity>,
     @InjectRepository(GroupEntity)
     private readonly groupEntityRepository: Repository<GroupEntity>,
     @InjectRepository(StageEntity)
     private readonly stageEntityRepository: Repository<StageEntity>,
     private readonly utilQuery: TournamentRepository,
     @InjectRepository(BracketMatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<
-      BracketMatchGameEntity
-    >,
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
     private readonly manager: BracketsManager,
     private readonly matchScheduleService: MatchScheduleService,
   ) {}
@@ -160,12 +154,35 @@ export class BracketMatchService {
     finishedGameNumber: number,
   ) {
     this.logger.log('Match game finished! We need to reschedule everything');
-    await this.ds.transaction(async tx => {
+    await this.ds.transaction(async (tx) => {
       await this.matchScheduleService.updateScheduleGameFinished(
         m,
         finishedGameNumber,
         tx,
       );
     });
+  }
+
+  private async getNextMatches(
+    match: BracketMatchEntity,
+  ): Promise<BracketMatchEntity[]> {
+    const stage = await this.stageEntityRepository.findOneBy({
+      id: match.stage_id,
+    });
+
+    // @ts-ignore
+    const {
+      roundNumber,
+      roundCount,
+      // @ts-ignore
+    } = await this.manager.update.getRoundPositionalInfo(match.round_id);
+    // @ts-ignore
+    return await this.manager.update.getNextMatches(
+      match,
+      'single_bracket',
+      stage,
+      roundNumber,
+      roundCount,
+    );
   }
 }

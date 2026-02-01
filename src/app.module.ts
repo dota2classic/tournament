@@ -32,6 +32,7 @@ import { RmqController } from './rmq.controller';
 import { MatchScheduleService } from './service/match-schedule.service';
 import { RedlockModule } from '@dota2classic/redlock';
 import { RedlockModuleOptions } from '@dota2classic/redlock/dist/redlock.module-definition';
+import { MatchFailedHandler } from './event/match-failed.handler';
 
 @Module({
   imports: [
@@ -133,6 +134,7 @@ import { RedlockModuleOptions } from '@dota2classic/redlock/dist/redlock.module-
     MatchScheduleService,
 
     BracketGameResultHandler,
+    MatchFailedHandler,
 
     {
       provide: BracketsManager,
