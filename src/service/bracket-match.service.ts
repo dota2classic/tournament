@@ -40,6 +40,15 @@ export class BracketMatchService {
     private readonly matchScheduleService: MatchScheduleService,
   ) {}
 
+  public async getMatches(tid: number) {
+    return await this.bracketMatchEntityRepository
+      .createQueryBuilder('bm')
+      .innerJoinAndSelect('bm.games', 'bg')
+      .innerJoin('bm.stage', 'stg')
+      .where('stg.tournament_id = :tid', { tid })
+      .getMany();
+  }
+
   /**
    * This thing generates MatchGameEntity for a given match id according to best-of-x strategy
    * @param tour

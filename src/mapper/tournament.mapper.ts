@@ -169,30 +169,4 @@ export class TournamentMapper {
       opponent2: game.opponent2 && (await this.mapSeedItem(game.opponent2)),
     };
   };
-
-  // mapTournamentMatch = async (
-  //   m: BracketMatchEntity,
-  // ): Promise<TournamentMatchDto> => {
-  //   const games = await this.matchGameEntityRepository.find({
-  //     where: {
-  //       id: m.id,
-  //     },
-  //     order: {
-  //       number: 'ASC',
-  //     },
-  //   });
-  //
-  //   return {
-  //     id: m.id,
-  //     stage_id: m.stage_id,
-  //     group_id: m.group_id,
-  //     round_id: m.round_id,
-  //     child_count: m.child_count,
-  //     number: m.number,
-  //     games: games.map(this.mapTournamentMatchGame),
-  //     opponent1: m.opponent1 && (await this.mapSeedItem(m.opponent1)),
-  //     opponent2: m.opponent2 && (await this.mapSeedItem(m.opponent2)),
-  //     status: m.status,
-  //   };
-  // };
 }

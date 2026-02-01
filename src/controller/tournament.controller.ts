@@ -121,6 +121,13 @@ export class TournamentController {
       .then(this.mapper.mapTournament);
   }
 
+  @Get(':id/matches')
+  async getTournamentMatches(@Param('id') id: number) {
+    return this.matchService
+      .getMatches(id)
+      .then((matches) => Promise.all(matches.map(this.bracketMapper.mapMatch)));
+  }
+
   @Post(':id/confirm_registration')
   async confirmRegistration(
     @Param('id') id: number,
