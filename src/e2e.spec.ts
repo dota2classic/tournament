@@ -1,5 +1,4 @@
 import { testUser, useFullModule } from './@test/useFullModule';
-import { TournamentService } from './service/tournament.service';
 import * as request from 'supertest';
 import { BracketDto, SeedDto } from './model/tournament.dto';
 import { BracketMatchService } from './service/bracket-match.service';
@@ -9,7 +8,7 @@ import { TournamentReadyCheckDeclinedEvent } from './gateway/events/tournament/t
 import { TournamentReadyCheckStartedEvent } from './gateway/events/tournament/tournament-ready-check-started.event';
 import { Dota_GameMode } from './gateway/shared-types/dota-game-mode';
 
-describe('TournamentService', () => {
+describe('End2End', () => {
   jest.setTimeout(60000);
 
   const te = useFullModule();

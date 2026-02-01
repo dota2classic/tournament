@@ -3,6 +3,7 @@ import { CommandBus, Constructor, EventBus } from '@nestjs/cqrs';
 import { ConfigService } from '@nestjs/config';
 import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { GameResultsEvent } from './gateway/events/gs/game-results.event';
+import { MatchFailedEvent } from './gateway/events/match-failed.event';
 
 @Controller()
 export class RmqController {
@@ -16,8 +17,17 @@ export class RmqController {
 
   @RabbitSubscribe({
     exchange: 'app.events',
+    routingKey: MatchFailedEvent.name,
+    queue: `tournament.${MatchFailedEvent.name}`,
+  })
+  async MatchFailedEvent(data: MatchFailedEvent) {
+    this.event(MatchFailedEvent, data);
+  }
+
+  @RabbitSubscribe({
+    exchange: 'app.events',
     routingKey: GameResultsEvent.name,
-    queue: `api-queue.${GameResultsEvent.name}`,
+    queue: `tournament.${GameResultsEvent.name}`,
   })
   private async handleGameResults(msg: GameResultsEvent) {
     this.event(GameResultsEvent, msg);
