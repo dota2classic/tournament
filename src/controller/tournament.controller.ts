@@ -7,6 +7,7 @@ import {
   ConfirmRegistrationDto,
   CreateTournamentDto,
   RegisterAsPartyDto,
+  ScheduleTournamentGameDto,
   SetGameWinnerDto,
   StartGameDto,
   TournamentDto,
@@ -207,6 +208,17 @@ export class TournamentController {
   @Post(':id/start_game')
   public async startGame(@Param('id') id: number, @Body() dto: StartGameDto) {
     await this.matchScheduleService.submitGameToLaunch(dto.gameId);
+  }
+
+  @Post(':id/schedule_game')
+  public async scheduleMatch(
+    @Param('id') id: number,
+    @Body() dto: ScheduleTournamentGameDto,
+  ) {
+    await this.matchScheduleService.scheduleMatchGame(
+      dto.gameId,
+      new Date(dto.scheduledDate),
+    );
   }
 
   // @Post(`/tournament_match/:id/schedule`)

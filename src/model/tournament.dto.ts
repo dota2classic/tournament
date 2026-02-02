@@ -32,7 +32,7 @@ export enum TournamentRegistrationState {
   /**
    * Подтверждение отклонено игроком
    */
-  DECLINED = 'DECLINED'
+  DECLINED = 'DECLINED',
 }
 
 export class RegisterAsPartyDto {
@@ -59,7 +59,7 @@ export class CreateTournamentDto {
   gameMode: Dota_GameMode;
 
   gameDurationSeconds: number;
-  gameBreakDurationSeconds: number
+  gameBreakDurationSeconds: number;
 
   roundBestOf: number;
   finalBestOf: number;
@@ -76,12 +76,11 @@ export class UpdateTournamentDto {
 
   imageUrl?: string;
 
-
   @ApiProperty({ enum: Dota_GameMode, enumName: 'Dota_GameMode' })
   gameMode?: Dota_GameMode;
 
   gameDurationSeconds?: number;
-  gameBreakDurationSeconds?: number
+  gameBreakDurationSeconds?: number;
 
   @ApiProperty({ enum: BracketType, enumName: 'BracketType' })
   strategy?: BracketType;
@@ -127,9 +126,7 @@ export class TournamentDto {
   @ApiProperty({ enum: Dota_GameMode, enumName: 'Dota_GameMode' })
   gameMode: Dota_GameMode;
 
-
   prize: string;
-
 
   startDate: string;
   description: string;
@@ -196,9 +193,9 @@ export class TournamentMatchDto {
   public readonly opponent2?: SeedItemDto;
 }
 
-export class ScheduleTournamentMatchDto {
-  gameId: number;
-  scheduledDate: number;
+export class ScheduleTournamentGameDto {
+  gameId: string;
+  scheduledDate: string;
 }
 
 export class ForfeitDto {

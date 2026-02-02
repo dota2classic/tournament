@@ -211,6 +211,30 @@ export class MatchScheduleService {
     await this.scheduleSubsequentGames(match, gameNumber, startTime, tx);
   }
 
+  public async scheduleMatchGame(
+    gameId: string,
+    date: Date,
+    tx: EntityManager = this.bracketMatchEntityRepository.manager,
+  ) {
+    const game = await tx.findOne<BracketMatchGameEntity>(
+      BracketMatchGameEntity,
+      {
+        where: {
+          id: gameId,
+        },
+      },
+    );
+
+    const match = await tx.findOne<BracketMatchEntity>(BracketMatchEntity, {
+      where: {
+        id: game.parent_id,
+      },
+      relations: ['games'],
+    });
+
+    await this.scheduleSubsequentGames(match, game.number, date, tx);
+  }
+
   private async scheduleSubsequentGames(
     match: BracketMatchEntity,
     startFromGameNumber: number,
