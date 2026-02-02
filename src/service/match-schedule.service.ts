@@ -19,7 +19,6 @@ import { PlayerId } from '../gateway/shared-types/player-id';
 import { LobbyReadyEvent } from '../gateway/events/lobby-ready.event';
 import { MatchmakingMode } from '../gateway/shared-types/matchmaking-mode';
 import { Dota_Map } from '../gateway/shared-types/dota-map';
-import { Dota_GameMode } from '../gateway/shared-types/dota-game-mode';
 import { Dota2Version } from '../gateway/shared-types/dota2version';
 import { DotaPatch } from '../gateway/constants/patch';
 import { Region } from '../gateway/shared-types/region';
@@ -260,6 +259,12 @@ export class MatchScheduleService {
       throw new BadRequestException('Game is not ready to be played!');
     }
 
+    const tournament = await this.tournamentRepository
+      .createQueryBuilder('tm')
+      .innerJoin('tm.stages', 'stg')
+      .where('stg.id = :stage_id', { stage_id: game.stage_id })
+      .getOne();
+
     const players: MatchPlayer[] = [];
 
     const participants = await Promise.all(
@@ -294,7 +299,7 @@ export class MatchScheduleService {
         gameId,
         MatchmakingMode.TOURNAMENT,
         Dota_Map.DOTA,
-        Dota_GameMode.SOLOMID,
+        tournament.gameMode,
         players,
         Dota2Version.Dota_684,
         false,
