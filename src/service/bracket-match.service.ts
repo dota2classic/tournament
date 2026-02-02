@@ -40,6 +40,15 @@ export class BracketMatchService {
     private readonly matchScheduleService: MatchScheduleService,
   ) {}
 
+  public async getMatch(matchId: number) {
+    return this.bracketMatchEntityRepository.findOne({
+      where: {
+        id: matchId,
+      },
+      relations: ['games'],
+    });
+  }
+
   public async getMatches(tid: number) {
     return await this.bracketMatchEntityRepository
       .createQueryBuilder('bm')

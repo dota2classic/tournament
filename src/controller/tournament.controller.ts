@@ -194,6 +194,16 @@ export class TournamentController {
     );
   }
 
+  @Get(':id/match_info/:match_id')
+  public async getMatch(
+    @Param('id') id: number,
+    @Param('match_id') matchId: number,
+  ) {
+    return this.matchService
+      .getMatch(matchId)
+      .then(this.bracketMapper.mapMatch);
+  }
+
   @Post(':id/start_game')
   public async startGame(@Param('id') id: number, @Body() dto: StartGameDto) {
     await this.matchScheduleService.submitGameToLaunch(dto.gameId);
