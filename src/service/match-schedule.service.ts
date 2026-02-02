@@ -258,11 +258,11 @@ export class MatchScheduleService {
     // If we start from [2], we want:
     // [1] = unchanged, [2] = start, [3] = start + (1 * offset)
 
-    const startIdx = startFromGameNumber - 1;
-    for (let i = startIdx; i < match.games.length; i++) {
+    let offset = 0;
+    for (let i = startFromGameNumber - 1; i < match.games.length; i++) {
       match.games[i].scheduledDate = addSeconds(
         startTime,
-        (i - startIdx) * gameWithBreakSeconds,
+        gameWithBreakSeconds * offset++,
       );
     }
 
