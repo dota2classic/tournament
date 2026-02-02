@@ -251,10 +251,18 @@ export class MatchScheduleService {
       tournament.scheduleStrategy.gameDurationSeconds +
       tournament.scheduleStrategy.gameBreakDurationSeconds;
 
-    for (let i = startFromGameNumber - 1; i < match.games.length; i++) {
+    // For bo3: [1,2,3]
+    // If we start from [1], we want:
+    // [1] = start, [2] = start + (1 * offset), [3] = start + (2 * offset)
+
+    // If we start from [2], we want:
+    // [1] = unchanged, [2] = start, [3] = start + (1 * offset)
+
+    const startIdx = startFromGameNumber - 1;
+    for (let i = startIdx; i < match.games.length; i++) {
       match.games[i].scheduledDate = addSeconds(
         startTime,
-        i * gameWithBreakSeconds,
+        (i - startIdx) * gameWithBreakSeconds,
       );
     }
 

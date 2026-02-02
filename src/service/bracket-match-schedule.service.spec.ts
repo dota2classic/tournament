@@ -252,4 +252,74 @@ describe('BracketMatchService', () => {
       previousScheduleDate = gameScheduleTime;
     }
   });
+
+  it('should support manual scheduling of a first game in bo3 and updating subsequent', async () => {
+    const tournament = await createNativeTournament(
+      te,
+      {
+        final: 3,
+        round: 3,
+        grandFinal: 1,
+      },
+      4,
+    );
+    await service.scheduleMatches(tournament.id);
+    let bj = await te
+      .service(BracketCrud)
+      .getBracket(tournament.id)
+      .then((t) => mapper.mapBracket(t, tournament));
+
+    const start = new Date(2030, 1, 1);
+
+    // When
+    await service.scheduleMatchGame(
+      bj.winning[0].seeds[0].games[0].gameId,
+      start,
+    );
+
+    // Then
+    bj = await te
+      .service(BracketCrud)
+      .getBracket(tournament.id)
+      .then((t) => mapper.mapBracket(t, tournament));
+
+    expect(bj.winning[0].seeds[0].games[0].scheduledDate).toEqual(
+      start.toISOString(),
+    );
+  });
+
+  it('should support manual scheduling of second game in bo3 and updating subsequent', async () => {
+    const tournament = await createNativeTournament(
+      te,
+      {
+        final: 3,
+        round: 3,
+        grandFinal: 1,
+      },
+      4,
+    );
+    await service.scheduleMatches(tournament.id);
+    let bj = await te
+      .service(BracketCrud)
+      .getBracket(tournament.id)
+      .then((t) => mapper.mapBracket(t, tournament));
+
+    const start = new Date(2030, 1, 1);
+
+    // When
+    await service.scheduleMatchGame(
+      bj.winning[0].seeds[0].games[1].gameId,
+      start,
+    );
+
+    // Then
+    bj = await te
+      .service(BracketCrud)
+      .getBracket(tournament.id)
+      .then((t) => mapper.mapBracket(t, tournament));
+
+    expect(bj.winning[0].seeds[0].games[1].scheduledDate).toEqual(
+      start.toISOString(),
+    );
+  });
 });
