@@ -266,10 +266,7 @@ export class MatchScheduleService {
       );
     }
 
-    const matchEndTime = addSeconds(
-      startTime,
-      (match.games.length - startFromGameNumber + 1) * gameWithBreakSeconds,
-    );
+    const matchEndTime = addSeconds(startTime, offset * gameWithBreakSeconds);
     await tx.save(BracketMatchEntity, match);
     await tx.save(BracketMatchGameEntity, match.games);
 
