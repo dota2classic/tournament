@@ -64,6 +64,34 @@ export class TournamentService {
   }
 
   /**
+   * IN_PROGRESS -> FINISHED
+   * @param tournamentId
+   */
+  public async finishTournament(tournamentId: number) {
+    const tournament = await this.getFullTournament(tournamentId);
+
+    if (!tournament) {
+      throw new NotFoundException('Tournament not found');
+    }
+    if (tournament.state !== TournamentStatus.IN_PROGRESS) {
+      throw new BadRequestException(
+        `Tournament must be in "registration" state!`,
+      );
+    }
+
+    await this.tournamentEntityRepository.update(
+      {
+        id: tournamentId,
+      },
+      {
+        state: TournamentStatus.FINISHED,
+      },
+    );
+
+    return this.getFullTournament(tournamentId);
+  }
+
+  /**
    * REGISTRATION -> READY_CHECK
    * Завершает регистрацию на турнир и запускает проверку на готовность
    * @param tournamentId

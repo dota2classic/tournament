@@ -116,6 +116,13 @@ export class TournamentController {
       .then(this.mapper.mapTournament);
   }
 
+  @Post(':id/finish_tournament')
+  async finishTournament(@Param('id') id: number) {
+    return this.tournamentService
+      .finishTournament(id)
+      .then(this.mapper.mapTournament);
+  }
+
   @Get(':id')
   async getTournament(@Param('id') id: number) {
     return this.tournamentService
