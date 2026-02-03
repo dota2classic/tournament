@@ -52,27 +52,13 @@ export class TournamentService {
    * This automatically starts tournaments when its time has come
    */
   @Cron(CronExpression.EVERY_MINUTE)
-  public async startTournaments() {
+  public async tournamentScheduleEvents() {
     await this.redlock.withLock(
       ['tournament-scheduled-transitions'],
       30_000,
       async (signal) => {
-        const startingTournaments = await this.tournamentEntityRepository
-          .createQueryBuilder('t')
-          .where('t.state = :state', { state: TournamentStatus.READY_CHECK })
-          .andWhere('t.start_date <= now()')
-          .getMany();
-
-        if (startingTournaments.length === 0) return;
-
-        await Promise.all(
-          startingTournaments.map(async (tournament) => {
-            await this.finishReadyCheck(tournament.id);
-            await this.bracketService.generateBracket(tournament.id);
-            await this.scheduleService.scheduleMatches(tournament.id);
-          }),
-        );
-        this.logger.log(`Started ${startingTournaments.length} tournaments`);
+        await this.startTournaments();
+        await this.startTournamentReadyChecks();
       },
     );
   }
@@ -457,5 +443,41 @@ WHERE tr.id = c.id::int;
       teams,
       leftovers,
     };
+  }
+
+  private async startTournaments() {
+    const startingTournaments = await this.tournamentEntityRepository
+      .createQueryBuilder('t')
+      .where('t.state = :state', { state: TournamentStatus.READY_CHECK })
+      .andWhere('t.start_date <= now()')
+      .getMany();
+
+    if (startingTournaments.length === 0) return;
+
+    await Promise.all(
+      startingTournaments.map(async (tournament) => {
+        await this.finishReadyCheck(tournament.id);
+        await this.bracketService.generateBracket(tournament.id);
+        await this.scheduleService.scheduleMatches(tournament.id);
+      }),
+    );
+    this.logger.log(`Started ${startingTournaments.length} tournaments`);
+  }
+
+  private async startTournamentReadyChecks() {
+    const registrationFinished = await this.tournamentEntityRepository
+      .createQueryBuilder('t')
+      .where('t.state = :state', { state: TournamentStatus.REGISTRATION })
+      .andWhere(`t.start_date >= now() - '1 hour'::interval`)
+      .getMany();
+
+    if (registrationFinished.length === 0) return;
+
+    await Promise.all(
+      registrationFinished.map(async (tournament) => {
+        await this.startReadyCheck(tournament.id);
+      }),
+    );
+    this.logger.log(`Started ${registrationFinished.length} ready checks`);
   }
 }
