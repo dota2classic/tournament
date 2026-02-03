@@ -241,6 +241,9 @@ export class MatchScheduleService {
     startTime: Date,
     tx: EntityManager = this.bracketMatchEntityRepository.manager,
   ) {
+    this.logger.log(
+      `Trying to schedule game #${startFromGameNumber} of ${match.games?.length}. Start date: ${startTime}`,
+    );
     const tournament = await this.getTournament(match);
 
     // Calculate start times of match and games

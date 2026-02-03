@@ -306,6 +306,8 @@ describe('BracketMatchService', () => {
 
     const start = new Date(2030, 1, 1);
 
+    const game1date = bj.winning[0].seeds[0].games[0].scheduledDate;
+
     // When
     await service.scheduleMatchGame(
       bj.winning[0].seeds[0].games[1].gameId,
@@ -318,8 +320,17 @@ describe('BracketMatchService', () => {
       .getBracket(tournament.id)
       .then((t) => mapper.mapBracket(t, tournament));
 
+    // Game1 should not change
+    expect(bj.winning[0].seeds[0].games[0].scheduledDate).toEqual(game1date);
+
+    // 2nd game - we changed that - should be updated
     expect(bj.winning[0].seeds[0].games[1].scheduledDate).toEqual(
       start.toISOString(),
     );
+
+    // 3rd game - next to second - should be updated too
+    expect(
+      new Date(bj.winning[0].seeds[0].games[2].scheduledDate).getTime(),
+    ).toBeGreaterThan(start.getTime());
   });
 });
