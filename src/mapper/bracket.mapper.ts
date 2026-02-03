@@ -27,9 +27,7 @@ export class BracketMapper {
     @InjectRepository(TeamEntity)
     private readonly teamEntityRepository: Repository<TeamEntity>,
     @InjectRepository(BracketMatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<
-      BracketMatchGameEntity
-    >,
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
     private readonly teamMapper: TeamMapper,
     private readonly crud: BracketCrud,
   ) {}
@@ -53,7 +51,7 @@ export class BracketMapper {
       status: m.status,
       opponent1: m.opponent1 && (await this.mapOpponent(m.opponent1)),
       opponent2: m.opponent2 && (await this.mapOpponent(m.opponent2)),
-      games: games.map(this.mapMatchGame),
+      games: await Promise.all(games.map(this.mapMatchGame)),
       startDate: (games.length && games[0].scheduledDate) || new Date(),
     };
   };
@@ -66,11 +64,21 @@ export class BracketMapper {
       round: b.round as RoundDto[],
       group: b.group,
       participant: await Promise.all(b.participant.map(this.mapParticipant)),
-      match: await Promise.all(b.match.map(e => this.mapMatch(e))),
+      match: await Promise.all(b.match.map(this.mapMatch)),
     };
   };
 
-  private mapMatchGame = (mg: BracketMatchGameEntity): BracketMatchGameDto => {
+  private mapMatchGame = async (
+    mg: BracketMatchGameEntity,
+  ): Promise<BracketMatchGameDto> => {
+    const [opponent1, opponent2] = await Promise.all([
+      mg.opponent1
+        ? this.mapOpponent(mg.opponent1!)
+        : Promise.resolve(undefined),
+      mg.opponent2
+        ? this.mapOpponent(mg.opponent2!)
+        : Promise.resolve(undefined),
+    ]);
     return {
       id: mg.id,
       bracket_match_id: mg.parent_id,
@@ -80,8 +88,8 @@ export class BracketMapper {
       status: mg.status,
       number: mg.number,
       finished: mg.status >= Status.Completed,
-      opponent1: mg.opponent1 && this.mapOpponentSmall(mg.opponent1),
-      opponent2: mg.opponent2 && this.mapOpponentSmall(mg.opponent2),
+      opponent1: opponent1,
+      opponent2: opponent2,
     };
   };
 
@@ -103,7 +111,7 @@ export class BracketMapper {
     return {
       id: b.id,
       tournament_id: b.tournament_id,
-      players: b.players.map(t => t.steamId),
+      players: b.players.map((t) => t.steamId),
       team:
         b.team &&
         (await this.teamMapper.mapTeam(
