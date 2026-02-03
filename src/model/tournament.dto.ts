@@ -39,6 +39,10 @@ export class RegisterAsPartyDto {
   steamIds: string[];
 }
 
+export class UnregisterPlayerDto {
+  steamId: string;
+}
+
 export class ConfirmRegistrationDto {
   steamId: string;
   confirm: boolean;

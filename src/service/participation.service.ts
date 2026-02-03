@@ -12,6 +12,10 @@ import { TournamentRegistrationState } from '../model/tournament.dto';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { TournamentStatus } from '../gateway/shared-types/tournament';
 
+const VALID_REGISTRATION_STATUSES: TournamentStatus[] = [
+  TournamentStatus.REGISTRATION,
+  TournamentStatus.READY_CHECK,
+];
 @Injectable()
 export class ParticipationService {
   constructor(
@@ -25,6 +29,50 @@ export class ParticipationService {
     private readonly tournamentEntityRepository: Repository<TournamentEntity>,
     private readonly ds: DataSource,
   ) {}
+
+  public async unregisterPlayer(tournamentId: number, steamId: string) {
+    await this.ds.transaction(async (tx) => {
+      // First, we need to find existing registration and tournamnet for it.
+      const alreadyRegistered = await tx
+        .createQueryBuilder()
+        .select('tr.id', 'registration_id')
+        .from('tournament_registration_player', 'trp')
+        .innerJoin(
+          'tournament_registration',
+          'tr',
+          'tr.id = trp.tournament_registration_id',
+        )
+        .where('tr.tournament_id = :tournamentId', { tournamentId })
+        .andWhere('trp.steam_id = :steamId', { steamId })
+        .getRawOne<{ registration_id: number }>();
+
+      if (!alreadyRegistered) {
+        throw new BadRequestException('Not registered');
+      }
+
+      const tournament = await tx.findOneBy<TournamentEntity>(
+        TournamentEntity,
+        {
+          id: tournamentId,
+        },
+      );
+
+      // Check that status is valid
+      if (!VALID_REGISTRATION_STATUSES.includes(tournament.state)) {
+        throw new BadRequestException('Invalid state for register');
+      }
+
+      // Delete players
+      await tx.delete(TournamentRegistrationPlayerEntity, {
+        tournamentRegistrationId: alreadyRegistered.registration_id,
+      });
+
+      // Delete registration
+      await tx.delete(TournamentRegistrationEntity, {
+        id: alreadyRegistered.registration_id,
+      });
+    });
+  }
 
   public async registerAsParty(
     tournamentId: number,
@@ -52,13 +100,22 @@ export class ParticipationService {
         );
       }
 
-      const tournamentState = await this.tournamentEntityRepository.findOneBy({
+      const tournament = await this.tournamentEntityRepository.findOneBy({
         id: tournamentId,
       });
 
+      // Check that status is valid
+      if (!VALID_REGISTRATION_STATUSES.includes(tournament.state)) {
+        throw new BadRequestException('Invalid state for register');
+      }
+
+      if (steamIds.length > tournament.teamSize) {
+        throw new BadRequestException('Party too big for this tournament');
+      }
+
       let startingState: TournamentRegistrationState =
         TournamentRegistrationState.CREATED;
-      if (tournamentState.state === TournamentStatus.READY_CHECK) {
+      if (tournament.state === TournamentStatus.READY_CHECK) {
         startingState = TournamentRegistrationState.PENDING_CONFIRMATION;
       }
 

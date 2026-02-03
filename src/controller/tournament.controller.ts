@@ -12,6 +12,7 @@ import {
   StartGameDto,
   TournamentDto,
   TournamentRegistrationState,
+  UnregisterPlayerDto,
   UpdateTournamentDto,
 } from '../model/tournament.dto';
 import { TournamentEntity } from '../db/entity/tournament.entity';
@@ -152,6 +153,14 @@ export class TournamentController {
     return this.participationService
       .registerAsParty(id, dto.steamIds)
       .then((t) => t.id);
+  }
+
+  @Post(':id/unregister')
+  public async unregister(
+    @Param('id') id: number,
+    @Body() dto: UnregisterPlayerDto,
+  ) {
+    await this.participationService.unregisterPlayer(id, dto.steamId);
   }
 
   // Bracket
