@@ -468,7 +468,7 @@ WHERE tr.id = c.id::int;
     const registrationFinished = await this.tournamentEntityRepository
       .createQueryBuilder('t')
       .where('t.state = :state', { state: TournamentStatus.REGISTRATION })
-      .andWhere(`t.start_date >= now() - '1 hour'::interval`)
+      .andWhere(`now() >= t.start_date - '1 hour'::interval`) // start ready check 1 hour before start
       .getMany();
 
     if (registrationFinished.length === 0) return;
