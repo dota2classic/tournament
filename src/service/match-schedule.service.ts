@@ -262,6 +262,7 @@ export class MatchScheduleService {
     // [1] = unchanged, [2] = start, [3] = start + (1 * offset)
 
     let offset = 0;
+    match.games.sort((a, b) => a.number - b.number);
     for (let i = startFromGameNumber - 1; i < match.games.length; i++) {
       match.games[i].scheduledDate = addSeconds(
         startTime,
