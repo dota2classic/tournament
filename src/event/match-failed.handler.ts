@@ -28,6 +28,14 @@ export class MatchFailedHandler implements IEventHandler<MatchFailedEvent> {
       return;
     }
 
+    // Update game - detach match id
+    await this.bracketMatchGameEntityRepository.update(
+      {
+        id: gm.id,
+      },
+      { externalMatchId: null },
+    );
+
     const opponents = await this.participantEntityRepository.find({
       where: {
         id: In([gm.opponent1.id, gm.opponent2.id]),
