@@ -285,6 +285,66 @@ describe('TournamentService', () => {
           .sort(),
       );
     });
+
+    it('should merge small parties into appropriate size', async () => {
+      // Given
+      const tournament = await createTournament(
+        te,
+        2,
+        BracketType.SINGLE_ELIMINATION,
+        TournamentStatus.READY_CHECK,
+      );
+
+      const registrations: TournamentRegistrationEntity[] = [];
+      // 2 parties of 2 players
+      for (let i = 0; i < 2; i++) {
+        // Create registration
+        registrations.push(
+          await createTournamentRegistration(
+            te,
+            tournament.id,
+            [testUser(), testUser()],
+            TournamentRegistrationState.CONFIRMED,
+          ),
+        );
+      }
+
+      // 4 parties of 1 player
+      for (let i = 0; i < 4; i++) {
+        // Create registration
+        registrations.push(
+          await createTournamentRegistration(
+            te,
+            tournament.id,
+            [testUser()],
+            TournamentRegistrationState.CONFIRMED,
+          ),
+        );
+      }
+
+      // When
+      await service.finishReadyCheck(tournament.id);
+
+      // Then
+      const participants = await te.repo(ParticipantEntity).find({
+        where: {
+          tournament_id: tournament.id,
+        },
+        relations: ['players'],
+      });
+
+      expect(participants).toHaveLength(4);
+
+      expect(
+        participants
+          .flatMap((t) => t.players.map((player) => player.steamId))
+          .sort(),
+      ).toEqual(
+        registrations
+          .flatMap((t) => t.players.map((player) => player.steamId))
+          .sort(),
+      );
+    });
   });
 
   describe('updateTournament', () => {

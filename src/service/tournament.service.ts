@@ -448,7 +448,8 @@ WHERE tr.id = c.id::int;
 
     // Merge partial
     const partials = registrations.filter((t) => t.players.length < teamSize);
-    const { teams, leftovers } = this.mergePartials(partials);
+
+    const { teams, leftovers } = this.mergePartials(partials, teamSize);
 
     for (let team of teams) {
       participations.push({
@@ -459,13 +460,16 @@ WHERE tr.id = c.id::int;
     return participations;
   }
 
-  private mergePartials(partials: TournamentRegistrationEntity[]): {
+  private mergePartials(
+    partials: TournamentRegistrationEntity[],
+    teamSize: number,
+  ): {
     teams: string[][];
     leftovers: string[];
   } {
     const { teams, leftovers } = minimizeLeftovers(
       partials.map((t) => t.players.map((p) => p.steamId)),
-      5,
+      teamSize,
     );
     return {
       teams,
