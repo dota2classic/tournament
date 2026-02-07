@@ -15,7 +15,7 @@ describe('BracketService', () => {
     service = te.service(BracketService);
   });
 
-  it('should generate a bracket', async () => {
+  it('should generate a bracket without BYEs', async () => {
     // Given
     const tour = await createTournamentWithParticipants(
       te,
@@ -45,5 +45,38 @@ describe('BracketService', () => {
         .where('m.stage_id = :stageId', { stageId: stage.id })
         .getMany(),
     ).resolves.toHaveLength(3); // 2 x Semifinals + finals
+  });
+
+  it('should generate a bracket with BYEs', async () => {
+    // Given: 6 participants, should make a 2^3 bracket
+
+    const tour = await createTournamentWithParticipants(
+      te,
+      TournamentStatus.IN_PROGRESS,
+      6,
+    );
+
+    // When
+    const stage = await service.generateBracket(tour.id);
+
+    // Then
+    await expect(
+      te.repo(RoundEntity).find({ where: { stage_id: stage.id } }),
+    ).resolves.toHaveLength(3); // Round with byes + Semi finals + finals
+
+    await expect(
+      te
+        .repo(BracketMatchEntity)
+        .find({ where: { stage_id: Number(stage.id) } }),
+    ).resolves.toHaveLength(7); // 4 x round + 2 x Semifinals + finals
+
+    await expect(
+      te
+        .repo(BracketMatchGameEntity)
+        .createQueryBuilder('mge')
+        .innerJoin('mge.match', 'm')
+        .where('m.stage_id = :stageId', { stageId: stage.id })
+        .getMany(),
+    ).resolves.toHaveLength(5); // 2 real games in r1 +  2 x Semifinals + finals
   });
 });
