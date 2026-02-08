@@ -87,4 +87,9 @@ describe('ParticipationService', () => {
     // When + Then
     await expect(service.registerAsParty(t.id, ['1'])).rejects.toThrow();
   });
+
+  // TODO: write test
+  // it('should update total party state when all players resovled', async () => {
+  //
+  // });
 });
