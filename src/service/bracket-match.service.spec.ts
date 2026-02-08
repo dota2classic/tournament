@@ -17,6 +17,63 @@ describe('BracketMatchService', () => {
     bm = te.service(BracketsManager);
   });
 
+  it('should mark remaining games in bo-x as archived if result is ready', async () => {
+    // Given
+    const tournament = await createNativeTournament(te, {
+      round: 3,
+      final: 3,
+      grandFinal: 3,
+    });
+    const stage = await te
+      .repo(StageEntity)
+      .findOneBy({ tournament_id: tournament.id });
+
+    const firstMatch = await te.repo(BracketMatchEntity).findOne({
+      where: {
+        stage_id: stage.id,
+      },
+      order: {
+        number: 'ASC',
+      },
+      relations: ['games'],
+    });
+
+    const firstGame = firstMatch.games[0];
+    const secondGame = firstMatch.games[1];
+    const thirdGame = firstMatch.games[2];
+
+    // Win first game
+    await service.setGameWinner(firstGame.id, firstGame.opponent1.id);
+    // Win second game
+    await service.setGameWinner(secondGame.id, firstGame.opponent1.id);
+
+    // Match should be finished now
+    const m = await te.repo(BracketMatchEntity).findOne({
+      where: {
+        id: firstMatch.id,
+      },
+      order: {
+        number: 'ASC',
+      },
+      relations: ['games'],
+    });
+    m.games.sort((a, b) => a.number - b.number);
+
+    console.log(JSON.stringify(m));
+
+    // Expect match result
+    expect(m).toEqual(
+      expect.objectContaining({
+        status: Status.Completed,
+        opponent1: expect.objectContaining({ score: 2, result: 'win' }),
+        opponent2: expect.objectContaining({ score: 0, result: 'loss' }),
+      }),
+    );
+
+    // Expect game3 status
+    expect(m.games[2].status).toEqual(Status.Archived);
+  });
+
   it('should update bracket match with a winner in bo-1', async () => {
     // Given
     const tournament = await createNativeTournament(te);

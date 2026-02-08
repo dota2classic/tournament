@@ -5,19 +5,16 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { Logger } from '@nestjs/common';
+import { Status } from 'brackets-model';
 
 @EventsHandler(MatchStartedEvent)
 export class MatchStartedHandler implements IEventHandler<MatchStartedEvent> {
   private logger = new Logger(MatchStartedHandler.name);
   constructor(
     @InjectRepository(BracketMatchEntity)
-    private readonly bracketMatchEntityRepository: Repository<
-      BracketMatchEntity
-    >,
+    private readonly bracketMatchEntityRepository: Repository<BracketMatchEntity>,
     @InjectRepository(BracketMatchGameEntity)
-    private readonly matchGameEntityRepository: Repository<
-      BracketMatchGameEntity
-    >,
+    private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
   ) {}
 
   async handle(event: MatchStartedEvent) {
@@ -29,12 +26,14 @@ export class MatchStartedHandler implements IEventHandler<MatchStartedEvent> {
     if (!game) return;
 
     this.logger.log('Match started for a tournament game!');
+
     await this.matchGameEntityRepository.update(
       {
         id: event.info.roomId,
       },
       {
         externalMatchId: event.matchId,
+        status: Status.Running,
       },
     );
   }

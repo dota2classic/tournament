@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { RoundEntity } from '../db/entity/round.entity';
@@ -11,7 +11,7 @@ import { BracketMatchGameEntity } from '../db/entity/bracket-match-game.entity';
 import { GroupEntity } from '../db/entity/group.entity';
 import { TournamentRepository } from '../repository/tournament.repository';
 import { BracketsManager } from 'brackets-manager';
-import { Id } from 'brackets-model';
+import { Id, Status } from 'brackets-model';
 import { MatchScheduleService } from './match-schedule.service';
 
 @Injectable()
@@ -163,6 +163,19 @@ export class BracketMatchService {
       where: { id: Number(game.parent_id) },
       relations: ['games'],
     });
+
+    if (match.status >= Status.Completed) {
+      // Match is completed! Mark all games are archived if they are not played
+      await this.matchGameEntityRepository.update(
+        {
+          parent_id: match.id,
+          status: In([Status.Ready]),
+        },
+        {
+          status: Status.Archived,
+        },
+      );
+    }
 
     await this.handleMatchUpdatedPerhaps(match, game.number);
   }
