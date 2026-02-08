@@ -186,35 +186,23 @@ export class ParticipationService {
         },
       );
 
-      // We should update total only if all states are resolved
-      const shouldUpdateTotalStatus =
-        reg.players.findIndex(
-          (t) => t.state === TournamentRegistrationState.PENDING_CONFIRMATION,
-        ) === -1;
-
-      if (!shouldUpdateTotalStatus) {
+      if (state === TournamentRegistrationState.DECLINED) {
+        reg.state = TournamentRegistrationState.DECLINED;
+        await tx.save(reg);
         return;
+        // Set whole party as declined
       }
 
       const isAllAccepted =
         reg.players.findIndex(
-          (plr) => plr.state !== TournamentRegistrationState.CONFIRMED,
+          (t) => t.state !== TournamentRegistrationState.CONFIRMED,
         ) === -1;
-
-      const isAnyoneDeclined =
-        reg.players.findIndex(
-          (plr) => plr.state !== TournamentRegistrationState.DECLINED,
-        ) !== -1;
 
       // Update status based on stuff
       if (isAllAccepted) {
         reg.state = TournamentRegistrationState.CONFIRMED;
         await tx.save(reg);
-      } else if (isAnyoneDeclined) {
-        reg.state = TournamentRegistrationState.DECLINED;
-        await tx.save(reg);
       }
-
       // TODO: emit something?
     });
   }

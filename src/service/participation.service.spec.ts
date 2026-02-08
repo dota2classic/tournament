@@ -88,8 +88,67 @@ describe('ParticipationService', () => {
     await expect(service.registerAsParty(t.id, ['1'])).rejects.toThrow();
   });
 
-  // TODO: write test
-  // it('should update total party state when all players resovled', async () => {
-  //
-  // });
+  const assertState = async (
+    id: number,
+    state: TournamentRegistrationState,
+  ) => {
+    const reg = await te
+      .repo(TournamentRegistrationEntity)
+      .findOneBy({ id: id });
+    expect(reg.state).toEqual(state);
+  };
+
+  it('should set party to READY if all are ready', async () => {
+    // Given
+    const t = await createTournament(
+      te,
+      2,
+      BracketType.SINGLE_ELIMINATION,
+      TournamentStatus.READY_CHECK,
+    );
+
+    let reg = await service.registerAsParty(t.id, ['1', '2']);
+    // Confirm one
+    await service.setRegistrationConfirmed(
+      t.id,
+      '1',
+      TournamentRegistrationState.CONFIRMED,
+    );
+    await assertState(reg.id, TournamentRegistrationState.PENDING_CONFIRMATION);
+
+    // Confirm two
+    await service.setRegistrationConfirmed(
+      t.id,
+      '2',
+      TournamentRegistrationState.CONFIRMED,
+    );
+    await assertState(reg.id, TournamentRegistrationState.CONFIRMED);
+  });
+
+  it('should set party to DECLINED instantly if declined', async () => {
+    // Given
+    const t = await createTournament(
+      te,
+      2,
+      BracketType.SINGLE_ELIMINATION,
+      TournamentStatus.READY_CHECK,
+    );
+
+    let reg = await service.registerAsParty(t.id, ['1', '2']);
+    // Confirm one
+    await service.setRegistrationConfirmed(
+      t.id,
+      '1',
+      TournamentRegistrationState.DECLINED,
+    );
+    await assertState(reg.id, TournamentRegistrationState.DECLINED);
+
+    // Confirm two
+    await service.setRegistrationConfirmed(
+      t.id,
+      '2',
+      TournamentRegistrationState.CONFIRMED,
+    );
+    await assertState(reg.id, TournamentRegistrationState.DECLINED);
+  });
 });
