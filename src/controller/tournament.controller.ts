@@ -188,14 +188,14 @@ export class TournamentController {
 
   @Post('/:id/auto_schedule_bracket')
   async autoScheduleBracket(@Param('id') id: number) {
-    await this.matchScheduleService.scheduleMatches(id);
+    await this.matchScheduleService.autoScheduleMatches(id);
     return this.getBracket(id);
   }
 
   @Post(`/:id/generate_bracket`)
   public async startTournament(@Param('id') id: number): Promise<BracketDto> {
     await this.bracketService.generateBracket(id);
-    await this.matchScheduleService.scheduleMatches(id);
+    await this.matchScheduleService.autoScheduleMatches(id);
     return this.getBracket(id);
   }
 

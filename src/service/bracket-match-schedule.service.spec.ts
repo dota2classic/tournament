@@ -173,24 +173,29 @@ describe('BracketMatchService', () => {
       },
       4,
     );
-    await service.scheduleMatches(tournament.id);
+    await service.autoScheduleMatches(tournament.id);
     const bj = await te
       .service(BracketCrud)
       .getBracket(tournament.id)
       .then((t) => mapper.mapBracket(t, tournament));
 
+    const startOfGames = new Date(
+      tournament.startDate.getTime() +
+        tournament.scheduleStrategy.gameBreakDurationSeconds * 1000,
+    );
+
     // Matches in first round start when tournament starts
     expect(bj.winning[0].seeds[0].scheduledDate).toEqual(
-      tournament.startDate.toISOString(),
+      startOfGames.toISOString(),
     );
     expect(bj.winning[0].seeds[0].games[0].scheduledDate).toEqual(
-      tournament.startDate.toISOString(),
+      startOfGames.toISOString(),
     );
     expect(bj.winning[0].seeds[1].scheduledDate).toEqual(
-      tournament.startDate.toISOString(),
+      startOfGames.toISOString(),
     );
     expect(bj.winning[0].seeds[1].games[0].scheduledDate).toEqual(
-      tournament.startDate.toISOString(),
+      startOfGames.toISOString(),
     );
 
     // Matches in second round always start later
@@ -213,24 +218,29 @@ describe('BracketMatchService', () => {
       },
       4,
     );
-    await service.scheduleMatches(tournament.id);
+    await service.autoScheduleMatches(tournament.id);
     const bj = await te
       .service(BracketCrud)
       .getBracket(tournament.id)
       .then((t) => mapper.mapBracket(t, tournament));
 
+    const startOfGames = new Date(
+      tournament.startDate.getTime() +
+        tournament.scheduleStrategy.gameBreakDurationSeconds * 1000,
+    );
+
     // Matches in first round start when tournament starts
     expect(bj.winning[0].seeds[0].scheduledDate).toEqual(
-      tournament.startDate.toISOString(),
+      startOfGames.toISOString(),
     );
     expect(bj.winning[0].seeds[0].games[0].scheduledDate).toEqual(
-      tournament.startDate.toISOString(),
+      startOfGames.toISOString(),
     );
     expect(bj.winning[0].seeds[1].scheduledDate).toEqual(
-      tournament.startDate.toISOString(),
+      startOfGames.toISOString(),
     );
     expect(bj.winning[0].seeds[1].games[0].scheduledDate).toEqual(
-      tournament.startDate.toISOString(),
+      startOfGames.toISOString(),
     );
 
     // Matches in second round always start later
@@ -263,7 +273,7 @@ describe('BracketMatchService', () => {
       },
       4,
     );
-    await service.scheduleMatches(tournament.id);
+    await service.autoScheduleMatches(tournament.id);
     let bj = await te
       .service(BracketCrud)
       .getBracket(tournament.id)
@@ -298,7 +308,7 @@ describe('BracketMatchService', () => {
       },
       4,
     );
-    await service.scheduleMatches(tournament.id);
+    await service.autoScheduleMatches(tournament.id);
     let bj = await te
       .service(BracketCrud)
       .getBracket(tournament.id)

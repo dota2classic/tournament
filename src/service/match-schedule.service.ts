@@ -84,7 +84,7 @@ export class MatchScheduleService {
     );
   }
 
-  public async scheduleMatches(tid: number) {
+  public async autoScheduleMatches(tid: number) {
     const tournament = await this.tournamentRepository.findOneBy({ id: tid });
 
     const readyMatches = await this.bracketMatchEntityRepository
@@ -118,7 +118,11 @@ export class MatchScheduleService {
      * lower group has offset of1 match. We ignore lower group for now and only think of single elimination.
      */
 
-    const tournamentStartDate = tournament.startDate;
+    // We add break duration before starting game so people can understand whats happening
+    const tournamentStartDate = new Date(
+      tournament.startDate.getTime() +
+        tournament.scheduleStrategy.gameBreakDurationSeconds * 1000,
+    );
 
     await this.ds.transaction(async (tx) => {
       await Promise.all(

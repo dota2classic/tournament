@@ -490,7 +490,7 @@ WHERE tr.id = c.id::int;
       startingTournaments.map(async (tournament) => {
         await this.finishReadyCheck(tournament.id);
         await this.bracketService.generateBracket(tournament.id);
-        await this.scheduleService.scheduleMatches(tournament.id);
+        await this.scheduleService.autoScheduleMatches(tournament.id);
       }),
     );
     this.logger.log(`Started ${startingTournaments.length} tournaments`);
