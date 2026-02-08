@@ -77,6 +77,7 @@ export class BracketService {
       seeding: shuffle(padArrayToClosestPower(preparedParticipants)),
       settings: {
         grandFinal: 'simple',
+        balanceByes: true,
       },
     };
 
