@@ -185,6 +185,17 @@ export class ParticipationService {
           relations: ['players'],
         },
       );
+
+      // We should update total only if all states are resolved
+      const shouldUpdateTotalStatus =
+        reg.players.findIndex(
+          (t) => t.state === TournamentRegistrationState.PENDING_CONFIRMATION,
+        ) === -1;
+
+      if (!shouldUpdateTotalStatus) {
+        return;
+      }
+
       const isAllAccepted =
         reg.players.findIndex(
           (plr) => plr.state !== TournamentRegistrationState.CONFIRMED,
