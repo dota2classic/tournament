@@ -158,7 +158,9 @@ describe('ParticipationService', () => {
 
     const standings = await service.getFinalStandings(t.id);
 
+    // 1 stage
+    expect(standings).toHaveLength(1);
     // 4 participants = 4 standings
-    expect(standings).toHaveLength(4);
+    expect(standings[0].standings).toHaveLength(4);
   });
 });
