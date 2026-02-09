@@ -5,12 +5,15 @@ import {
 } from '@nestjs/common';
 import { ParticipantEntity } from '../db/entity/participant.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { TournamentRegistrationState } from '../model/tournament.dto';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { TournamentStatus } from '../gateway/shared-types/tournament';
+import { BracketsManager } from 'brackets-manager';
+import { groupBy } from '../util/group-by';
+import { StageStandingsDto } from '../model/bracket.dto';
 
 const VALID_REGISTRATION_STATUSES: TournamentStatus[] = [
   TournamentStatus.REGISTRATION,
@@ -27,6 +30,7 @@ export class ParticipationService {
     private readonly tournamentRegistrationPlayerEntityRepository: Repository<TournamentRegistrationPlayerEntity>,
     @InjectRepository(TournamentEntity)
     private readonly tournamentEntityRepository: Repository<TournamentEntity>,
+    private readonly bm: BracketsManager,
     private readonly ds: DataSource,
   ) {}
 
@@ -205,5 +209,36 @@ export class ParticipationService {
       }
       // TODO: emit something?
     });
+  }
+
+  public async getFinalStandings(id: number): Promise<StageStandingsDto[]> {
+    const t = await this.tournamentEntityRepository.findOne({
+      where: { id },
+      relations: ['stages'],
+    });
+    return await Promise.all(
+      t.stages.map(async (stage) => {
+        const standings = await this.bm.get.finalStandings(stage.id);
+        // Load all participants in batch
+        const participantMap: Map<number, ParticipantEntity> = groupBy(
+          await this.tournamentParticipantEntityRepository.find({
+            where: {
+              id: In(standings.map((t) => t.id)),
+            },
+            relations: ['players'],
+          }),
+          'id',
+        );
+
+        return {
+          name: stage.name,
+          stage_id: stage.id,
+          standings: standings.map((st) => ({
+            rank: st.rank,
+            participant: participantMap.get(Number(st.id)),
+          })),
+        } satisfies StageStandingsDto;
+      }),
+    );
   }
 }

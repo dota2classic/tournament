@@ -1,6 +1,6 @@
 import { useFullModule } from '../@test/useFullModule';
 import { ParticipationService } from './participation.service';
-import { createTournament } from '../@test/test-util';
+import { createFinishedTournament, createTournament } from '../@test/test-util';
 import { TournamentRegistrationState } from '../model/tournament.dto';
 import {
   BracketType,
@@ -150,5 +150,15 @@ describe('ParticipationService', () => {
       TournamentRegistrationState.CONFIRMED,
     );
     await assertState(reg.id, TournamentRegistrationState.DECLINED);
+  });
+
+  it('should give standings if tournament finished', async () => {
+    // Given
+    const t = await createFinishedTournament(te);
+
+    const standings = await service.getFinalStandings(t.id);
+
+    // 4 participants = 4 standings
+    expect(standings).toHaveLength(4);
   });
 });

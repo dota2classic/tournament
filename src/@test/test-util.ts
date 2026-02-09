@@ -17,6 +17,9 @@ import { TournamentService } from '../service/tournament.service';
 import { ParticipationService } from '../service/participation.service';
 import { BracketService } from '../service/bracket.service';
 import { Dota_GameMode } from '../gateway/shared-types/dota-game-mode';
+import { BracketCrud } from '../service/bracket.crud';
+import { BracketMatchService } from '../service/bracket-match.service';
+import { BracketMatchEntity } from '../db/entity/bracket-match.entity';
 
 export const BestOfOne: BestOfStrategy = {
   round: 1,
@@ -161,4 +164,24 @@ export const createNativeTournament = async (
   await ts.finishReadyCheck(t.id);
   await te.service(BracketService).generateBracket(t.id);
   return ts.getFullTournament(t.id);
+};
+
+export const createFinishedTournament = async (te: TestEnvironment) => {
+  const t = await createNativeTournament(te);
+  const br = await te.service(BracketCrud).getBracket(t.id);
+  br.match.sort((a, b) => a.round_id - b.round_id);
+  for (let m of br.match) {
+    m = await te.repo(BracketMatchEntity).findOne({
+      where: {
+        id: m.id,
+      },
+      relations: ['games'],
+    });
+    console.log('Setting winner of game 1 match', m);
+    await te
+      .service(BracketMatchService)
+      .setGameWinner(m.games[0].id, m.opponent1.id);
+  }
+
+  return t;
 };

@@ -137,6 +137,13 @@ export class TournamentController {
       .then((matches) => Promise.all(matches.map(this.bracketMapper.mapMatch)));
   }
 
+  @Get(':id/standings')
+  async getTournamentStandings(@Param('id') id: number) {
+    return this.participationService
+      .getFinalStandings(id)
+      .then((standings) => standings.map(this.bracketMapper.mapStandings));
+  }
+
   @Post(':id/confirm_registration')
   async confirmRegistration(
     @Param('id') id: number,
@@ -236,23 +243,4 @@ export class TournamentController {
       new Date(dto.scheduledDate),
     );
   }
-
-  // @Post(`/tournament_match/:id/schedule`)
-  // public async scheduleTournamentMatch(
-  //   @Param('id') id: number,
-  //   @Body() scheduleDto: ScheduleTournamentMatchDto,
-  // ): Promise<BracketMatchDto> {
-  //   const m = await this.bracketMatchEntityRepository.findOneById(id);
-  //   if (!m) return;
-  //
-  //   const tourId = await this.utilQuery.matchTournamentId(m.id);
-  //   await this.scheduler.scheduleGame(
-  //     tourId,
-  //     m.id,
-  //     scheduleDto.gameId,
-  //     scheduleDto.scheduledDate,
-  //   );
-  //
-  //   return this.getTournamentMatch(m.id);
-  // }
 }

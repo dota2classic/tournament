@@ -4,9 +4,10 @@ import {
   BracketMatchDto,
   BracketMatchGameDto,
   BracketParticipantDto,
-  OpponentDto,
   ParticipantResultDto,
   RoundDto,
+  StageStandingsDto,
+  StageStandingsResultDto,
   TournamentBracketInfoDto,
 } from '../model/bracket.dto';
 import { ParticipantEntity } from '../db/entity/participant.entity';
@@ -68,6 +69,21 @@ export class BracketMapper {
     };
   };
 
+  public mapStandings = async (
+    standings: StageStandingsDto,
+  ): Promise<StageStandingsResultDto> => {
+    return {
+      stage_id: standings.stage_id,
+      name: standings.name,
+      standings: await Promise.all(
+        standings.standings.map(async (p) => ({
+          rank: p.rank,
+          participant: await this.mapParticipant(p.participant),
+        })),
+      ),
+    };
+  };
+
   private mapMatchGame = async (
     mg: BracketMatchGameEntity,
   ): Promise<BracketMatchGameDto> => {
@@ -92,16 +108,6 @@ export class BracketMapper {
       opponent2: opponent2,
     };
   };
-
-  private mapOpponentSmall = (p: ParticipantResult): OpponentDto => ({
-    id: Number(p.id),
-    result: p.result,
-    position: p.position,
-    participant: {
-      id: Number(p.id),
-      tournament_id: 2,
-    },
-  });
 
   private mapParticipant = async (
     b: ParticipantEntity,
