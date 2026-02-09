@@ -317,6 +317,7 @@ describe('BracketMatchService', () => {
 
     const start = new Date(2030, 1, 1);
 
+    bj.winning[0].seeds.sort((a, b) => a.number - b.number);
     const game1date = bj.winning[0].seeds[0].games[0].scheduledDate;
 
     // When
