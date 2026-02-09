@@ -141,7 +141,9 @@ export class TournamentController {
   async getTournamentStandings(@Param('id') id: number) {
     return this.participationService
       .getFinalStandings(id)
-      .then((standings) => standings.map(this.bracketMapper.mapStandings));
+      .then((standings) =>
+        Promise.all(standings.map(this.bracketMapper.mapStandings)),
+      );
   }
 
   @Post(':id/confirm_registration')
