@@ -39,6 +39,12 @@ export class RegisterAsPartyDto {
   steamIds: string[];
 }
 
+
+export class InviteToRegistrationDto {
+  inviterSteamId: string;
+  steamId: string;
+}
+
 export class UnregisterPlayerDto {
   steamId: string;
 }

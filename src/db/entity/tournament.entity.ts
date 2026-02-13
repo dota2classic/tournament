@@ -14,6 +14,7 @@ import { ParticipantEntity } from './participant.entity';
 import { TournamentRegistrationEntity } from './tournament-registration.entity';
 import { StageEntity } from './stage.entity';
 import { Dota_GameMode } from '../../gateway/shared-types/dota-game-mode';
+import { RegistrationInvitationEntity } from './registration-invitation.entity';
 
 export class BestOfStrategy {
   round: number;
@@ -100,6 +101,11 @@ export class TournamentEntity {
 
   @OneToMany((e) => ParticipantEntity, (e) => e.tournament, { eager: false })
   participants: Relation<ParticipantEntity>[];
+
+  @OneToMany((e) => RegistrationInvitationEntity, (e) => e.tournament, {
+    eager: false,
+  })
+  invitations: Relation<RegistrationInvitationEntity>[];
 
   @OneToMany((e) => TournamentRegistrationEntity, (e) => e.tournament, {
     eager: false,

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { ParticipantEntity } from '../db/entity/participant.entity';
@@ -14,6 +15,9 @@ import { TournamentStatus } from '../gateway/shared-types/tournament';
 import { BracketsManager } from 'brackets-manager';
 import { groupBy } from '../util/group-by';
 import { StageStandingsDto } from '../model/bracket.dto';
+import { RegistrationInvitationEntity } from '../db/entity/registration-invitation.entity';
+import { EventBus } from '@nestjs/cqrs';
+import { TournamentRegistrationInvitationCreatedEvent } from '../gateway/events/tournament/tournament-registration-invitation-created.event';
 
 const VALID_REGISTRATION_STATUSES: TournamentStatus[] = [
   TournamentStatus.REGISTRATION,
@@ -21,17 +25,22 @@ const VALID_REGISTRATION_STATUSES: TournamentStatus[] = [
 ];
 @Injectable()
 export class ParticipationService {
+  private logger = new Logger(ParticipationService.name);
+
   constructor(
     @InjectRepository(ParticipantEntity)
     private readonly tournamentParticipantEntityRepository: Repository<ParticipantEntity>,
     @InjectRepository(TournamentRegistrationEntity)
-    private readonly tournamentRegistrationEntityRepository: Repository<TournamentRegistrationEntity>,
+    private readonly regRepo: Repository<TournamentRegistrationEntity>,
     @InjectRepository(TournamentRegistrationPlayerEntity)
-    private readonly tournamentRegistrationPlayerEntityRepository: Repository<TournamentRegistrationPlayerEntity>,
+    private readonly regPlayerRepo: Repository<TournamentRegistrationPlayerEntity>,
     @InjectRepository(TournamentEntity)
     private readonly tournamentEntityRepository: Repository<TournamentEntity>,
     private readonly bm: BracketsManager,
+    @InjectRepository(RegistrationInvitationEntity)
+    private readonly regInviteRepo: Repository<RegistrationInvitationEntity>,
     private readonly ds: DataSource,
+    private readonly ebus: EventBus,
   ) {}
 
   public async unregisterPlayer(tournamentId: number, steamId: string) {
@@ -208,6 +217,141 @@ export class ParticipationService {
         await tx.save(reg);
       }
       // TODO: emit something?
+    });
+  }
+
+  public async invitePlayerToRegistration(
+    tournamentId: number,
+    inviterSteamId: string,
+    steamId: string,
+  ) {
+    // First, find active reg for player
+    const reg = await this.regPlayerRepo
+      .createQueryBuilder('trp')
+      .leftJoinAndSelect('trp.registration', 'reg')
+      .where('reg.tournament_id = :tournamentId', { tournamentId })
+      .andWhere('trp.steam_id = :steamId', { steamId: inviterSteamId })
+      .getOne();
+    if (!reg) {
+      throw new BadRequestException('No registration');
+    }
+
+    // Ok, there is a registration. create an invitation
+    const inv = await this.regInviteRepo.save(
+      new RegistrationInvitationEntity(
+        inviterSteamId,
+        steamId,
+        reg.registration.id,
+        reg.registration.tournamentId,
+      ),
+    );
+
+    // Emit invitation event
+    this.ebus.publish(
+      new TournamentRegistrationInvitationCreatedEvent(
+        reg.registration.tournamentId,
+        inviterSteamId,
+        steamId,
+        reg.tournamentRegistrationId,
+        inv.id,
+      ),
+    );
+    return inv;
+  }
+
+  public async acceptRegistrationInvitation(
+    invitationId: string,
+    accept: boolean,
+  ) {
+    const invite = await this.regInviteRepo.findOneBy({ id: invitationId });
+    if (!invite) {
+      throw new NotFoundException('Invitation not found');
+    }
+
+    if (!accept) {
+      await this.regInviteRepo.remove(invite);
+    }
+
+    const tournament = await this.tournamentEntityRepository.findOneBy({
+      id: invite.tournamentId,
+    });
+
+    if (!VALID_REGISTRATION_STATUSES.includes(tournament.state)) {
+      throw new BadRequestException('Wrong tournament state');
+    }
+
+    await this.ds.transaction(async (tx) => {
+      // Select registration for update
+      const reg = await tx
+        .createQueryBuilder<TournamentRegistrationEntity>(
+          TournamentRegistrationEntity,
+          'reg',
+        )
+        .innerJoinAndSelect('reg.players', 'players')
+        .where('reg.id = :regId', { regId: invite.registrationId })
+        .setLock('pessimistic_write') // SELECT ... FOR UPDATE
+        .getOne();
+
+      if (!reg) {
+        throw new BadRequestException("Registration doesn't exist");
+      }
+
+      if (reg.players.length >= tournament.teamSize) {
+        throw new BadRequestException('Team is full');
+      }
+
+      this.logger.log(`Registration acquired ${reg.id}`);
+
+      // Select existing participation for update
+      const existingPlayerReg = await tx
+        .createQueryBuilder<TournamentRegistrationPlayerEntity>(
+          TournamentRegistrationPlayerEntity,
+          'rpe',
+        )
+        .where('rpe.steam_id = :steamId', { steamId: invite.steamId })
+        .innerJoin('rpe.registration', 'registration')
+        .andWhere('registration.tournament_id = :tournamentId', {
+          tournamentId: invite.tournamentId,
+        })
+        .setLock('pessimistic_write') // SELECT ... FOR UPDATE
+        .getOne();
+
+      this.logger.log(
+        `Is player already in some registration? ${existingPlayerReg != null}`,
+      );
+
+      if (existingPlayerReg) {
+        // we need to delete it
+        await tx.update<TournamentRegistrationPlayerEntity>(
+          TournamentRegistrationPlayerEntity,
+          {
+            steamId: existingPlayerReg.steamId,
+            tournamentRegistrationId:
+              existingPlayerReg.tournamentRegistrationId,
+          },
+          {
+            tournamentRegistrationId: reg.id,
+          },
+        );
+        this.logger.log(
+          'Changed registration id of existing player registration, because it existed',
+        );
+      } else {
+        await tx.save(
+          TournamentRegistrationPlayerEntity,
+          new TournamentRegistrationPlayerEntity(
+            invite.steamId,
+            reg.id,
+            reg.state,
+          ),
+        );
+        this.logger.log('Created new player registration');
+      }
+
+      await tx.delete(RegistrationInvitationEntity, invite);
+      this.logger.log(
+        'Player invitation accepting is complete! Removed invitation',
+      );
     });
   }
 

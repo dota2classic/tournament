@@ -121,11 +121,12 @@ export const createNativeTournament = async (
     grandFinal: 1,
   },
   pc = 4,
+  teamSize = 1,
 ) => {
   const ts = te.service(TournamentService);
   // Create tournament
   const t = await ts.createTournament(
-    1,
+    teamSize,
     Math.random().toString(),
     BracketType.SINGLE_ELIMINATION,
     '123',
@@ -144,9 +145,11 @@ export const createNativeTournament = async (
   await ts.publish(t.id);
 
   // Register
-  const steamIds = Array.from({ length: pc }, testUser);
+  const steamIds = Array.from({ length: pc * teamSize }, testUser);
   for (let i = 0; i < pc; i++) {
-    await te.service(ParticipationService).registerAsParty(t.id, [steamIds[i]]);
+    await te
+      .service(ParticipationService)
+      .registerAsParty(t.id, steamIds.slice(i * teamSize, (i + 1) * teamSize));
   }
 
   // Confirm ready check

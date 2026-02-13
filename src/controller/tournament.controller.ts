@@ -6,6 +6,7 @@ import {
   BracketDto,
   ConfirmRegistrationDto,
   CreateTournamentDto,
+  InviteToRegistrationDto,
   RegisterAsPartyDto,
   ScheduleTournamentGameDto,
   SetGameWinnerDto,
@@ -169,6 +170,18 @@ export class TournamentController {
     return this.participationService
       .registerAsParty(id, dto.steamIds)
       .then((t) => t.id);
+  }
+
+  @Post(':id/invite_to_registration')
+  public async inviteToRegistration(
+    @Param('id') id: number,
+    @Body() dto: InviteToRegistrationDto,
+  ) {
+    await this.participationService.invitePlayerToRegistration(
+      id,
+      dto.inviterSteamId,
+      dto.steamId,
+    );
   }
 
   @Post(':id/unregister')
