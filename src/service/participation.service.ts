@@ -19,6 +19,7 @@ import { RegistrationInvitationEntity } from '../db/entity/registration-invitati
 import { EventBus } from '@nestjs/cqrs';
 import { TournamentRegistrationInvitationCreatedEvent } from '../gateway/events/tournament/tournament-registration-invitation-created.event';
 import { TournamentRegistrationInvitationResolvedEvent } from '../gateway/events/tournament/tournament-registration-invitation-resolved.event';
+import { CheckEmptyRegistrationsEvent } from '../event/check-empty-registrations.event';
 
 const VALID_REGISTRATION_STATUSES: TournamentStatus[] = [
   TournamentStatus.REGISTRATION,
@@ -46,7 +47,7 @@ export class ParticipationService {
 
   public async unregisterPlayer(tournamentId: number, steamId: string) {
     await this.ds.transaction(async (tx) => {
-      // First, we need to find existing registration and tournamnet for it.
+      // First, we need to find existing registration and tournament for it.
       const alreadyRegistered = await tx
         .createQueryBuilder()
         .select('tr.id', 'registration_id')
@@ -76,15 +77,13 @@ export class ParticipationService {
         throw new BadRequestException('Invalid state for register');
       }
 
-      // Delete players
+      // Delete player
       await tx.delete(TournamentRegistrationPlayerEntity, {
         tournamentRegistrationId: alreadyRegistered.registration_id,
+        steamId,
       });
 
-      // Delete registration
-      await tx.delete(TournamentRegistrationEntity, {
-        id: alreadyRegistered.registration_id,
-      });
+      this.ebus.publish(new CheckEmptyRegistrationsEvent());
     });
   }
 
@@ -361,6 +360,8 @@ export class ParticipationService {
       this.logger.log(
         'Player invitation accepting is complete! Removed invitation',
       );
+
+      this.ebus.publish(new CheckEmptyRegistrationsEvent());
 
       this.ebus.publish(
         new TournamentRegistrationInvitationResolvedEvent(

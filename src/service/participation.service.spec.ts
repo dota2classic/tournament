@@ -37,7 +37,7 @@ describe('ParticipationService', () => {
     expect(re.state).toEqual(TournamentRegistrationState.CREATED);
   });
 
-  it('should unregister whole party if player from party unregisters', async () => {
+  it('should unregister player from party', async () => {
     // Given
     const t = await createTournament(
       te,
@@ -51,11 +51,12 @@ describe('ParticipationService', () => {
     await service.unregisterPlayer(t.id, '1');
 
     // Then
-    await expect(
-      te.repo(TournamentRegistrationEntity).count({
-        where: { id: re.id },
-      }),
-    ).resolves.toEqual(0);
+    const regs = await te.repo(TournamentRegistrationPlayerEntity).find({
+      where: { tournamentRegistrationId: re.id },
+    });
+
+    expect(regs).toHaveLength(1);
+    expect(regs[0].steamId).toEqual('2');
   });
 
   it('should not register a party which doesnt fit', async () => {

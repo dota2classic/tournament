@@ -33,6 +33,7 @@ import { MatchScheduleService } from './service/match-schedule.service';
 import { RedlockModule } from '@dota2classic/redlock';
 import { RedlockModuleOptions } from '@dota2classic/redlock/dist/redlock.module-definition';
 import { MatchFailedHandler } from './event/match-failed.handler';
+import { CheckEmptyRegistrationsHandler } from './event/check-empty-registrations.handler';
 
 @Module({
   imports: [
@@ -129,6 +130,7 @@ import { MatchFailedHandler } from './event/match-failed.handler';
     BracketCrud,
     TournamentRepository,
     MatchCancelledHandler,
+    CheckEmptyRegistrationsHandler,
     TournamentService,
     ParticipationService,
     MatchScheduleService,
