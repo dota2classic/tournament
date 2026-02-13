@@ -7,6 +7,7 @@ import {
   BracketRoundDto,
   MatchGameDto,
   RegistrationDto,
+  RegistrationInvitationDto,
   SeedDto,
   SeedItemDto,
   TournamentDto,
@@ -22,6 +23,7 @@ import { TournamentRegistrationEntity } from '../db/entity/tournament-registrati
 import { BracketType } from '../gateway/shared-types/tournament';
 import { splitBy } from '../util/splitBy';
 import { ParticipantEntity } from '../db/entity/participant.entity';
+import { RegistrationInvitationEntity } from '../db/entity/registration-invitation.entity';
 
 @Injectable()
 export class TournamentMapper {
@@ -167,6 +169,20 @@ export class TournamentMapper {
       status: game.status,
       opponent1: game.opponent1 && (await this.mapSeedItem(game.opponent1)),
       opponent2: game.opponent2 && (await this.mapSeedItem(game.opponent2)),
+    };
+  };
+
+  mapInvitation = (
+    inv: RegistrationInvitationEntity,
+  ): RegistrationInvitationDto => {
+    return {
+      id: inv.id,
+      inviterSteamId: inv.inviterSteamId,
+      steamId: inv.steamId,
+      tournament: {
+        id: inv.tournament.id,
+        name: inv.tournament.name,
+      },
     };
   };
 }

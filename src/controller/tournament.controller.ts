@@ -8,6 +8,7 @@ import {
   CreateTournamentDto,
   InviteToRegistrationDto,
   RegisterAsPartyDto,
+  ReplyRegistrationInvitationDto,
   ScheduleTournamentGameDto,
   SetGameWinnerDto,
   StartGameDto,
@@ -30,6 +31,7 @@ import { TournamentService } from '../service/tournament.service';
 import { ParticipationService } from '../service/participation.service';
 import { MatchScheduleService } from '../service/match-schedule.service';
 import { TournamentBracketInfoDto } from '../model/bracket.dto';
+import { RegistrationInvitationEntity } from '../db/entity/registration-invitation.entity';
 
 @Controller('tournament')
 @ApiTags('tournament')
@@ -47,6 +49,8 @@ export class TournamentController {
     private readonly bracketMatchEntityRepository: Repository<BracketMatchEntity>,
     @InjectRepository(BracketMatchGameEntity)
     private readonly matchGameEntityRepository: Repository<BracketMatchGameEntity>,
+    @InjectRepository(RegistrationInvitationEntity)
+    private readonly regInvRepo: Repository<RegistrationInvitationEntity>,
     private readonly matchService: BracketMatchService,
     private readonly utilQuery: TournamentRepository,
     private readonly tournamentService: TournamentService,
@@ -62,6 +66,16 @@ export class TournamentController {
         relations: ['registrations', 'registrations.players'],
       })
       .then((t) => t.map(this.mapper.mapTournament));
+  }
+
+  @Get('/registration_invitation/:id')
+  public async getInvitation(@Param('id') id: string) {
+    return this.regInvRepo
+      .findOne({
+        where: { id },
+        relations: ['tournament'],
+      })
+      .then(this.mapper.mapInvitation);
   }
 
   // Tournament statuses
@@ -181,6 +195,17 @@ export class TournamentController {
       id,
       dto.inviterSteamId,
       dto.steamId,
+    );
+  }
+
+  @Post(':id/reply_to_registration_invitation')
+  public async replyRegistrationInvitation(
+    @Param('id') id: number,
+    @Body() dto: ReplyRegistrationInvitationDto,
+  ) {
+    await this.participationService.acceptRegistrationInvitation(
+      dto.invitationId,
+      dto.accept,
     );
   }
 

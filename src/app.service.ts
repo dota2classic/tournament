@@ -12,6 +12,7 @@ import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { TournamentReadyCheckDeclinedEvent } from './gateway/events/tournament/tournament-ready-check-declined.event';
 import { LobbyReadyEvent } from './gateway/events/lobby-ready.event';
 import { TournamentRegistrationInvitationCreatedEvent } from './gateway/events/tournament/tournament-registration-invitation-created.event';
+import { TournamentRegistrationInvitationResolvedEvent } from './gateway/events/tournament/tournament-registration-invitation-resolved.event';
 
 @Injectable()
 export class AppService implements OnApplicationBootstrap {
@@ -40,6 +41,7 @@ export class AppService implements OnApplicationBootstrap {
           TournamentReadyCheckStartedEvent,
           TournamentReadyCheckDeclinedEvent,
           TournamentRegistrationInvitationCreatedEvent,
+          TournamentRegistrationInvitationResolvedEvent,
           LobbyReadyEvent,
         ),
       )

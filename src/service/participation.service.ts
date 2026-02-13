@@ -18,6 +18,7 @@ import { StageStandingsDto } from '../model/bracket.dto';
 import { RegistrationInvitationEntity } from '../db/entity/registration-invitation.entity';
 import { EventBus } from '@nestjs/cqrs';
 import { TournamentRegistrationInvitationCreatedEvent } from '../gateway/events/tournament/tournament-registration-invitation-created.event';
+import { TournamentRegistrationInvitationResolvedEvent } from '../gateway/events/tournament/tournament-registration-invitation-resolved.event';
 
 const VALID_REGISTRATION_STATUSES: TournamentStatus[] = [
   TournamentStatus.REGISTRATION,
@@ -270,6 +271,14 @@ export class ParticipationService {
 
     if (!accept) {
       await this.regInviteRepo.remove(invite);
+      this.ebus.publish(
+        new TournamentRegistrationInvitationResolvedEvent(
+          invite.inviterSteamId,
+          invite.steamId,
+          accept,
+        ),
+      );
+      return;
     }
 
     const tournament = await this.tournamentEntityRepository.findOneBy({
@@ -351,6 +360,14 @@ export class ParticipationService {
       await tx.delete(RegistrationInvitationEntity, invite);
       this.logger.log(
         'Player invitation accepting is complete! Removed invitation',
+      );
+
+      this.ebus.publish(
+        new TournamentRegistrationInvitationResolvedEvent(
+          invite.inviterSteamId,
+          invite.steamId,
+          true,
+        ),
       );
     });
   }

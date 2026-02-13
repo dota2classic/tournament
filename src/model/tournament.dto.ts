@@ -45,6 +45,11 @@ export class InviteToRegistrationDto {
   steamId: string;
 }
 
+export class ReplyRegistrationInvitationDto {
+  invitationId: string;
+  accept: boolean;
+}
+
 export class UnregisterPlayerDto {
   steamId: string;
 }
@@ -221,4 +226,19 @@ export class SetGameWinnerDto {
 
 export class StartGameDto {
   gameId: string;
+}
+
+
+export class SmallTournamentDto {
+  id: number;
+  name: string;
+}
+
+
+
+export class RegistrationInvitationDto {
+  id: string;
+  inviterSteamId: string;
+  steamId: string;
+  tournament: SmallTournamentDto
 }
