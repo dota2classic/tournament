@@ -36,8 +36,10 @@ export class BracketCrud implements CrudInterface {
     private readonly tournamentEntityRepository: Repository<TournamentEntity>,
   ) {}
 
-  delete<T>(table: Table, filter?: Partial<T>): Promise<boolean> {
-    throw 'not implemented';
+  async delete<T>(table: Table, filter?: Partial<T>): Promise<boolean> {
+    const rep = this.connection.getRepository(mapTable[table]);
+
+    return rep.delete(filter).then((t) => t.affected > 0);
   }
 
   insert<T>(table: Table, value: OmitId<T>): Promise<number>;
@@ -79,9 +81,8 @@ export class BracketCrud implements CrudInterface {
     // id is either id or criteria
 
     if (table === 'match_game') {
-      const rep: Repository<BracketMatchGameEntity> = this.connection.getRepository(
-        mapTable[table],
-      );
+      const rep: Repository<BracketMatchGameEntity> =
+        this.connection.getRepository(mapTable[table]);
       // HERE WE NEED TO IMPLEMENT A DOGSHIT DEEP MERGE
       const gamesToUpdate: BracketMatchGameEntity[] = [];
       if (typeof id === 'number' || typeof id == 'string') {
@@ -123,18 +124,18 @@ export class BracketCrud implements CrudInterface {
 
     // @ts-ignore
     const group: GroupEntity[] = await this.select<GroupEntity>('group', {
-      stage_id: In(stage.map(t => t.id)),
+      stage_id: In(stage.map((t) => t.id)),
     });
 
     // @ts-ignore
     const round: RoundEntity[] = await this.select<RoundEntity>('round', {
-      stage_id: In(stage.map(t => t.id)),
+      stage_id: In(stage.map((t) => t.id)),
     });
 
     // @ts-ignore
     const match: BracketMatchEntity[] = await this.select<BracketMatchEntity>(
       'match',
-      { stage_id: In(stage.map(t => t.id)) },
+      { stage_id: In(stage.map((t) => t.id)) },
     );
 
     const tournament = await this.tournamentEntityRepository.findOneById(tid);

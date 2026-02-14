@@ -19,7 +19,6 @@ import { TournamentRepository } from '../repository/tournament.repository';
 import { InputStage, Stage } from 'brackets-model';
 import { shuffle } from '../util/shuffle';
 import { padArrayToClosestPower } from '../util/arrays';
-import { BracketUpdatedEvent } from '../event/bracket-updated.event';
 
 @Injectable()
 export class BracketService {
@@ -98,43 +97,19 @@ export class BracketService {
       );
     });
     this.logger.log(`Generated bracket for tournament ${tournamentId}`);
-
-    // TODO
-    // await Promise.all(
-    //   allMatches.map(async m =>
-    //     this.bracketMatchService.scheduleBracketMatch(tournamentId, m.id),
-    //   ),
-    // );
     return stage;
   }
 
-  public async setMatchResults(matchId: number, winnerOpponentId: number) {
-    const m: BracketMatchEntity =
-      await this.bracketMatchEntityRepository.findOne({
-        where: {
-          id: matchId,
-        },
-      });
-    if (m.opponent1?.id === winnerOpponentId) {
-      m.opponent1.result = 'win';
-    } else if (m.opponent2?.id === winnerOpponentId) {
-      m.opponent2.result = 'win';
-    } else {
-      throw new Error(`No such opponent in match ${matchId}`);
-    }
-
-    await this.manager.update.match({
-      id: m.id,
-      opponent1: m.opponent1,
-      opponent2: m.opponent2,
+  public async regenerateBracket(tournamentId: number) {
+    const stage = await this.stageEntityRepository.findOne({
+      where: {
+        tournament_id: tournamentId,
+      },
     });
-
-    this.ebus.publish(
-      new BracketUpdatedEvent(
-        await this.utilQuery.matchTournamentId(matchId),
-        matchId,
-        '',
-      ),
-    );
+    if (stage) {
+      // Delete old stage
+      await this.manager.delete.stage(stage.id);
+    }
+    return this.generateBracket(tournamentId);
   }
 }

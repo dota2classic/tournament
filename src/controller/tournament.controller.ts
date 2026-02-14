@@ -242,7 +242,7 @@ export class TournamentController {
 
   @Post(`/:id/generate_bracket`)
   public async startTournament(@Param('id') id: number): Promise<BracketDto> {
-    await this.bracketService.generateBracket(id);
+    await this.bracketService.regenerateBracket(id);
     await this.matchScheduleService.autoScheduleMatches(id);
     return this.getBracket(id);
   }
