@@ -408,4 +408,16 @@ export class MatchScheduleService {
       .where('stg.id = :stage_id', { stage_id: match.stage_id })
       .getOne();
   }
+
+  async resetGameData(gameId: string) {
+    await this.matchGameEntityRepository.update(
+      {
+        id: gameId,
+      },
+      {
+        gameserverScheduled: false,
+        externalMatchId: null,
+      },
+    );
+  }
 }

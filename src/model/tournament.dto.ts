@@ -242,3 +242,8 @@ export class RegistrationInvitationDto {
   steamId: string;
   tournament: SmallTournamentDto
 }
+
+
+export class ResetGameDataDto {
+  gameId: string;
+}

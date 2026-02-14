@@ -9,6 +9,7 @@ import {
   InviteToRegistrationDto,
   RegisterAsPartyDto,
   ReplyRegistrationInvitationDto,
+  ResetGameDataDto,
   ScheduleTournamentGameDto,
   SetGameWinnerDto,
   StartGameDto,
@@ -244,6 +245,14 @@ export class TournamentController {
     await this.bracketService.generateBracket(id);
     await this.matchScheduleService.autoScheduleMatches(id);
     return this.getBracket(id);
+  }
+
+  @Post(`/:id/reset_game_data`)
+  public async resetGameData(
+    @Param('id') id: number,
+    @Body() dto: ResetGameDataDto,
+  ) {
+    await this.matchScheduleService.resetGameData(dto.gameId);
   }
 
   @Post(':id/set_game_winner')
