@@ -106,6 +106,8 @@ export class BracketMatchService {
         child_count: bestOf,
       },
     );
+
+    this.logger.log(`Generating ${bestOf} games for match ${bracketMatch.id}`);
     for (let i = 1; i <= bestOf; i++) {
       await tx.save(
         BracketMatchGameEntity,

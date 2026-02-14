@@ -80,13 +80,15 @@ export class BracketService {
       },
     };
 
-    const stage = await this.manager.create(stageSetup);
+    const stage = await this.manager.create.stage(stageSetup);
 
     const allMatches = await this.bracketMatchEntityRepository.find({
       where: {
         stage_id: Number(stage.id),
       },
     });
+
+    this.logger.log(`Total matches in tournament: ${allMatches.length}`);
 
     // Create game/games for each match
     await this.ds.transaction(async (tx) => {

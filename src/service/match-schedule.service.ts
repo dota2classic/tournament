@@ -119,6 +119,10 @@ export class MatchScheduleService {
         tournament.scheduleStrategy.gameBreakDurationSeconds * 1000,
     );
 
+    this.logger.log(
+      `Auto-scheduling ${readyMatches.length} initial matches. Start date: ${tournamentStartDate.toISOString()}`,
+    );
+
     await this.ds.transaction(async (tx) => {
       await Promise.all(
         readyMatches.map((match) =>
