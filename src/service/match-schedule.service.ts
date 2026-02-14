@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, } from '@nestjs/common';
 import { StageEntity } from '../db/entity/stage.entity';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { TournamentStatus } from '../gateway/shared-types/tournament';
@@ -410,6 +405,14 @@ export class MatchScheduleService {
   }
 
   async resetGameData(gameId: string) {
+    const g = await this.matchGameEntityRepository.findOneBy({ id: gameId });
+    if (!g) throw new NotFoundException('Game not found');
+
+    if (g.status !== Status.Running) {
+      throw new BadRequestException('Game is not running');
+    }
+
+    this.logger.log('Reset scheduled gameserver so game can be run again');
     await this.matchGameEntityRepository.update(
       {
         id: gameId,
@@ -417,6 +420,7 @@ export class MatchScheduleService {
       {
         gameserverScheduled: false,
         externalMatchId: null,
+        status: Status.Ready,
       },
     );
   }
