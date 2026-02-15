@@ -361,8 +361,6 @@ export class ParticipationService {
         'Player invitation accepting is complete! Removed invitation',
       );
 
-      this.ebus.publish(new CheckEmptyRegistrationsEvent());
-
       this.ebus.publish(
         new TournamentRegistrationInvitationResolvedEvent(
           invite.inviterSteamId,
@@ -371,6 +369,8 @@ export class ParticipationService {
         ),
       );
     });
+
+    this.ebus.publish(new CheckEmptyRegistrationsEvent());
   }
 
   public async getFinalStandings(id: number): Promise<StageStandingsDto[]> {

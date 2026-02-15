@@ -50,7 +50,9 @@ export class TournamentMapper {
 
       description: t.description,
       startDate: t.startDate.toISOString(),
-      registrations: t.registrations.map(this.mapRegistration),
+      registrations: t.registrations
+        .filter((t) => t.players.length > 0)
+        .map(this.mapRegistration),
       scheduleStrategy: t.scheduleStrategy,
     };
   };
