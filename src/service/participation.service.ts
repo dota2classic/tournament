@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, } from '@nestjs/common';
 import { ParticipantEntity } from '../db/entity/participant.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
@@ -17,8 +12,12 @@ import { groupBy } from '../util/group-by';
 import { StageStandingsDto } from '../model/bracket.dto';
 import { RegistrationInvitationEntity } from '../db/entity/registration-invitation.entity';
 import { EventBus } from '@nestjs/cqrs';
-import { TournamentRegistrationInvitationCreatedEvent } from '../gateway/events/tournament/tournament-registration-invitation-created.event';
-import { TournamentRegistrationInvitationResolvedEvent } from '../gateway/events/tournament/tournament-registration-invitation-resolved.event';
+import {
+  TournamentRegistrationInvitationCreatedEvent
+} from '../gateway/events/tournament/tournament-registration-invitation-created.event';
+import {
+  TournamentRegistrationInvitationResolvedEvent
+} from '../gateway/events/tournament/tournament-registration-invitation-resolved.event';
 import { CheckEmptyRegistrationsEvent } from '../event/check-empty-registrations.event';
 
 const VALID_REGISTRATION_STATUSES: TournamentStatus[] = [
@@ -82,9 +81,8 @@ export class ParticipationService {
         tournamentRegistrationId: alreadyRegistered.registration_id,
         steamId,
       });
-
-      this.ebus.publish(new CheckEmptyRegistrationsEvent());
     });
+    this.ebus.publish(new CheckEmptyRegistrationsEvent());
   }
 
   public async registerAsParty(

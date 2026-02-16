@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger, NotFoundException, } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { StageEntity } from '../db/entity/stage.entity';
 import { TournamentEntity } from '../db/entity/tournament.entity';
 import { TournamentStatus } from '../gateway/shared-types/tournament';
