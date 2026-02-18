@@ -234,6 +234,10 @@ export class ParticipationService {
       throw new BadRequestException('No registration');
     }
 
+    if (await this.regInviteRepo.existsBy({ inviterSteamId, steamId })) {
+      throw new BadRequestException('Invitation already exists');
+    }
+
     // Ok, there is a registration. create an invitation
     const inv = await this.regInviteRepo.save(
       new RegistrationInvitationEntity(
