@@ -1,24 +1,9 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
-import {
-  BestOfStrategy,
-  ScheduleStrategy,
-  TournamentEntity,
-} from '../db/entity/tournament.entity';
+import { BadRequestException, Injectable, Logger, NotFoundException, } from '@nestjs/common';
+import { BestOfStrategy, ScheduleStrategy, TournamentEntity, } from '../db/entity/tournament.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
-import {
-  BracketType,
-  TournamentStatus,
-} from '../gateway/shared-types/tournament';
-import {
-  TournamentRegistrationState,
-  UpdateTournamentDto,
-} from '../model/tournament.dto';
+import { BracketType, TournamentStatus, } from '../gateway/shared-types/tournament';
+import { TournamentRegistrationState, UpdateTournamentDto, } from '../model/tournament.dto';
 import { TournamentRegistrationPlayerEntity } from '../db/entity/tournament-registration-player.entity';
 import { typeormBulkUpdate } from '../util/typeorm-bulk-update';
 import { TournamentRegistrationEntity } from '../db/entity/tournament-registration.entity';
@@ -219,6 +204,11 @@ export class TournamentService {
       updateDto.startDate = new Date(dto.startDate);
       updateDto.strategy = dto.strategy;
       updateDto.gameMode = dto.gameMode;
+
+      updateDto.killsToWin = dto.killsToWin;
+      updateDto.midTowerToWin = dto.midTowerToWin;
+      updateDto.enableBanStage = dto.enableBanStage;
+      updateDto.disableRunes = dto.disableRunes;
 
       updateDto.scheduleStrategy = t.scheduleStrategy;
       Object.assign(updateDto.scheduleStrategy, {

@@ -28,6 +28,7 @@ import { RedlockService } from '@dota2classic/redlock/dist/redlock.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { addSeconds, isBefore } from 'date-fns';
 import { BracketsManager } from 'brackets-manager';
+import { GameServerPluginParameters } from '../gateway/commands/LaunchGameServer/game-server-plugin-parameters';
 
 @Injectable()
 export class MatchScheduleService {
@@ -350,10 +351,16 @@ export class MatchScheduleService {
         tournament.gameMode,
         players,
         Dota2Version.Dota_684,
-        false,
-        false,
         DotaPatch.DOTA_684,
         Region.RU_MOSCOW,
+        new GameServerPluginParameters(
+          tournament.disableRunes,
+          tournament.midTowerToWin,
+          tournament.killsToWin,
+          tournament.enableBanStage,
+          false,
+          false,
+        ),
       ),
     );
 

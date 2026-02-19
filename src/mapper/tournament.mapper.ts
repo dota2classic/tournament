@@ -48,6 +48,11 @@ export class TournamentMapper {
       gameMode: t.gameMode,
       prize: t.prize,
 
+      disableRunes: t.disableRunes,
+      enableBanStage: t.enableBanStage,
+      killsToWin: t.killsToWin,
+      midTowerToWin: t.midTowerToWin,
+
       description: t.description,
       startDate: t.startDate.toISOString(),
       registrations: t.registrations

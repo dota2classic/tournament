@@ -1,9 +1,9 @@
-import { BracketType, TournamentStatus } from '../gateway/shared-types/tournament';
+import { BracketType, TournamentStatus, } from '../gateway/shared-types/tournament';
 import { TeamDto } from './team.dto';
 import { Result as OpponentResult } from 'brackets-model/dist/unions';
 import { Status as MatchStatus } from 'brackets-model';
 import { ApiProperty } from '@nestjs/swagger';
-import { BestOfStrategy, ScheduleStrategy } from '../db/entity/tournament.entity';
+import { BestOfStrategy, ScheduleStrategy, } from '../db/entity/tournament.entity';
 import { Dota_GameMode } from '../gateway/shared-types/dota-game-mode';
 
 /**
@@ -38,7 +38,6 @@ export enum TournamentRegistrationState {
 export class RegisterAsPartyDto {
   steamIds: string[];
 }
-
 
 export class InviteToRegistrationDto {
   inviterSteamId: string;
@@ -102,6 +101,11 @@ export class UpdateTournamentDto {
   roundBestOf?: number;
   finalBestOf?: number;
   grandFinalBestOf?: number;
+
+  disableRunes?: boolean;
+  midTowerToWin?: boolean;
+  enableBanStage?: boolean;
+  killsToWin?: number;
 }
 
 export class RegistrationPlayerDto {
@@ -146,6 +150,11 @@ export class TournamentDto {
   startDate: string;
   description: string;
   registrations: RegistrationDto[];
+
+  disableRunes: boolean;
+  midTowerToWin: boolean;
+  enableBanStage: boolean;
+  killsToWin: number;
 }
 
 export class SeedItemDto {
@@ -195,27 +204,9 @@ export class BracketDto {
   losing: BracketRoundDto[];
 }
 
-export class TournamentMatchDto {
-  public readonly id: number;
-  public readonly stage_id: number;
-  public readonly group_id: number;
-  public readonly round_id: number;
-  public readonly child_count: number;
-  public readonly number: number;
-  public readonly games: MatchGameDto[];
-  public readonly status: MatchStatus;
-  public readonly opponent1?: SeedItemDto;
-  public readonly opponent2?: SeedItemDto;
-}
-
 export class ScheduleTournamentGameDto {
   gameId: string;
   scheduledDate: string;
-}
-
-export class ForfeitDto {
-  gameId: number;
-  forfeitId: string;
 }
 
 export class SetGameWinnerDto {
@@ -228,21 +219,17 @@ export class StartGameDto {
   gameId: string;
 }
 
-
 export class SmallTournamentDto {
   id: number;
   name: string;
 }
 
-
-
 export class RegistrationInvitationDto {
   id: string;
   inviterSteamId: string;
   steamId: string;
-  tournament: SmallTournamentDto
+  tournament: SmallTournamentDto;
 }
-
 
 export class ResetGameDataDto {
   gameId: string;
