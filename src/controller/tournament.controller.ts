@@ -10,6 +10,7 @@ import {
   RegisterAsPartyDto,
   ReplyRegistrationInvitationDto,
   ResetGameDataDto,
+  RunExampleGameDto,
   ScheduleTournamentGameDto,
   SetGameWinnerDto,
   StartGameDto,
@@ -291,5 +292,13 @@ export class TournamentController {
       dto.gameId,
       new Date(dto.scheduledDate),
     );
+  }
+
+  @Post(':id/run_example_game')
+  public async runExampleGame(
+    @Param('id') id: number,
+    @Body() dto: RunExampleGameDto,
+  ) {
+    this.matchScheduleService.runExampleGame(id, dto.radiant, dto.dire);
   }
 }

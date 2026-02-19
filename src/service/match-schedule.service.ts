@@ -29,6 +29,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { addSeconds, isBefore } from 'date-fns';
 import { BracketsManager } from 'brackets-manager';
 import { GameServerPluginParameters } from '../gateway/commands/LaunchGameServer/game-server-plugin-parameters';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class MatchScheduleService {
@@ -438,6 +439,47 @@ export class MatchScheduleService {
         externalMatchId: null,
         status: Status.Ready,
       },
+    );
+  }
+
+  public async runExampleGame(id: number, radiant: string[], dire: string[]) {
+    const tournament = await this.tournamentRepository.findOneBy({ id });
+
+    const players: MatchPlayer[] = [];
+    radiant.forEach((plr) => {
+      players.push({
+        playerId: new PlayerId(plr),
+        team: DotaTeam.RADIANT,
+        partyId: plr,
+      });
+    });
+    dire.forEach((plr) => {
+      players.push({
+        playerId: new PlayerId(plr),
+        team: DotaTeam.DIRE,
+        partyId: plr,
+      });
+    });
+
+    this.ebus.publish(
+      new LobbyReadyEvent(
+        v4(),
+        MatchmakingMode.TOURNAMENT,
+        Dota_Map.DOTA,
+        tournament.gameMode,
+        players,
+        Dota2Version.Dota_684,
+        DotaPatch.DOTA_684,
+        Region.RU_MOSCOW,
+        new GameServerPluginParameters(
+          tournament.disableRunes,
+          tournament.midTowerToWin,
+          tournament.killsToWin,
+          tournament.enableBanStage,
+          false,
+          false,
+        ),
+      ),
     );
   }
 }

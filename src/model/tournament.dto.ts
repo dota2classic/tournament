@@ -234,3 +234,9 @@ export class RegistrationInvitationDto {
 export class ResetGameDataDto {
   gameId: string;
 }
+
+
+export class RunExampleGameDto {
+  radiant: string[];
+  dire: string[]
+}
