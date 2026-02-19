@@ -121,9 +121,9 @@ export class MatchScheduleService {
      */
 
     // We add break duration before starting game so people can understand whats happening
-    const tournamentStartDate = new Date(
-      tournament.startDate.getTime() +
-        tournament.scheduleStrategy.gameBreakDurationSeconds * 1000,
+    const tournamentStartDate = addSeconds(
+      tournament.startDate,
+      tournament.scheduleStrategy.gameBreakDurationSeconds,
     );
 
     this.logger.log(
